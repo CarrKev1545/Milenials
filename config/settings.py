@@ -1,7 +1,4 @@
-"""
-Django settings for config project.
-"""
-
+# config/settings.py
 from pathlib import Path
 import os
 import dj_database_url
@@ -39,6 +36,9 @@ INSTALLED_APPS = [
     "reportes",
 ]
 
+# Usuario personalizado
+AUTH_USER_MODEL = "core.Usuario"
+
 # === Middleware (WhiteNoise justo después de Security) ===
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -72,23 +72,16 @@ WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
 # === Base de datos ===
-# Local (fallback): SQLite. Producción: usa DATABASE_URL (PostgreSQL de Render).
+# Local (DEBUG=True): SQLite. Producción: DATABASE_URL (PostgreSQL en Render).
 DATABASES = {
     "default": dj_database_url.config(
-        default=(
-            f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
-            if DEBUG
-            else os.environ.get("DATABASE_URL", "")
-        ),
+        default=(f"sqlite:///{BASE_DIR / 'db.sqlite3'}" if DEBUG else os.environ.get("DATABASE_URL", "")),
         conn_max_age=600,
         ssl_require=not DEBUG,
     )
 }
 
-# === Usuario personalizado ===
-AUTH_USER_MODEL = "core.Usuario"
-
-# === Validadores de contraseña ===
+# === Password validators ===
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -96,31 +89,27 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# === i18n / zona horaria ===
+# === i18n / TZ ===
 LANGUAGE_CODE = "es"
 TIME_ZONE = "America/Bogota"
 USE_I18N = True
 USE_TZ = True
 
-# === Archivos estáticos ===
+# === Estáticos ===
 STATIC_URL = "/static/"
-# carpeta de estáticos del proyecto (si existe)
 STATICFILES_DIRS = [BASE_DIR / "static"] if (BASE_DIR / "static").exists() else []
-# carpeta donde collectstatic juntará archivos para producción
 STATIC_ROOT = BASE_DIR / "staticfiles"
-
-# WhiteNoise storage para prod
 STATICFILES_STORAGE = (
     "whitenoise.storage.CompressedManifestStaticFilesStorage"
     if not DEBUG
     else "whitenoise.storage.CompressedStaticFilesStorage"
 )
 
-# === Media (uploads) ===
+# === Media ===
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.environ.get("MEDIA_ROOT", str(BASE_DIR / "media"))
 
-# === Seguridad extra en producción ===
+# === Seguridad extra en prod ===
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_SSL_REDIRECT = True
@@ -130,5 +119,4 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
 
-# === Auto primary key ===
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
