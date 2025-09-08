@@ -1,0 +1,418 @@
+{% extends "core/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Asignación de Docentes a grupos{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Mensajes flash */
+  .re-msg{margin:.5rem 0; padding:.6rem .9rem; border-radius:.5rem; font-weight:600;}
+  .re-msg--ok{background:#0f5132; color:#d1e7dd;}
+  .re-msg--err{background:#842029; color:#f8d7da;}
+
+  /* Backdrop + modal (para reemplazar asignación existente) */
+  .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45);
+              display: grid; place-items: center; z-index: 1000; }
+  .hidden { display: none !important; }
+  .modal { width: min(520px, 92vw); background: #fff; border-radius: 14px;
+           padding: 18px 18px 14px; box-shadow: 0 12px 30px rgba(0,0,0,.18); }
+  .modal h3 { margin: 0 0 8px; font-size: 18px; }
+  .modal p { margin: 0 0 16px; color: #4b5563; }
+  .modal-actions { display:flex; gap:10px; justify-content:flex-end; }
+  .btn { border: 1px solid #9aa3af; background:#f9fafb; color:#111; padding:8px 12px; border-radius:10px; cursor:pointer; font-weight:600; }
+  .btn.primary { background:#b91c1c; color:#fff; border-color:transparent; }
+
+  /* Toast flotante (respeta estética general) */
+  .toast { position: fixed; right: 16px; bottom: 16px; z-index: 1100;
+           background:#111827; color:#fff; padding:10px 12px; border-radius:10px;
+           box-shadow: 0 8px 24px rgba(0,0,0,.25); max-width: 60ch; }
+  .toast.hidden{display:none}
+
+  /* Acciones con el estilo del dashboard */
+  .re-actions{margin-top:16px;display:flex;gap:14px;flex-wrap:wrap}
+  .re-btn{background:var(--accent,#9c0f10);color:#fff;border:none;padding:12px 18px;border-radius:12px;font-weight:800;cursor:pointer;box-shadow:0 12px 22px rgba(156,15,16,.38)}
+  .re-btn:hover{transform:translateY(-1px)}
+  .re-btn:disabled{opacity:.55;cursor:not-allowed}
+  .re-btn--ghost{background:#374151}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="re" aria-labelledby="titulo-adg">
+  <h1 id="titulo-adg" class="re-title">Asignación de Docentes a grupos</h1>
+
+  <div class="re-wrap">
+    <!-- Columna izquierda con icono -->
+    <aside class="re-left" aria-label="Ilustración docentes a grupos">
+      <div class="re-avatar" aria-hidden="true">
+        <i class="fa-solid fa-chalkboard-user"></i>
+      </div>
+    </aside>
+
+    <!-- Columna derecha (sin tabla grande) -->
+    <div class="re-right">
+      {% if messages %}
+        {% for m in messages %}
+          <div class="re-msg {% if m.tags == 'success' %}re-msg--ok{% else %}re-msg--err{% endif %}">
+            {{ m }}
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <form class="re-form" id="adg-form" autocomplete="off" novalidate>
+        {% csrf_token %}
+
+        <!-- DOCENTE -->
+        <label class="re-field" for="adg-docente">
+          <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-user-tie"></i></span>
+          <select id="adg-docente" name="docente_id" aria-label="Seleccione el docente" required>
+            <option value="">Seleccione el docente</option>
+          </select>
+          <span class="re-caret" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+        </label>
+
+        <!-- GRUPO (según sede del docente) -->
+        <label class="re-field" for="adg-grupos">
+          <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-users-rectangle"></i></span>
+          <select id="adg-grupos" name="grupo_id" aria-label="Seleccione el grupo" required disabled>
+            <option value="">Seleccione el grupo</option>
+          </select>
+          <span class="re-caret" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+        </label>
+
+        <!-- ASIGNATURA (del grupo elegido) -->
+        <label class="re-field" for="adg-asignatura">
+          <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-book"></i></span>
+          <select id="adg-asignatura" name="grupo_asignatura_id" aria-label="Seleccione la asignatura" required disabled>
+            <option value="">Seleccione la asignatura</option>
+          </select>
+          <span class="re-caret" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+        </label>
+      </form>
+
+      <!-- Acciones -->
+      <div class="re-actions">
+        <button type="button" class="re-btn" id="btn-asignar" disabled>Asignar</button>
+        <button type="button" class="re-btn re-btn--ghost" id="btn-quitar" disabled>Quitar asignación</button>
+        <button type="reset"  form="adg-form" class="re-btn re-btn--ghost" id="btn-eliminar">Limpiar</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Modal de confirmación para REEMPLAZAR -->
+<div id="modalReemplazo" class="backdrop hidden" aria-hidden="true" role="dialog" aria-modal="true">
+  <div class="modal">
+    <h3>Reemplazar docente asignado</h3>
+    <p>Ya existe un docente asignado a esa (grupo, asignatura). ¿Deseas reemplazarlo por el seleccionado?</p>
+    <div class="modal-actions">
+      <button type="button" class="btn" data-cancel>Cancelar</button>
+      <button type="button" class="btn primary" data-confirm>Reemplazar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const $ = (s) => document.querySelector(s);
+  const form       = $('#adg-form');
+  const docenteSel = $('#adg-docente');
+  const grupoSel   = $('#adg-grupos');
+  const asigSel    = $('#adg-asignatura');
+  const btnAsignar = $('#btn-asignar');
+  const btnQuitar  = $('#btn-quitar');
+
+  /* ENDPOINTS (no se tocan conexiones/lógica de servidor) */
+  const URL_API_DOCENTES        = "{% url 'api_docentes' %}";
+  const URL_API_GRUPOS_DOCENTE  = "{% url 'api_grupos_por_docente' %}";
+  const URL_API_ASIGS_POR_GRUPO = "{% url 'api_asignaturas_por_grupo' %}";
+  const URL_POST_ASIGNAR_ASIG   = "{% url 'rector_asignar_docente_asignatura' %}";
+  const URL_POST_QUITAR_ASIG    = "{% url 'rector_quitar_docente_asignatura' %}";
+  const URL_POST_VINCULAR_DG    = "{% url 'rector_vincular_docente_grupo' %}";  // NUEVO
+
+  /* Utils */
+  function clearSelect(sel, placeholder){
+    sel.innerHTML = '';
+    const opt = document.createElement('option');
+    opt.value = ''; opt.textContent = placeholder;
+    sel.appendChild(opt);
+  }
+  function disable(el, on){ el.disabled = !!on; }
+  async function fetchJSON(url){
+    const r = await fetch(url, {headers: {'X-Requested-With':'fetch'}});
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    return await r.json();
+  }
+  function getCSRF(){
+    return document.querySelector('input[name=csrfmiddlewaretoken]')?.value || '';
+  }
+  function showToast(msg, ok=true) {
+    const el = document.getElementById("toast");
+    el.textContent = msg;
+    el.style.background = ok ? "#065f46" : "#7f1d1d";
+    el.classList.remove("hidden");
+    setTimeout(() => el.classList.add("hidden"), 2600);
+  }
+  async function parseMaybeJSON(resp){
+    const ct = resp.headers.get('content-type') || '';
+    if (ct.includes('application/json')) {
+      try { return await resp.json(); } catch { return {}; }
+    }
+    return {};
+  }
+  function toggleButtons(){
+    const hasDoc = !!docenteSel.value;
+    const hasGrp = !!grupoSel.value;
+    const hasGA  = !!asigSel.value;
+    btnAsignar.disabled = !(hasDoc && hasGrp && hasGA);
+    btnQuitar.disabled  = !(hasDoc && hasGA);
+  }
+
+  /* Modal de reemplazo */
+  const modal = document.getElementById("modalReemplazo");
+  let pendingPayload = null;
+
+  function openModal() {
+    modal.classList.remove("hidden");
+    modal.setAttribute("aria-hidden", "false");
+  }
+  function closeModal() {
+    modal.classList.add("hidden");
+    modal.setAttribute("aria-hidden", "true");
+  }
+  modal.querySelector("[data-cancel]").addEventListener("click", closeModal);
+  modal.querySelector("[data-confirm]").addEventListener("click", async () => {
+    if (!pendingPayload) return closeModal();
+    try {
+      const fd = new FormData();
+      Object.entries(pendingPayload).forEach(([k, v]) => fd.append(k, v));
+      fd.append("reemplazar", "1"); // forzar reemplazo
+
+      const resp = await fetch(URL_POST_ASIGNAR_ASIG, {
+        method: "POST",
+        headers: { "X-CSRFToken": getCSRF() },
+        body: fd
+      });
+
+      const data = await parseMaybeJSON(resp);
+      if (resp.ok && (data.ok !== false)) {
+        showToast(data.msg || "Asignación actualizada.", true);
+      } else {
+        showToast(data.msg || "No se pudo reemplazar la asignación.", false);
+      }
+    } catch {
+      showToast("Error de red al reemplazar.", false);
+    } finally {
+      pendingPayload = null;
+      closeModal();
+    }
+  });
+
+  /* Cargar DOCENTES */
+  async function cargarDocentes(){
+    clearSelect(docenteSel, 'Seleccione el docente');
+    try{
+      const data = await fetchJSON(URL_API_DOCENTES);
+      (data.docentes || []).forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.id;
+        opt.textContent = d.nombre_completo;
+        docenteSel.appendChild(opt);
+      });
+    }catch(e){
+      console.warn('No se pudieron cargar docentes:', e);
+    }
+  }
+
+  /* Cargar GRUPOS por docente (sede del docente) */
+  async function cargarGruposPorDocente(docente_id){
+    clearSelect(grupoSel, 'Seleccione el grupo');
+    clearSelect(asigSel,  'Seleccione la asignatura');
+    disable(grupoSel, true);
+    disable(asigSel,  true);
+    toggleButtons();
+    if(!docente_id) return;
+
+    try{
+      const url = URL_API_GRUPOS_DOCENTE + `?docente_id=${encodeURIComponent(docente_id)}`;
+      const data = await fetchJSON(url);
+      const lista = (data.grupos || []);
+      if (lista.length){
+        lista.forEach(g => {
+          const opt = document.createElement('option');
+          opt.value = g.id;
+          opt.textContent = g.etiqueta; // p.ej. "11° 102"
+          grupoSel.appendChild(opt);
+        });
+        disable(grupoSel, false);
+      }else{
+        const opt = document.createElement('option');
+        opt.value=''; opt.textContent='No hay grupos en la sede del docente'; opt.disabled=true;
+        grupoSel.appendChild(opt);
+      }
+    }catch(e){
+      console.warn('No se pudieron cargar grupos:', e);
+    }
+  }
+
+  /* Cargar ASIGNATURAS por grupo */
+  async function cargarAsignaturasPorGrupo(grupo_id){
+    clearSelect(asigSel, 'Seleccione la asignatura');
+    disable(asigSel, true);
+    toggleButtons();
+    if(!grupo_id) return;
+
+    try{
+      const url = URL_API_ASIGS_POR_GRUPO + `?grupo_id=${encodeURIComponent(grupo_id)}`;
+      const data = await fetchJSON(url);
+      const lista = data.asignaturas || [];
+      if (lista.length){
+        lista.forEach(a => {
+          const opt = document.createElement('option');
+          opt.value = a.ga_id;        // lo que necesita el POST
+          opt.textContent = a.nombre; // visible en el select
+          asigSel.appendChild(opt);
+        });
+        disable(asigSel, false);
+      }else{
+        const opt = document.createElement('option');
+        opt.value=''; opt.textContent='No hay asignaturas para este grupo'; opt.disabled=true;
+        asigSel.appendChild(opt);
+      }
+    }catch(e){
+      console.warn('No se pudieron cargar asignaturas:', e);
+    }
+  }
+
+  /* Vincular docente↔grupo si hace falta (dinámico) */
+  async function ensureVinculo(docente_id, grupo_id) {
+    const fd = new FormData();
+    fd.append("docente_id", docente_id);
+    fd.append("grupo_id",   grupo_id);
+
+    const resp = await fetch(URL_POST_VINCULAR_DG, {
+      method: "POST",
+      headers: { "X-CSRFToken": getCSRF() },
+      body: fd
+    });
+
+    const data = await parseMaybeJSON(resp);
+    if (!resp.ok || (data.ok === false)) {
+      throw new Error(data?.msg || "No se pudo vincular docente con grupo.");
+    }
+    if (data.created) showToast("Vinculado docente↔grupo.", true);
+  }
+
+  /* Eventos */
+  docenteSel.addEventListener('change', () => {
+    cargarGruposPorDocente(docenteSel.value);
+    toggleButtons();
+  });
+  grupoSel.addEventListener('change', () => {
+    cargarAsignaturasPorGrupo(grupoSel.value);
+    toggleButtons();
+  });
+  asigSel.addEventListener('change', toggleButtons);
+
+  form.addEventListener('reset', () => {
+    setTimeout(() => {
+      clearSelect(grupoSel, 'Seleccione el grupo');
+      clearSelect(asigSel,  'Seleccione la asignatura');
+      disable(grupoSel, true);
+      disable(asigSel,  true);
+      toggleButtons();
+    }, 0);
+  });
+
+  /* Asignar */
+  btnAsignar.addEventListener('click', async () => {
+    const docente_id = docenteSel.value;
+    const grupo_id   = grupoSel.value;
+    const ga_id      = asigSel.value;
+    if(!docente_id || !grupo_id || !ga_id){
+      alert('Selecciona docente, grupo y asignatura.'); return;
+    }
+    try{
+      btnAsignar.disabled = true;
+
+      // 1) Asegura el vínculo docente↔grupo (si no existe, lo crea)
+      await ensureVinculo(docente_id, grupo_id);
+
+      // 2) Ahora sí: asignar la (grupo, asignatura) al docente
+      const fd = new FormData();
+      fd.append("docente_id", docente_id);
+      fd.append("grupo_id",   grupo_id);
+      fd.append("grupo_asignatura_id", ga_id);
+
+      const r = await fetch(URL_POST_ASIGNAR_ASIG, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCSRF() },
+        body: fd
+      });
+
+      if (r.status === 409) {
+        // Ya existe alguien asignado → pedir confirmación de reemplazo
+        pendingPayload = { docente_id, grupo_id, grupo_asignatura_id: ga_id };
+        openModal();
+        return;
+      }
+
+      const data = await parseMaybeJSON(r);
+      if (!r.ok || (data.ok === false)) {
+        showToast(data.msg || "No se pudo asignar.", false);
+        return;
+      }
+      showToast(data.msg || "Asignación registrada.", true);
+    }catch(e){
+      showToast(e.message || 'Error de red al asignar.', false);
+    } finally {
+      btnAsignar.disabled = false;
+      toggleButtons();
+    }
+  });
+
+  /* Quitar */
+  btnQuitar.addEventListener('click', async () => {
+    const docente_id = docenteSel.value;
+    const ga_id      = asigSel.value;
+    if(!docente_id || !ga_id){
+      alert('Selecciona docente y asignatura.'); return;
+    }
+    if(!confirm('¿Quitar esta asignación del docente?')) return;
+
+    try{
+      btnQuitar.disabled = true;
+      const fd = new FormData();
+      fd.append("docente_id", docente_id);
+      fd.append("grupo_asignatura_id", ga_id);
+
+      const r = await fetch(URL_POST_QUITAR_ASIG, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCSRF() },
+        body: fd
+      });
+
+      const data = await parseMaybeJSON(r);
+      if (!r.ok || (data.ok === false)) {
+        showToast(data.msg || "No se pudo eliminar la asignación.", false);
+        return;
+      }
+      showToast(data.msg || "Asignación eliminada.", true);
+    }catch(_){
+      showToast('Error de red al eliminar.', false);
+    } finally {
+      btnQuitar.disabled = false;
+      toggleButtons();
+    }
+  });
+
+  /* Init */
+  cargarDocentes();
+})();
+</script>
+{% endblock %}

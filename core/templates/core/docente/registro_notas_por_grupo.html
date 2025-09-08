@@ -1,0 +1,293 @@
+{% extends "core/base_dashboard_docente.html" %}
+{% load static %}
+
+{% block title %}Registro de notas — Tabla{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-title{
+    position:sticky; top:var(--navbar-height); z-index:40;
+    background:var(--accent); color:#fff; font-weight:800; letter-spacing:.2px;
+    text-align:center; padding:10px 12px; box-shadow:0 4px 12px rgba(0,0,0,.35)
+  }
+
+  /* ===== Contenedor tarjeta (igual a rector) ===== */
+  .rg{width:100%;max-width:1180px;margin:0 auto;padding:0 20px}
+  .rg-wrap{position:relative;margin-top:14px}
+  .rg-wrap::before{
+    content:""; position:absolute; inset:-18px -22px; border-radius:18px;
+    background:
+      radial-gradient(140% 160% at 10% 0%, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 45%),
+      linear-gradient(135deg, rgba(22,22,24,.88) 0%, rgba(16,16,18,.86) 100%);
+    border:1px solid rgba(255,255,255,.10); backdrop-filter: blur(6px) saturate(115%);
+    box-shadow:0 22px 44px rgba(0,0,0,.50); z-index:0
+  }
+  .rg-inner{position:relative;z-index:1;padding:28px 24px 24px}
+  .rg-badge{width:370px;max-width:90vw;margin:0 auto;margin-top:-22px;background:#0c0c0c;border-radius:16px;
+    box-shadow:0 16px 30px rgba(0,0,0,.55), inset 0 -8px 22px rgba(0,0,0,.22);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px 16px 12px}
+  .rg-badge i{font-size:82px;color:#fff;filter:drop-shadow(0 10px 30px rgba(0,0,0,.6))}
+  .rg-chip{margin-top:12px;background:var(--accent);color:#fff;padding:8px 18px;border-radius:999px;font-weight:800;letter-spacing:.2px}
+
+  /* ===== Chips de resumen (mismo header oscuro que rector) ===== */
+  :root{
+    /* tokens de la cabecera de tablas de rector (fallbacks si no existieran) */
+    --panel-dark:   #0f172a;
+    --panel-darker: #0b1220;
+  }
+  .meta-tags{display:flex;flex-wrap:wrap;gap:10px;margin:16px 2px 10px}
+  .meta-tag{
+    background:linear-gradient(180deg,var(--panel-dark),var(--panel-darker));
+    color:#fff;border:1px solid rgba(255,255,255,.08);
+    padding:8px 12px;border-radius:12px;font-weight:900;letter-spacing:.2px;
+    box-shadow:0 8px 16px rgba(0,0,0,.28)
+  }
+
+  /* ===== Tarjeta & tabla ===== */
+  .table-card{
+    background:#fff;border-radius:16px;box-shadow:0 12px 30px rgba(0,0,0,.18);
+    border:1px solid #e5e9f2; overflow:hidden
+  }
+  .table-responsive{width:100%;max-height:460px;overflow:auto;background:#eef2f6}
+  .table-responsive::-webkit-scrollbar{height:10px;width:10px}
+  .table-responsive::-webkit-scrollbar-thumb{background:#9aa4b2;border-radius:999px}
+  .table-responsive::-webkit-scrollbar-track{background:#e6ebf3;border-radius:999px}
+
+  table.tabla{width:100%;border-collapse:separate;border-spacing:0 10px}
+
+  /* Header de tabla con los mismos colores que rector */
+  .tabla thead th{
+    position:sticky; top:0; z-index:4;
+    background:linear-gradient(180deg,var(--panel-dark),var(--panel-darker));
+    color:#fff;font-weight:900;text-transform:uppercase;letter-spacing:.3px;
+    text-align:left;padding:14px 16px; box-shadow:0 4px 0 rgba(255,255,255,.04)
+  }
+  .tabla th:nth-child(1){width:42%}
+  .tabla th:nth-child(2){width:16%}
+  .tabla th:nth-child(3){width:16%}
+  .tabla th:nth-child(4){width:10%}
+  .tabla th:nth-child(5){width:16%}
+
+  /* Filas “card” */
+  .tabla tbody td{
+    background:#fff; color:#0b1220; border:1px solid #e6ebf3;
+    padding:14px 16px; vertical-align:middle;
+    transition: filter .12s ease, box-shadow .12s ease, background .12s ease
+  }
+  .tabla tbody tr td:first-child{border-top-left-radius:12px;border-bottom-left-radius:12px;border-left-width:1px}
+  .tabla tbody tr td:last-child {border-top-right-radius:12px;border-bottom-right-radius:12px;border-right-width:1px}
+  .tabla tbody tr:hover td{filter:saturate(110%); box-shadow:0 8px 18px rgba(2,6,23,.08); background:#fff}
+
+  /* Congelar primera columna (como rector) */
+  .tabla thead th:first-child{left:0; z-index:5}
+  .tabla tbody td:first-child{position:sticky; left:0; z-index:3; background:#fff; box-shadow:1px 0 0 #e6ebf3}
+
+  /* Tipografías */
+  .alum{font-weight:900;letter-spacing:.2px}
+  .doc{opacity:.9;font-weight:800;font-variant-numeric:tabular-nums;
+       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+
+  /* Inputs con focus en el color institucional (var(--accent)) */
+  .inp-nota, .inp-fallas{
+    width:118px;height:40px;border:1px solid #cfd8dc;border-radius:10px;background:#f8fafc;
+    padding:0 10px;font-weight:800;text-align:center;font-variant-numeric:tabular-nums; letter-spacing:.2px;
+    transition:border-color .12s ease, box-shadow .12s ease, background .12s ease
+  }
+  .inp-fallas{width:96px}
+  .inp-nota:focus, .inp-fallas:focus{
+    outline:none; border-color: var(--accent);
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); background:#fff
+  }
+  .inp-nota::-webkit-outer-spin-button,
+  .inp-nota::-webkit-inner-spin-button,
+  .inp-fallas::-webkit-outer-spin-button,
+  .inp-fallas::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0 }
+
+  /* Botón Guardar: exactamente el acento institucional */
+  .tabla [data-guardar-nota].rg-btn{
+    height:40px;min-width:132px;border-radius:10px;
+    background:var(--accent);
+    box-shadow:0 12px 22px color-mix(in srgb, var(--accent) 28%, transparent);
+    font-weight:900; letter-spacing:.2px
+  }
+  .tabla [data-guardar-nota].rg-btn:hover{transform:translateY(-1px)}
+  .tabla [data-guardar-nota].rg-btn:disabled{opacity:.55;box-shadow:none;cursor:not-allowed}
+
+  .tabla td.actions{position:relative}
+  .tabla .save-status{position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:.86rem; font-weight:800; color:#059669}
+
+  .msg{display:grid; place-items:center; height:82px; color:#334155; font-weight:800}
+
+  @media (max-width: 900px){
+    .tabla th:nth-child(2), .tabla td:nth-child(2){display:none}
+    .tabla th:nth-child(1){width:auto}
+  }
+</style>
+{% endblock %}
+
+
+{% block content %}
+  <div class="page-title">Registro de notas</div>
+
+  <main class="main" role="main">
+    <section class="rg" aria-label="Registro por grupo">
+      <div class="rg-wrap">
+        <div class="rg-inner">
+          <div class="rg-badge" aria-hidden="true">
+            <i class="fa-solid fa-clipboard-list"></i>
+            <div class="rg-chip">TABLA</div>
+          </div>
+
+          <!-- Resumen como chips -->
+          <div id="resumen-tags" class="meta-tags"></div>
+
+          <div class="table-card">
+            <div class="table-responsive">
+              <table class="tabla" id="tabla-estudiantes" aria-label="Tabla de estudiantes del grupo">
+                <thead>
+                  <tr>
+                    <th>Estudiante</th>
+                    <th>Documento</th>
+                    <th>Nota (1.00–5.00)</th>
+                    <th>Fallas</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td colspan="5"><div class="msg">Cargando…</div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="rg-actions" style="margin-top:16px">
+            <a href="{% url 'docente_registro_notas_filtro' %}" class="rg-btn rg-btn--ghost">Volver a filtros</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'core/js/registro_notas_docente_api.js' %}"></script>
+<script>
+  /* ========= LECTURA DE PARÁMETROS ========= */
+  const qs = new URLSearchParams(window.location.search);
+  const sede_id       = qs.get("sede_id");
+  const grado_id      = qs.get("grado_id");
+  const grupo_id      = qs.get("grupo_id");
+  const area_id       = qs.get("area_id");
+  const asignatura_id = qs.get("asignatura_id");
+  const periodo_id    = qs.get("periodo_id");
+
+  if (!grupo_id || !asignatura_id || !periodo_id) {
+    window.location.href = "{% url 'docente_registro_notas_filtro' %}";
+  }
+
+  /* ========= Helpers ========= */
+  async function j(url){
+    try{
+      const r = await fetch(url, {headers:{'Accept':'application/json'}});
+      if (!r.ok) return {__error__: true, status: r.status, url};
+      return await r.json();
+    }catch(e){
+      return {__error__: true, err: String(e), url};
+    }
+  }
+
+  const $tags = document.getElementById("resumen-tags");
+  function addTag(label, value){
+    const s = document.createElement("span");
+    s.className = "meta-tag";
+    s.textContent = `${label}: ${value}`;
+    $tags.appendChild(s);
+  }
+
+  /* ========= Resumen (nombres) ========= */
+  (async () => {
+    const pj = await j("{% url 'api_docente_periodos_abiertos' %}");
+    const per = (pj?.periodos || []).find(x => String(x.id) === String(periodo_id));
+    addTag("Periodo", per?.nombre || periodo_id);
+
+    if (sede_id){
+      const sj = await j("{% url 'api_docente_sedes' %}");
+      const sede = (sj?.sedes || []).find(x => String(x.id) === String(sede_id));
+      addTag("Sede", sede?.nombre || sede_id);
+    }
+    if (grado_id && sede_id){
+      const gj = await j("{% url 'api_docente_grados_por_sede' %}?sede_id=" + encodeURIComponent(sede_id));
+      const grado = (gj?.grados || []).find(x => String(x.id) === String(grado_id));
+      addTag("Grado", grado?.nombre || grado_id);
+    }
+    if (sede_id && grado_id){
+      const grj = await j("{% url 'api_docente_grupos_por_sede_grado' %}?sede_id=" + encodeURIComponent(sede_id) + "&grado_id=" + encodeURIComponent(grado_id));
+      const grupo = (grj?.grupos || []).find(x => String(x.id) === String(grupo_id));
+      addTag("Grupo", grupo?.nombre || grupo_id);
+    }
+    if (area_id && grupo_id){
+      const aj = await j("{% url 'api_docente_areas_por_grupo' %}?grupo_id=" + encodeURIComponent(grupo_id));
+      const area = (aj?.areas || []).find(x => String(x.id) === String(area_id));
+      addTag("Área", area?.nombre || area_id);
+    }
+    if (grupo_id && area_id){
+      const asj = await j("{% url 'api_docente_asignaturas_por_grupo_area' %}?grupo_id=" + encodeURIComponent(grupo_id) + "&area_id=" + encodeURIComponent(area_id));
+      const asig = (asj?.asignaturas || []).find(x => String(x.id) === String(asignatura_id));
+      addTag("Asignatura", asig?.nombre || asignatura_id);
+    }
+  })();
+
+  /* ========= Tabla: estudiantes + notas ========= */
+  const $tbody = document.querySelector("#tabla-estudiantes tbody");
+  function putMsg(text){
+    $tbody.innerHTML = `<tr><td colspan="5" style="padding:20px"><div class="msg">${text}</div></td></tr>`;
+  }
+
+  async function cargarTabla(){
+    putMsg("Cargando…");
+
+    const estResp = await j("{% url 'api_docente_estudiantes_por_grupo' %}?grupo_id=" + encodeURIComponent(grupo_id));
+    if (estResp.__error__) { putMsg("No se pudieron cargar los estudiantes ("+(estResp.status||estResp.err||"")+")"); return; }
+    const estudiantes = estResp.estudiantes || [];
+
+    let notasMap = new Map();
+    const notasUrl = "{% url 'api_docente_notas_por_grupo_asignatura_periodo' %}?grupo_id=" + encodeURIComponent(grupo_id) +
+                     "&asignatura_id=" + encodeURIComponent(asignatura_id) +
+                     "&periodo_id=" + encodeURIComponent(periodo_id);
+    const notasResp = await j(notasUrl);
+    if (!notasResp.__error__){
+      const notas = notasResp.notas || [];
+      notas.forEach(n => notasMap.set(String(n.estudiante_id), n));
+    }
+
+    $tbody.innerHTML = "";
+    if (!estudiantes.length){
+      putMsg("No hay estudiantes en este grupo.");
+      return;
+    }
+
+    for (const e of estudiantes){
+      const n = notasMap.get(String(e.id)) || {};
+      const nota   = (n.nota   != null) ? Number(n.nota).toFixed(2) : "";
+      const fallas = (n.fallas != null) ? String(n.fallas) : "0";
+
+      const tr = document.createElement("tr");
+      tr.setAttribute("data-row-estudiante", e.id);
+      tr.setAttribute("data-asignatura-id",  asignatura_id);
+      tr.setAttribute("data-periodo-id",     periodo_id);
+
+      tr.innerHTML = `
+        <td class="alum"><span>${(e.apellidos ?? "").toUpperCase()}</span>${e.apellidos ? ", " : ""}${(e.nombre ?? "").toUpperCase()}</td>
+        <td class="doc">${e.documento ?? ""}</td>
+        <td><input class="inp-nota"   type="number" min="1" max="5" step="0.01" value="${nota}"   data-saved-value="${nota}"></td>
+        <td><input class="inp-fallas" type="number" min="0" step="1"    value="${fallas}" data-saved-value="${fallas}"></td>
+        <td class="actions"><button type="button" class="rg-btn" data-guardar-nota>Guardar</button><span class="save-status"></span></td>
+      `;
+      $tbody.appendChild(tr);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", cargarTabla);
+</script>
+{% endblock %}

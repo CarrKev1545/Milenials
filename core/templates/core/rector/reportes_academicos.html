@@ -1,0 +1,51 @@
+{% extends "core/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Reportes Académicos{% endblock %}
+
+{% block content %}
+  <section class="re" aria-label="Reportes Académicos">
+    <h2 class="re-title">Reportes Académicos</h2>
+
+    <div class="re-wrap">
+      <div class="re-left">
+        <div class="re-avatar"><i class="fa-solid fa-clipboard-list"></i></div>
+        <p style="margin-top:10px;opacity:.9;">Descarga reportes por curso, periodo y área.</p>
+      </div>
+
+      <div class="re-right">
+        <form class="re-form">
+          <div class="re-field">
+            <span class="re-ico"><i class="fa-solid fa-school"></i></span>
+            <select>
+              <option disabled selected>Selecciona sede</option>
+              <option>Sede A</option><option>Sede B</option>
+            </select>
+            <span class="re-caret"><i class="fa-solid fa-chevron-down"></i></span>
+          </div>
+          <div class="re-field">
+            <span class="re-ico"><i class="fa-solid fa-layer-group"></i></span>
+            <select>
+              <option disabled selected>Selecciona grado</option>
+              <option>6º</option><option>7º</option>
+            </select>
+            <span class="re-caret"><i class="fa-solid fa-chevron-down"></i></span>
+          </div>
+          <div class="re-field">
+            <span class="re-ico"><i class="fa-solid fa-calendar-days"></i></span>
+            <select>
+              <option disabled selected>Periodo</option>
+              <option>I</option><option>II</option><option>III</option><option>IV</option>
+            </select>
+            <span class="re-caret"><i class="fa-solid fa-chevron-down"></i></span>
+          </div>
+        </form>
+
+        <div class="re-actions">
+          <button class="re-btn" type="button">Generar PDF</button>
+          <button class="re-btn re-btn--ghost" type="button">Exportar Excel</button>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

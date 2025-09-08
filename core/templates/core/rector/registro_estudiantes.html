@@ -1,0 +1,138 @@
+{% extends "core/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Registro Estudiantes{% endblock %}
+
+{% block content %}
+<section class="re" aria-labelledby="titulo-re">
+  <h1 id="titulo-re" class="re-title">Registro Estudiantes</h1>
+
+  <div class="re-wrap">
+    <!-- Columna izquierda: avatar -->
+    <aside class="re-left" aria-label="Avatar estudiante">
+      <div class="re-avatar" aria-hidden="true">
+        <i class="fa-solid fa-user-graduate" aria-hidden="true"></i>
+      </div>
+    </aside>
+
+    <!-- Columna derecha: formulario + acciones -->
+    <div class="re-right">
+      <form id="re-form" class="re-form" autocomplete="off" novalidate>
+        {% csrf_token %}
+
+        <!-- Nombre -->
+        <label class="re-field" for="re-nombre">
+          <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+          <input id="re-nombre" name="nombre" type="text"
+                 placeholder="Nombre" aria-label="Nombre"
+                 pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$"
+                 title="El nombre solo puede contener letras y espacios"
+                 required />
+        </label>
+
+        <!-- Apellidos -->
+        <label class="re-field" for="re-apellido">
+          <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-user-pen"></i></span>
+          <input id="re-apellido" name="apellidos" type="text"
+                 placeholder="Apellidos" aria-label="Apellidos"
+                 pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$"
+                 title="Los apellidos solo pueden contener letras y espacios"
+                 required />
+        </label>
+
+        <!-- Número de documento -->
+        <label class="re-field" for="re-documento">
+          <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-id-card"></i></span>
+          <input id="re-documento" name="documento" type="text" inputmode="numeric"
+                 placeholder="Número de documento" aria-label="Número de documento"
+                 required />
+        </label>
+      </form>
+
+      <!-- Acciones -->
+      <div class="re-actions">
+        <button id="btn-crear" type="submit" form="re-form" class="re-btn">Crear</button>
+        <button type="reset" form="re-form" class="re-btn re-btn--ghost">Eliminar datos</button>
+      </div>
+
+      <!-- Mensaje dinámico -->
+      <div id="re-msg" class="re-msg" role="alert" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  const form   = document.getElementById('re-form');
+  const nombre = document.getElementById('re-nombre');
+  const ape    = document.getElementById('re-apellido');
+  const doc    = document.getElementById('re-documento');
+  const msg    = document.getElementById('re-msg');
+
+  // Solo dígitos en documento
+  doc?.addEventListener('input', () => {
+    doc.value = doc.value.replace(/\D+/g, '').slice(0, 20);
+  });
+
+  // Validación personalizada de letras en nombre y apellidos
+  function soloLetras(valor) {
+    return /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/.test(valor);
+  }
+
+  // Interceptar submit -> AJAX
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    msg.textContent = "";
+
+    if (!nombre.value.trim() || !ape.value.trim() || !doc.value.trim()) {
+      msg.textContent = "Completa Nombre, Apellido y Documento.";
+      msg.style.color = "red";
+      return;
+    }
+
+    if (!soloLetras(nombre.value.trim())) {
+      msg.textContent = "El nombre solo puede contener letras y espacios.";
+      msg.style.color = "red";
+      return;
+    }
+
+    if (!soloLetras(ape.value.trim())) {
+      msg.textContent = "El apellido solo puede contener letras y espacios.";
+      msg.style.color = "red";
+      return;
+    }
+
+    try {
+      const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+      const resp = await fetch("{% url 'rector_registro_estudiantes_crear' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrftoken,
+        },
+        body: JSON.stringify({
+          nombre: nombre.value.trim(),
+          apellidos: ape.value.trim(),
+          documento: doc.value.trim(),
+        }),
+      });
+
+      const data = await resp.json();
+      if (data.ok) {
+        msg.textContent = data.msg;
+        msg.style.color = "green";
+        form.reset();
+      } else {
+        msg.textContent = data.msg || "Error en el registro.";
+        msg.style.color = "red";
+      }
+    } catch (err) {
+      msg.textContent = "Error de conexión con el servidor.";
+      msg.style.color = "red";
+    }
+  });
+})();
+</script>
+{% endblock %}

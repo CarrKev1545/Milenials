@@ -1,0 +1,42 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}Login{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'css/login.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="login-wrapper">
+  <section class="login-card" aria-label="Formulario de inicio de sesión">
+    <img class="avatar" src="{% static 'img/logo2.jpeg' %}" alt="Logo institucional">
+    <h1 class="login-title">MILLENNIALS</h1>
+
+    <form class="login-form" action="" method="post" novalidate>
+      {% csrf_token %}
+
+      {% if error %}
+        <p class="error-message">{{ error }}</p>
+      {% endif %}
+
+      <label for="usuario" class="field-label">Usuario</label>
+      <input id="usuario" name="usuario" type="text"
+             class="field-control" placeholder="Entrar Username"
+             autocomplete="username" required>
+
+      <label for="password" class="field-label">Contraseña</label>
+      <input id="password" name="password" type="password"
+             class="field-control" placeholder="Entrar Password"
+             autocomplete="current-password" required>
+
+      <button type="submit" class="btn-login">Log In</button>
+      <a class="forgot" href="#" tabindex="0">¿Ha perdido su contraseña?</a>
+    </form>
+  </section>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'js/login.js' %}" defer></script>
+{% endblock %}

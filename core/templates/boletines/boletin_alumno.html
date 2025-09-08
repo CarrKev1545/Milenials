@@ -1,0 +1,191 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Boletín Académico - {{ colegio.nombre|default:"IE Departamental G.U.R." }}</title>
+
+  <!-- Preload (opcional) -->
+  <link rel="preload" as="image" href="{% static 'boletin/img/EscudoCundinamarca.jpg' %}">
+  <link rel="preload" as="image" href="{% static 'boletin/img/EscudoColegio.jpg' %}">
+
+  <!-- CSS del boletín -->
+  <link rel="stylesheet" href="{% static 'boletin/boletin.css' %}">
+</head>
+<body>
+
+  <!-- Acciones (no imprimen) -->
+  <section class="actions no-print">
+    <button id="btnPDF">Descargar PDF</button>
+    <button class="primary" id="btnExcel">Exportar a Excel</button>
+  </section>
+
+  {% for b in boletines %}
+  <div class="page"><!-- una página por estudiante -->
+
+    <!-- Encabezado -->
+    <header class="header">
+      <div class="logo left">
+        <img src="{% static 'boletin/img/EscudoCundinamarca.jpg' %}" alt="Escudo de Cundinamarca" />
+      </div>
+
+      <div class="header-center">
+        <h1>{{ colegio.nombre|default:"IE Departamental Gustavo Uribe Ramírez" }}</h1>
+        <p class="subtitle">{{ colegio.subtitulo|default:"Secretaría de Educación de Cundinamarca – Granada" }}</p>
+        <p class="doc-title">Boletín Académico</p>
+      </div>
+
+      <div class="logo right">
+        <img src="{% static 'boletin/img/EscudoColegio.jpg' %}" alt="Escudo de la Institución" />
+      </div>
+    </header>
+    <div class="header-line"></div>
+
+    <!-- Datos -->
+    <section class="meta-summary">
+      <div class="meta meta-boxed">
+        <div class="row"><span class="k">Apellidos:</span>      <span class="value box ch-28">{{ b.apellidos }}</span></div>
+        <div class="row"><span class="k">Nombres:</span>        <span class="value box ch-28">{{ b.nombres }}</span></div>
+        <div class="row"><span class="k">Identificación:</span> <span class="value box ch-14">{{ b.identificacion }}</span></div>
+        <div class="row"><span class="k">Sede:</span>           <span class="value box ch-34">{{ b.sede }}</span></div>
+      </div>
+
+      <div class="meta-right">
+        <div class="mini-row">
+          <span class="k">Jornada:</span>
+          <span class="value box ch-14">{{ b.jornada }}</span>
+        </div>
+
+        <div class="mini-grid">
+          <div class="mini-row">
+            <span class="k">Año:</span>
+            <span class="value box ch-6">{{ b.anio }}</span>
+          </div>
+          <div class="mini-row">
+            <span class="k">Periodo:</span>
+            <span class="value box ch-6">{{ b.periodo }}</span>
+          </div>
+          <div class="mini-row">
+            <span class="k">Grado:</span>
+            <span class="value box ch-6">{{ b.grado }}</span>
+          </div>
+          <div class="mini-row">
+            <span class="k">Grupo:</span>
+            <span class="value box ch-8">{{ b.grupo }}</span>
+          </div>
+          <div class="mini-row span-2">
+            <span class="k">Fecha de creación:</span>
+            <span class="value box ch-14">{{ b.fecha|default:fecha_generacion }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Métricas -->
+    <section class="metrics-row">
+      <div class="summary one-row">
+        <article class="card metric">
+          <div class="metric-top">Promedio del estudiante</div>
+          <div class="metric-main">{{ b.promedio|default:"—" }}</div>
+        </article>
+        <article class="card metric">
+          <div class="metric-top">Puesto ante el grupo</div>
+          <div class="metric-main">{{ b.puesto_grupo|default:"—" }}</div>
+        </article>
+        <article class="card metric">
+          <div class="metric-top">Puesto ante el grado</div>
+          <div class="metric-main">{{ b.puesto_grado|default:"—" }}</div>
+        </article>
+        <article class="card metric">
+          <div class="metric-top">Puesto institucional</div>
+          <div class="metric-main">{{ b.puesto_institucional|default:"—" }}</div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Tabla de notas -->
+    <section class="table-wrap">
+      <table class="grades" id="tablaNotas">
+        <thead>
+          <tr>
+            <th class="col-area">ÁREA Y ASIGNATURA</th>
+            <th class="col-p">P1</th>
+            <th class="col-p">P2</th>
+            <th class="col-p">P3</th>
+            <th class="col-final">FINAL</th>
+            <th class="col-nivel">NIVEL DESEMPEÑO</th>
+            <th class="col-fallas">FALLAS</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in b.rubrica %}
+            {% if r.tipo == 'area' %}
+              <tr class="area-row">
+                <td class="area-name">{{ r.nombre|upper }}</td>
+                <td>{{ r.p1 }}</td>
+                <td>{{ r.p2 }}</td>
+                <td>{{ r.p3 }}</td>
+                <td class="{% if r.final_perdida %}nota-roja{% endif %}">{{ r.final }}</td>
+                <td class="{% if r.nivel_perdida %}nota-roja{% endif %}">{{ r.nivel }}</td>
+                <td></td>
+              </tr>
+            {% else %}
+              <tr class="subject-row">
+                <td>{{ r.nombre|title }}</td>
+                <td class="{% if r.p1_perdida %}nota-roja{% endif %}">{{ r.p1 }}</td>
+                <td class="{% if r.p2_perdida %}nota-roja{% endif %}">{{ r.p2 }}</td>
+                <td class="{% if r.p3_perdida %}nota-roja{% endif %}">{{ r.p3 }}</td>
+                <td class="{% if r.final_perdida %}nota-roja{% endif %}">{{ r.final }}</td>
+                <td class="{% if r.nivel_perdida %}nota-roja{% endif %}">{{ r.nivel }}</td>
+                <td>{{ r.fallas }}</td>
+              </tr>
+            {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Leyenda -->
+    <section class="legend">
+      <strong>Convenciones:</strong>
+      <span class="chip"><span class="badge s">S</span> Desempeño Superior</span>
+      <span class="chip"><span class="badge a">A</span> Desempeño Alto</span>
+      <span class="chip"><span class="badge bs">Bs</span> Desempeño Básico</span>
+      <span class="chip"><span class="badge d">Bj</span> Desempeño Bajo</span>
+    </section>
+
+    <!-- Diagnóstico -->
+    <section class="diagnostico">
+      <h3>Diagnóstico / Análisis del estudiante</h3>
+      <div class="diag-box">{{ b.diagnostico|default_if_none:"" }}</div>
+      <p class="diag-hint">Este espacio es para registrar observaciones y conclusiones del periodo.</p>
+    </section>
+
+    <!-- Firmas -->
+    <section class="sign">
+      <div class="sign-col">
+        <div class="line"></div>
+        <p>Docente Director(a) de Grupo</p>
+      </div>
+      <div class="sign-col">
+        <div class="line"></div>
+        <p>Coordinadora Académica<br>Maria Lucy Gutierrez Villarraga</p>
+      </div>
+      <div class="sign-col">
+        <div class="line"></div>
+        <p>Rector<br>Jairo Gutiérrez Beltrán</p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>Generado por el sistema académico — <strong>Millennials</strong></p>
+    </footer>
+
+  </div><!-- /.page -->
+  {% endfor %}
+
+  <!-- JS del boletín -->
+  <script src="{% static 'boletin/boletin.js' %}"></script>
+</body>
+</html>

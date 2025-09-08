@@ -1,0 +1,63 @@
+{% extends "core/base_dashboard_docente.html" %}
+{% load static %}
+
+{% block title %}Reportes académicos — Tabla{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-title{position:sticky;top:var(--navbar-height);z-index:40;background:var(--accent);color:#fff;font-weight:800;letter-spacing:.2px;text-align:center;padding:10px 12px;box-shadow:0 4px 12px rgba(0,0,0,.35)}
+  .rg{width:100%;max-width:1180px;margin:0 auto;padding:0 20px}
+  .table-card{background:#fff;border-radius:16px;box-shadow:0 12px 30px rgba(0,0,0,.18);border:1px solid #e5e9f2;overflow:hidden;margin-top:16px}
+  .table-responsive{width:100%;overflow-x:auto}
+  table.tabla{width:100%;border-collapse:separate;border-spacing:0}
+  .tabla thead th{background:#0f172a;color:#fff;font-weight:900;text-align:left;padding:12px 14px;letter-spacing:.2px}
+  .tabla tbody td{padding:12px 14px;border-top:1px solid #eef2f6;background:#fff}
+  .tabla tbody tr:nth-child(odd) td{background:#fbfdff}
+  .alum{font-weight:800;letter-spacing:.2px}
+  .doc{opacity:.85}
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="page-title">Reportes académicos</div>
+
+  <main class="main" role="main">
+    <section class="rg">
+      <div class="table-card">
+        <div class="table-responsive">
+          <table class="tabla">
+            <thead>
+              <tr><th>Estudiante</th><th>Documento</th></tr>
+            </thead>
+            <tbody id="tbody">
+              <tr><td colspan="2">Cargando…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+  const qs = new URLSearchParams(location.search);
+  const grupo_id = qs.get("grupo_id");
+
+  async function j(url){ try{ const r=await fetch(url,{headers:{'Accept':'application/json'}}); return await r.json(); }catch{return{}} }
+  const $tbody = document.getElementById('tbody');
+
+  (async()=>{
+    const r = await j("{% url 'api_docente_estudiantes_por_grupo' %}?grupo_id="+encodeURIComponent(grupo_id));
+    const alumnos = r.estudiantes || [];
+    if (!alumnos.length){ $tbody.innerHTML = '<tr><td colspan="2">No hay estudiantes.</td></tr>'; return; }
+    $tbody.innerHTML = '';
+    alumnos.forEach(a=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="alum">${(a.apellidos||"").toUpperCase()}${a.apellidos?', ':''}${(a.nombre||"").toUpperCase()}</td><td class="doc">${a.documento||''}</td>`;
+      $tbody.appendChild(tr);
+    });
+  })();
+</script>
+{% endblock %}

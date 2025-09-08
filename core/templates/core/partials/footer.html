@@ -1,0 +1,27 @@
+{% load static %}
+
+<footer class="site-footer" role="contentinfo" aria-label="Pie de página del sitio">
+  <div class="footer-inner">
+    <div class="footer-left">
+      <img src="{% static 'img/logo2.jpeg' %}" alt="Logo colegio" class="footer-logo">
+      <div class="footer-school">
+        <div class="school-name">Nombre del Colegio</div>
+        <div class="school-sub">Sede / Ciudad</div>
+      </div>
+    </div>
+
+    <div class="footer-center">
+      Dirección: Calle Falsa 123<br>
+      Tel: (+57) 300 000 0000 · Email: info@colegio.edu.co
+    </div>
+
+    <div class="footer-right">
+      <nav class="footer-links">
+        <a href="#">Privacidad</a>
+        <a href="#">Términos</a>
+        <a href="#">Contacto</a>
+      </nav>
+      <div class="copyright">© {% now "Y" %} Nombre del Colegio</div>
+    </div>
+  </div>
+</footer>

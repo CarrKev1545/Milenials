@@ -1,0 +1,38 @@
+{% extends "core/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Panel del Rector{% endblock %}
+
+{% block content %}
+<div class="cards" aria-label="Accesos rápidos">
+  <!-- Registro de notas -->
+  <article class="card" role="button" tabindex="0"
+           aria-label="Registro de notas"
+           data-link="{% url 'rector_registro_notas' %}">
+    <div class="card-box">
+      <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+    </div>
+    <a class="label" href="{% url 'rector_registro_notas' %}">Registro notas</a>
+  </article>
+
+  <!-- Registro de estudiantes -->
+  <article class="card" role="button" tabindex="0"
+           aria-label="Registro de estudiantes"
+           data-link="{% url 'rector_registro_estudiantes' %}">
+    <div class="card-box">
+      <i class="fa-solid fa-user-graduate" aria-hidden="true"></i>
+    </div>
+    <a class="label" href="{% url 'rector_registro_estudiantes' %}">Registro estudiantes</a>
+  </article>
+
+  <!-- Reportes académicos -->
+  <article class="card" role="button" tabindex="0"
+           aria-label="Reportes académicos"
+           data-link="{% url 'rector_reportes_academicos' %}">
+    <div class="card-box">
+      <i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>
+    </div>
+    <a class="label" href="{% url 'rector_reportes_academicos' %}">Reportes académicos</a>
+  </article>
+</div>
+{% endblock %}

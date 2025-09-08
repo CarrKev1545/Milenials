@@ -1,0 +1,26 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Millennials{% endblock %}</title>
+  <link rel="icon" href="{% static 'img/icono.ico' %}">
+  {% block extra_css %}{% endblock %}
+  <style>
+    /* Reset mínimo para evitar márgenes raros */
+    html, body { height: 100%; margin: 0; }
+  </style>
+</head>
+<body>
+  {% if request.user.is_authenticated %}
+    <div class="topbar" style="padding:8px 12px; background:#111; color:#fff;">
+      Millennials — Usuario: {{ request.user.usuario }} | Rol: {{ request.user.rol }}
+      <a href="{% url 'logout' %}" style="color:#fff; margin-left:12px;">Cerrar sesión</a>
+    </div>
+  {% endif %}
+
+  {% block content %}{% endblock %}
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

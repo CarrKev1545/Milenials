@@ -1,0 +1,199 @@
+{% extends "core/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Registro de Notas{% endblock %}
+
+{% block content %}
+  <section class="rd" aria-label="Registro de Notas">
+    <h2 class="rd-title">Registro de Notas</h2>
+
+    <div class="rd-wrap">
+      <div class="rd-left">
+        <div class="rd-avatar"><i class="fa-solid fa-user-plus"></i></div>
+
+        <!-- Buscar estudiante por documento -->
+        <div class="rd-left-row">
+          <label class="rd-left-label" for="rd-doc">Documento del estudiante</label>
+          <div class="rd-left-input">
+            <input id="rd-doc" type="text" placeholder="Sólo dígitos (5–20)" autocomplete="off">
+          </div>
+        </div>
+
+        <!-- Resultado estudiante -->
+        <div id="rd-est-info" class="rd-left-row" style="margin-top:.5rem; font-weight:700;"></div>
+        <div id="rd-est-adv"  class="rd-left-row" style="margin-top:.25rem; color:#b91c1c;"></div>
+        <!-- guardo ids aquí -->
+        <input type="hidden" id="rd-est-id" value="">
+        <input type="hidden" id="rd-grupo-id" value="">
+      </div>
+
+      <div class="rd-right">
+        <!-- CSRF oculto para el helper -->
+        <form id="csrf-holder" style="display:none">{% csrf_token %}</form>
+
+        <form class="rd-form" id="rd-form" autocomplete="off" novalidate>
+          <!-- ASIGNATURA del grupo activo -->
+          <div class="rd-field">
+            <span class="rd-ico"><i class="fa-solid fa-book"></i></span>
+            <select id="rd-asignatura" required disabled>
+              <option value="">Asignatura (del grupo activo)</option>
+            </select>
+            <span class="rd-caret"><i class="fa-solid fa-chevron-down"></i></span>
+          </div>
+
+          <!-- PERIODO (abiertos) -->
+          <div class="rd-field">
+            <span class="rd-ico"><i class="fa-solid fa-calendar-days"></i></span>
+            <select id="rd-periodo" required disabled>
+              <option value="">Periodo (abierto)</option>
+            </select>
+            <span class="rd-caret"><i class="fa-solid fa-chevron-down"></i></span>
+          </div>
+
+          <!-- NOTA -->
+          <div class="rd-field">
+            <span class="rd-ico"><i class="fa-solid fa-pen"></i></span>
+            <input id="rd-nota" type="number" step="0.1" min="1.0" max="5.0" placeholder="Nota (1.0 – 5.0)">
+          </div>
+
+          <!-- FALLAS (opcional) -->
+          <div class="rd-field">
+            <span class="rd-ico"><i class="fa-solid fa-user-clock"></i></span>
+            <input id="rd-fallas" type="number" step="1" min="0" placeholder="Fallas (opcional)" value="0">
+          </div>
+        </form>
+
+        <div class="rd-actions">
+          <button class="btn-rect" type="button" id="rd-guardar">Guardar nota</button>
+          <button class="btn-rect btn-rect--ghost" type="button" id="rd-cancelar">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+
+{% block extra_js %}
+<!-- helper: getCSRF() + guardarNota(...) -->
+<script src="{% static 'core/js/registro_notas_api.js' %}"></script>
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+
+  const $doc        = $('#rd-doc');
+  const $info       = $('#rd-est-info');
+  const $adv        = $('#rd-est-adv');
+  const $estId      = $('#rd-est-id');
+  const $grupoId    = $('#rd-grupo-id');
+  const $asig       = $('#rd-asignatura');
+  const $per        = $('#rd-periodo');
+  const $nota       = $('#rd-nota');
+  const $fallas     = $('#rd-fallas');
+  const $btnSave    = $('#rd-guardar');
+  const $btnCancel  = $('#rd-cancelar');
+
+  function clearSelect(sel, ph){
+    sel.innerHTML = ''; const o=document.createElement('option');
+    o.value=''; o.textContent = ph; sel.appendChild(o);
+  }
+  function disable(el, on=true){ el.disabled = !!on; }
+
+  // 1) Cargar periodos abiertos de una vez
+  async function cargarPeriodos(){
+    try{
+      const r = await fetch("{% url 'api_periodos_abiertos' %}");
+      const data = await r.json();
+      clearSelect($per, 'Periodo (abierto)');
+      (data.periodos||[]).forEach(p=>{
+        const o=document.createElement('option');
+        o.value=p.id; o.textContent=p.nombre; $per.appendChild(o);
+      });
+      disable($per, false);
+    }catch(_){
+      clearSelect($per, 'No se pudieron cargar periodos');
+    }
+  }
+  cargarPeriodos();
+
+  // 2) Al digitar documento -> buscar estudiante + grupo activo + asignaturas del grupo
+  async function buscarPorDocumento(doc){
+    $info.textContent=''; $adv.textContent='';
+    $estId.value=''; $grupoId.value='';
+    clearSelect($asig, 'Asignatura (del grupo activo)'); disable($asig, true);
+
+    doc = (doc||'').trim();
+    if(!doc) return;
+
+    try{
+      // a) estudiante por documento
+      const e = await fetch("{% url 'api_estudiante_por_documento' %}?documento="+encodeURIComponent(doc))
+                        .then(r=>r.json());
+      if(!e || !e.ok || !e.estudiante){
+        $adv.textContent='No se encontró el estudiante.';
+        return;
+      }
+      const est = e.estudiante;
+      $estId.value = est.id;
+      $info.textContent = `Estudiante: ${est.apellidos} ${est.nombre}  (ID: ${est.id})`;
+
+      // b) verificar grupo ACTIVO del estudiante (y obtenerlo)
+      const g = await fetch("{% url 'api_estudiante_en_grupo_por_documento' %}?documento="+encodeURIComponent(doc))
+                        .then(r=>r.json());
+      if(!g || !g.ok || !g.grupo){
+        $adv.textContent='El estudiante no tiene grupo activo.';
+        return;
+      }
+      const grupo_id = g.grupo.id;
+      $grupoId.value = grupo_id;
+
+      // c) cargar asignaturas de ese grupo
+      const a = await fetch("{% url 'api_asignaturas_por_grupo' %}?grupo_id="+grupo_id).then(r=>r.json());
+      clearSelect($asig, 'Asignatura (del grupo activo)');
+      (a.asignaturas||[]).forEach(x=>{
+        const o=document.createElement('option');
+        // usamos id de asignatura (NO ga_id) porque el endpoint de registrar_nota recibe "asignatura_id"
+        o.value=x.id; o.textContent=x.nombre;
+        $asig.appendChild(o);
+      });
+      disable($asig, false);
+
+    }catch(_){
+      $adv.textContent='Error consultando información. Intenta de nuevo.';
+    }
+  }
+
+  $doc.addEventListener('change', ()=>buscarPorDocumento($doc.value));
+  $doc.addEventListener('blur',   ()=>buscarPorDocumento($doc.value));
+  $doc.addEventListener('keyup', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); buscarPorDocumento($doc.value); }});
+
+  // 3) Guardar
+  $btnSave.addEventListener('click', async ()=>{
+    const estudiante_id = $estId.value;
+    const asignatura_id = $asig.value;
+    const periodo_id    = $per.value;
+    const nota          = $nota.value;
+    const fallas        = $fallas.value || '0';
+
+    if(!estudiante_id){ alert('Primero busca y selecciona un estudiante válido.'); return; }
+    if(!asignatura_id){ alert('Selecciona la asignatura.'); return; }
+    if(!periodo_id){    alert('Selecciona el periodo.'); return; }
+    if(!nota){          alert('Ingresa la nota (1.0 – 5.0).'); return; }
+
+    // Usa el helper (llama al endpoint rector_registrar_nota)
+    const res = await guardarNota(estudiante_id, asignatura_id, periodo_id, nota, fallas);
+    if(!res || res.ok !== true){
+      alert((res && res.msg) ? res.msg : 'No se pudo guardar la nota.');
+      return;
+    }
+    alert(res.msg || (res.accion === 'INSERT' ? 'Nota registrada.' : 'Nota actualizada.'));
+  });
+
+  // 4) Cancelar / limpiar
+  $btnCancel.addEventListener('click', ()=>{
+    $doc.value=''; $info.textContent=''; $adv.textContent='';
+    $estId.value=''; $grupoId.value='';
+    clearSelect($asig, 'Asignatura (del grupo activo)'); disable($asig,true);
+    $per.value=''; $nota.value=''; $fallas.value='0';
+  });
+})();
+</script>
+{% endblock %}

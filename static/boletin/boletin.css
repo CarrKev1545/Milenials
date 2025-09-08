@@ -1,0 +1,319 @@
+/* ===========================
+   Paleta institucional
+   =========================== */
+:root{
+  --verde:#2B7A0B;
+  --rojo:#B22222;
+  --negro:#1E1E1E;
+  --blanco:#FFFFFF;
+
+  --gris-700:#374151;
+  --gris-500:#6B7280;
+  --gris-300:#D1D5DB;
+  --borde:#9AA3AF;
+
+  --radius:16px;
+  --shadow:0 6px 18px rgba(0,0,0,.06);
+
+  /* tonos suaves para resaltar áreas */
+  --verde-soft:#EAF8F0;
+  --rojo-soft:#FBEAEA;
+}
+
+/* ===========================
+   Reset / base
+   =========================== */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--blanco); color:var(--gris-700);
+  font:14px/1.6 "Segoe UI", Roboto, Arial, Helvetica, "Noto Sans", sans-serif;
+  -webkit-print-color-adjust:exact; print-color-adjust:exact;
+}
+header,section,footer{width:min(1000px,94%);margin:0 auto}
+
+/* ===========================
+   ENCABEZADO (logos + título)
+   =========================== */
+.header{
+  display:grid;
+  grid-template-columns: 120px 1fr 120px;
+  align-items:center;
+  gap:16px;
+  padding:14px 0 12px;
+  position:relative;
+}
+.header-line{
+  width:100%;
+  height:4px;
+  background:var(--verde);
+  margin-top:-10px; /* opcional, ajustar para acercarla al header */
+}
+
+.logo{display:flex;justify-content:center;align-items:center}
+.logo img{
+  display:block;
+  max-width:100%;
+  max-height:90px;
+  height:auto; width:auto;
+  object-fit:contain;
+}
+.header-center{text-align:center}
+.header-center h1{margin:0;font-size:26px;line-height:1.25;color:var(--negro)}
+.subtitle{margin:6px 0 10px;color:var(--gris-500);font-size:13px}
+.doc-title{display:inline-block;padding:8px 18px;background:var(--rojo);color:#fff;border-radius:999px;font-weight:700;font-size:14px}
+
+/* ===========================
+   Acciones (fuera de PDF)
+   =========================== */
+.actions{display:flex;gap:10px;justify-content:flex-end;padding:10px 0 0}
+.actions button{border:1px solid var(--borde);background:#f9fafb;color:#111;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600}
+.actions button.primary{background:var(--verde);color:#fff;border-color:transparent}
+.actions button:hover{filter:brightness(.97)}
+
+/* ===========================
+   Meta (cabecera de datos)
+   =========================== */
+.meta-summary{
+  display:grid;
+  grid-template-columns: 1.2fr 1fr; /* izquierda | derecha */
+  gap:14px 26px;
+  align-items:start;
+  margin-top:10px;
+  padding:18px 0 6px;
+}
+
+/* Bloque izquierdo (lista de filas) */
+.meta{display:grid;gap:10px}
+.meta .row{
+  display:flex; align-items:center; gap:10px; min-height:40px;
+}
+.meta .k{min-width:130px; white-space:nowrap; color:#4b5563; font-weight:600;}
+.meta .value{
+  flex:1; display:inline-flex; align-items:center; min-height:36px;
+}
+
+/* Cajitas (chips) */
+.box{
+  padding:8px 12px;
+  border:1px solid var(--gris-300);
+  border-radius:10px;
+  background:#f8fafc;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  line-height:1.25;
+  font-family:ui-monospace,Menlo,Consolas,"Liberation Mono",monospace;
+}
+.ch-6  {max-width:6ch}
+.ch-8  {max-width:8ch}
+.ch-14 {max-width:14ch}
+.ch-28 {max-width:28ch}
+.ch-34 {max-width:34ch}
+
+/* Bloque derecho (jornada + grid) */
+.meta-right{display:grid;gap:12px}
+.mini-row{display:flex;align-items:center;gap:10px;min-height:36px}
+.mini-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px}
+.mini-grid .span-2{grid-column:1 / -1}
+
+/* ===========================
+   Métricas
+   =========================== */
+.metrics-row{margin-top:12px}
+.summary.one-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.card.metric{
+  border:1px solid var(--borde);
+  background:#fff; border-radius:var(--radius);
+  padding:16px 18px; box-shadow:var(--shadow);
+  min-height:118px;
+  display:flex; flex-direction:column; justify-content:space-between; align-items:center;
+  break-inside:avoid; page-break-inside:avoid; /* bien aquí */
+}
+.metric-top{font-size:13px;font-weight:700;color:var(--gris-500);text-align:center}
+.metric-main{font-size:28px;font-weight:900;color:var(--verde);line-height:1;text-align:center}
+
+/* ===========================
+   Rúbrica (tabla)
+   =========================== */
+.table-wrap{margin-top:10px}
+table.grades{
+  width:100%; border-collapse:collapse; table-layout:fixed;
+  border:1px solid var(--borde); background:#fff;
+}
+/* columnas que sumen 100% */
+.col-area{width:42%}
+.col-p{width:9%}
+.col-final{width:9%}
+.col-nivel{width:13%}
+.col-fallas{width:9%; word-break:break-word; text-align:center}
+
+.grades thead th{
+  background:#F8FAF8; color:#0e0e0e;
+  border:1px solid var(--borde);
+  border-bottom:1.2pt solid var(--negro);
+  padding:10px 6px;
+  font-size:12px; font-weight:800; text-align:center;
+  letter-spacing:.3px; text-transform:uppercase;
+}
+.grades tbody td{
+  border:1px solid var(--borde);
+  padding:10px 6px; font-size:14px;
+  vertical-align:middle; text-align:center;
+}
+.grades tbody td:first-child{text-align:left}
+
+/* ÁREAS con franja suave y separador superior */
+tr.area-row:nth-of-type(3n+1) td{ background:var(--verde-soft) !important; border-top:2px solid var(--verde); font-weight:800; }
+tr.area-row:nth-of-type(3n+2) td{ background:var(--rojo-soft)  !important; border-top:2px solid var(--rojo);  font-weight:800; }
+tr.area-row:nth-of-type(3n)   td{ background:#F4F8F4         !important; border-top:2px solid #7aa58f;     font-weight:800; }
+
+/* ===========================
+   Leyenda
+   =========================== */
+.legend{margin:14px 0 0;color:var(--gris-500);font-size:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.legend strong{color:var(--negro)}
+.badge{display:inline-block;min-width:28px;padding:2px 10px;border-radius:999px;border:1px solid var(--borde);background:#fff;font-weight:800;text-align:center}
+.badge.s{color:#0F5132;background:#EAF8F0;border-color:#7CC89E}
+.badge.a{color:#1D4ED8;background:#EEF3FF;border-color:#9AB7FF}
+.badge.bs{color:#92400E;background:#FFF7DA;border-color:#F2C86E}
+.badge.d{color:#fff;background:#B22222;border-color:#B22222;text-shadow:0 0 1px rgba(0,0,0,.25)}
+
+/* ===========================
+   Diagnóstico / Firmas / Footer
+   =========================== */
+.diagnostico{margin:16px 0 0}
+.diagnostico h3{margin:6px 0 10px;color:var(--gris-700)}
+.diag-box{min-height:110px;border:1px dashed var(--borde);border-radius:10px;padding:12px;background:#fff}
+.diag-hint{color:var(--gris-500);font-size:12px;margin-top:6px}
+.sign{display:flex;justify-content:space-around;gap:32px;padding:34px 0 24px}
+.sign-col{text-align:center;flex:1}
+.sign-col .line{border-bottom:1px solid var(--gris-700);margin:44px auto 8px;width:80%}
+.footer{text-align:center;color:var(--gris-500);font-size:12px;padding:10px 0 28px}
+
+/* ===========================
+   Impresión
+   =========================== */
+
+/* Márgenes algo más ajustados para aprovechar la hoja */
+@page{ size:A4; margin:14mm 12mm; }
+
+@media print{
+  header,section,footer{width:100%}
+  .no-print{display:none !important}
+  .actions{display:none}
+  .card.metric{box-shadow:none}
+
+  /* bordes más fuertes en PDF */
+  table.grades{border:0.75pt solid #000}
+  .grades thead th,.grades tbody td{border:0.75pt solid #000}
+
+  /* mantener colores suaves de áreas */
+  tr.area-row:nth-of-type(3n+1) td{background:var(--verde-soft) !important}
+  tr.area-row:nth-of-type(3n+2) td{background:var(--rojo-soft)  !important}
+
+  /* === Páginas === */
+  .page { break-after: page; page-break-after: always; }
+  .page:last-child { break-after: auto; page-break-after: auto; }
+
+  /* === Quitar hueco: permitir que la tabla se parta === */
+  .table-wrap, table.grades { break-inside: auto; page-break-inside: auto; }
+  .grades thead { display: table-header-group; }   /* repetir encabezado */
+  .grades tfoot { display: table-footer-group; }
+  .grades tr    { break-inside: avoid; page-break-inside: avoid; }
+
+  /* === Ajustes de la columna derecha en vertical (solo en PDF) === */
+  .meta-right { display: block !important; }
+  .meta-right .mini-grid { display: block !important; }
+  .meta-right .mini-grid .mini-row {
+    display:flex !important; align-items:center; gap:8px; margin:4px 0;
+    break-inside: avoid;
+  }
+  .meta-right .mini-row .k { display:inline-block; min-width:90px !important; white-space:nowrap; }
+  .meta-right .mini-row .value {
+    flex:1 1 auto !important; max-width:none !important;
+    white-space:normal !important; word-break:break-word;
+  }
+  .meta-right .mini-grid .span-2 { grid-column: auto !important; }
+  .ch-6,.ch-8,.ch-14,.ch-28,.ch-34{ max-width:none !important; }
+
+  /* Colores de estado también en PDF */
+  .nota-aprobada { color:#065f46 !important; font-weight:700 !important; }
+  .nota-reprobada { color:#7f1d1d !important; font-weight:700 !important; }
+  .nota-S  { color:#0F5132 !important; font-weight:700 !important; }
+  .nota-A  { color:#1D4ED8 !important; font-weight:700 !important; }
+  .nota-Bs { color:#92400E !important; font-weight:700 !important; }
+  .nota-Bj { color:#B22222 !important; font-weight:700 !important; }
+}
+
+/* ===========================
+   Responsivo
+   =========================== */
+@media (max-width: 900px){
+  .meta-summary{grid-template-columns:1fr}
+  .summary.one-row{grid-template-columns:repeat(2,1fr)}
+  .mini-grid{grid-template-columns:1fr}
+  .mini-grid .span-2{grid-column:1 / -1}
+}
+
+/* Fix mini-grid labels/chips alignment */
+.meta-right .mini-grid { grid-auto-rows: minmax(0, auto); }
+.meta-right .mini-row { width: 100%; }
+.meta-right .mini-row .k {
+  display: inline-block;
+  min-width: 80px;
+  white-space: nowrap;
+}
+.meta-right .mini-row .value {
+  white-space: nowrap;
+}
+
+/* Si “Periodo” es largo (p.ej., P1-2025), dale un poco más de aire */
+.meta-right .mini-row:nth-child(2) .value { max-width: 10ch; }
+
+/* ===== Ajustes específicos para Grado y Grupo ===== */
+.meta-right .mini-row.grado .value,
+.meta-right .mini-row.grupo .value {
+  min-width: 6ch;
+  text-align: center;
+}
+
+/* === Estado de nota (global) === */
+.nota-aprobada { color: #065f46; font-weight: 700; }
+.nota-reprobada { color: #7f1d1d; font-weight: 700; }
+
+
+/* ====== HOTFIX: forzar múltiples boletines en PDF ====== */
+@media print {
+  /* Asegura que cada boletín sea un bloque normal imprimible */
+  .page { 
+    display: block !important;
+
+    /* 1) fuerza corte DESPUÉS de cada boletín */
+    break-after: page !important;
+    page-break-after: always !important;
+  }
+
+  /* 2) y también fuerza corte ANTES de todo boletín que no sea el primero */
+  .page + .page {
+    break-before: page !important;
+    page-break-before: always !important;
+  }
+
+  /* 3) no bloquees los cortes internos (evita “se va todo a la siguiente hoja”) */
+  .page * { 
+    break-inside: auto !important; 
+    page-break-inside: auto !important; 
+  }
+
+  /* 4) la tabla puede partirse y repetir encabezado sin dejar huecos */
+  .table-wrap, table.grades { 
+    break-inside: auto !important; 
+    page-break-inside: auto !important; 
+  }
+  .grades thead { display: table-header-group !important; }
+  .grades tfoot { display: table-footer-group !important; }
+  .grades tr    { break-inside: avoid !important; page-break-inside: avoid !important; }
+
+  /* 5) evita que alguna regla anterior meta overflow extraño */
+  html, body { height: auto !important; }
+}

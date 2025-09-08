@@ -1,0 +1,86 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Reportes académicos</title>
+
+  <!-- CSS global -->
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <!-- Iconos -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+</head>
+<body>
+  <!-- ===== NAVBAR ===== -->
+  <header class="navbar" role="navigation" aria-label="Barra principal">
+    <div class="nav-left">
+      <img src="{% static 'img/logo2.jpeg' %}" alt="Logo colegio" class="logo" />
+      <div class="nav-title">
+        <h3>RECTOR / <span class="nowrap">COORDINADOR</span></h3>
+        <span class="user-name">{{ request.user.usuario }}</span>
+      </div>
+    </div>
+
+    <nav class="nav-menu" aria-label="Menú principal">
+      <a href="{% url 'dashboard_rector' %}">Inicio</a>
+      <a href="{% url 'rector_estudiantes_a_grupos' %}">Estudiante a grupos</a>
+      <a href="{% url 'rector_asignacion_docentes_grupos' %}">Asignación de Docentes a grupos</a>
+    </nav>
+
+    <div class="nav-right">
+      <a href="{% url 'logout' %}" class="btn-logout">Cerrar Sesión</a>
+    </div>
+  </header>
+
+  <!-- Barra roja -->
+  <div class="admin-bar">Reportes académicos</div>
+
+  <!-- ===== CONTENIDO ===== -->
+  <main class="main main--cards" role="main">
+    <section class="cards cards--center" aria-label="Opciones">
+      <!-- Card: Por grupos -->
+      <a href="{% url 'rector_reportes_academicos_por_grupo' %}" class="card">
+        <div class="card-box" aria-hidden="true">
+          <i class="fa-solid fa-people-group"></i>
+        </div>
+        <div class="label">Por grupos</div>
+      </a>
+
+      <!-- Card: Por estudiante -->
+      <a href="{% url 'rector_reportes_academicos_por_estudiante' %}" class="card">
+        <div class="card-box" aria-hidden="true">
+          <i class="fa-solid fa-user-plus"></i>
+        </div>
+        <div class="label">Por estudiante</div>
+      </a>
+    </section>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="site-footer" role="contentinfo" aria-label="Pie de página del sitio">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <img src="{% static 'img/logo2.jpeg' %}" alt="Logo colegio" class="footer-logo" />
+        <div class="footer-school">
+          <div class="school-name">Nombre del Colegio</div>
+          <div class="school-sub">Sede / Ciudad</div>
+        </div>
+      </div>
+      <div class="footer-center">
+        <div>Dirección: Calle Falsa 123</div>
+        <div>Tel: (+57) 300 000 0000 · Email: info@colegio.edu.co</div>
+      </div>
+      <div class="footer-right">
+        <nav class="footer-links">
+          <a href="#">Privacidad</a>
+          <a href="#">Términos</a>
+          <a href="#">Contacto</a>
+        </nav>
+        <div class="copyright">© {% now "Y" %} Nombre del Colegio</div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
