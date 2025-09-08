@@ -73,13 +73,15 @@ ASGI_APPLICATION = "config.asgi.application"
 
 # === Base de datos ===
 # Local (DEBUG=True): SQLite. Producción: DATABASE_URL (PostgreSQL en Render).
+# === Base de datos ===
 DATABASES = {
     "default": dj_database_url.config(
-        default=(f"sqlite:///{BASE_DIR / 'db.sqlite3'}" if DEBUG else os.environ.get("DATABASE_URL", "")),
+        default=os.environ.get("DATABASE_URL", f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
         conn_max_age=600,
-        ssl_require=not DEBUG,
+        ssl_require=os.environ.get("DEBUG", "False").lower() != "true",  # SSL solo si no es DEBUG
     )
 }
+
 
 # === Validadores ===
 AUTH_PASSWORD_VALIDATORS = [
