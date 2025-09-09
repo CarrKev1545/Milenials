@@ -15,7 +15,7 @@ body{
   color:var(--white);
   /* En dev funciona bien esta ruta absoluta;
      si usas {% static %} en la plantilla, quita esta línea. */
-  background:url("/static/img/fondo2.jpg") center center / cover no-repeat fixed !important;
+  
 }
 
 /* Lienzo que centra la tarjeta en toda la ventana */
