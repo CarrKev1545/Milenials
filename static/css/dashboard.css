@@ -675,14 +675,13 @@ input::placeholder, textarea::placeholder{ color: rgba(255,255,255,.55); }
 
 /* ===== MAIN con solo tarjetas ===== */
 .main.main--cards{
-
+  
   min-height: calc(100vh - var(--navbar-height) - var(--footer-height));
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0 20px;
   box-sizing: border-box;
-  
 }
 .admin-bar + .main.main--cards {
   min-height: calc(100vh - var(--navbar-height) - var(--admin-bar-height) - var(--footer-height));
