@@ -237,10 +237,10 @@
     for (const e of lista) {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <input class="nota"   type="number" step="0.1" min="1.0" max="5.0" value=""
-       data-est="${e.id}" inputmode="decimal" lang="es">
-        <input class="fallas" type="number" step="1"   min="0"   value=""
-       data-est="${e.id}" inputmode="numeric">
+        <td>${e.apellidos || 'N/A'}</td>
+        <td>${e.nombre || 'N/A'}</td>
+        <td><input class="nota"   type="number" step="0.1" min="1.0" max="5.0" value="" data-est="${e.id}"></td>
+        <td><input class="fallas" type="number" step="1"   min="0"   value="" data-est="${e.id}"></td>
       `;
       tbody.appendChild(tr);
     }
@@ -289,44 +289,33 @@
 
   function normDecimal(str){
     if (str == null) return '';
-    str = String(str).trim().replace(/,/g, '.');     // ← todas las comas
-    str = str.replace(/[^\d.]/g, '');                // solo dígitos y punto
-    const i = str.indexOf('.');
-    if (i !== -1) {
-      const head = str.slice(0, i + 1);
-      const tail = str.slice(i + 1).replace(/\./g, '');
-      str = head + tail; ;
+    str = String(str).trim().replace(',', '.');
+    str = str.replace(/[^0-9.]/g,'');
+    const parts = str.split('.');
+    if (parts.length > 2){
+      str = parts[0] + '.' + parts.slice(1).join('');
     }
     return str;
   }
 
- function validateNota(input, mutate = false){
-  const td  = input.closest('td');
-  const raw = String(input.value ?? '');
-  const v   = normDecimal(raw);
+  function validateNota(input){
+    const td = input.closest('td');
+    let v = normDecimal(input.value);
+    input.value = v;
 
-  if (mutate && v !== raw){
-    const pos = input.selectionStart || raw.length;
-    input.value = v;                               // solo en blur
-    // intenta conservar el cursor en posición natural
-    const newPos = Math.min(v.length, pos + (v.length - raw.length));
-    try { input.setSelectionRange(newPos, newPos); } catch(_) {}
+    if (v === ''){
+      td.classList.remove('cell-ok','cell-bad'); td.classList.add('cell-empty');
+      return {ok:true, empty:true};
+    }
+    const num = Number(v);
+    const ok = Number.isFinite(num) && num >= 1.0 && num <= 5.0;
+    if (!ok){
+      td.classList.remove('cell-ok','cell-empty'); td.classList.add('cell-bad');
+      return {ok:false, empty:false};
+    }
+    td.classList.remove('cell-bad','cell-empty'); td.classList.add('cell-ok');
+    return {ok:true, empty:false, value:num};
   }
-
-  if (v === ''){
-    td.classList.remove('cell-ok','cell-bad'); td.classList.add('cell-empty');
-    return {ok:true, empty:true};
-  }
-  const num = Number(v);
-  const ok  = Number.isFinite(num) && num >= 1.0 && num <= 5.0;
-  if (!ok){
-    td.classList.remove('cell-ok','cell-empty'); td.classList.add('cell-bad');
-    return {ok:false, empty:false};
-  }
-  td.classList.remove('cell-bad','cell-empty'); td.classList.add('cell-ok');
-  return {ok:true, empty:false, value:num};
-}
-
 
   function validateFallas(input){
     const td = input.closest('td');
@@ -353,7 +342,7 @@
 
   function validateAll(){
     let errors = 0;
-    document.querySelectorAll('input.nota').forEach(inp => { if (!validateNota(inp, false).ok) errors++; });
+    document.querySelectorAll('input.nota').forEach(inp => { if (!validateNota(inp).ok) errors++; });
     document.querySelectorAll('input.fallas').forEach(inp => { if (!validateFallas(inp).ok) errors++; });
 
     const disabled = errors > 0;
@@ -369,15 +358,10 @@
 
   function attachFieldHandlers(){
     document.querySelectorAll('input.nota').forEach(inp=>{
-      inp.addEventListener('input', ()=> { validateNota(inp, false); validateAll(); });
+      inp.addEventListener('input', ()=> validateAll());
       inp.addEventListener('blur',  ()=>{
-        const r = validateNota(inp, true); // normaliza coma→punto aquí
-        if (r.ok && !r.empty){
-          const n = Number(normDecimal(inp.value));
-          const clamped = Math.min(5, Math.max(1, n));
-          const rounded = Math.round(clamped * 10) / 10; // redondeo a décimas
-          inp.value = rounded.toFixed(1);                 // 2 decimales
-        }
+        const r = validateNota(inp);
+        if (r.ok && !r.empty){ inp.value = Number(inp.value).toFixed(1); }
         validateAll();
       });
       inp.closest('td').classList.add('cell-empty');
@@ -391,24 +375,6 @@
 
     validateAll();
   }
-
-  function preventWheelOnNumberInputs(){
-    document.querySelectorAll('input[type="number"]').forEach(inp=>{
-      inp.addEventListener('wheel', e=>{
-        if (document.activeElement === inp) e.preventDefault();
-      }, {passive:false});
-    });
-  }
-  (function patchAfterLoad(){
-    const orig = window.loadTabla;
-    if (typeof orig === 'function'){
-      window.loadTabla = async function(){
-        await orig();
-        attachFieldHandlers();
-        preventWheelOnNumberInputs();
-      }
-    }
-  })();
 
   // Parche: engancha handlers justo después de tu loadTabla()
   (function interceptAfterLoad(){
