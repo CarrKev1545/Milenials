@@ -15,16 +15,21 @@
 </head>
 <body>
   <!-- ===== NAVBAR ===== -->
-  <header class="navbar" role="navigation" aria-label="Barra principal">
+  <header class="navbar" id="navbar" role="navigation" aria-label="Barra principal">
     <div class="nav-left">
+      <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menú" aria-controls="main-menu" aria-expanded="false">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+
       <img src="{% static 'img/logo2.jpeg' %}" alt="Logo colegio" class="logo">
+
       <div class="nav-title">
         <h3>RECTOR / <span class="nowrap">COORDINADOR</span></h3>
         <span class="user-name">{{ request.user.usuario }}</span>
       </div>
     </div>
 
-    <nav class="nav-menu" aria-label="Menú principal">
+    <nav class="nav-menu" id="main-menu" aria-label="Menú principal">
       <a href="{% url 'dashboard_rector' %}">Inicio</a>
       <a href="{% url 'rector_estudiantes_a_grupos' %}">Estudiante a grupos</a>
       <a href="{% url 'rector_asignacion_docentes_grupos' %}">Asignación de Docentes a grupos</a>
@@ -33,6 +38,9 @@
     <div class="nav-right">
       <a href="{% url 'logout' %}" class="btn-logout">Cerrar Sesión</a>
     </div>
+
+    <!-- Fondo oscuro para el menú en móvil -->
+    <div class="nav-backdrop" id="nav-backdrop" hidden></div>
   </header>
 
   <!-- Barra roja -->
