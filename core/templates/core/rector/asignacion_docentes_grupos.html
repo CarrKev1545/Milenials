@@ -92,10 +92,16 @@
 
       <!-- Acciones -->
       <div class="re-actions">
-        <button type="button" class="re-btn" id="btn-asignar" disabled>Asignar</button>
-        <button type="button" class="re-btn re-btn--ghost" id="btn-quitar" disabled>Quitar asignación</button>
-        <button type="reset"  form="adg-form" class="re-btn re-btn--ghost" id="btn-eliminar">Limpiar</button>
-      </div>
+  <!-- Asignar (usa form adg-form y se comporta como submit) -->
+  <button type="submit" form="adg-form" class="re-btn" id="btn-asignar">Asignar</button>
+
+  <!-- Quitar asignación (puede ser type="button" si no envía form) -->
+  <button type="button" class="re-btn re-btn--ghost" id="btn-quitar">Quitar asignación</button>
+
+  <!-- Eliminar/Limpiar -->
+  <button type="reset" form="adg-form" class="re-btn re-btn--ghost" id="btn-eliminar">Limpiar</button>
+</div>
+
     </div>
   </div>
 </section>
