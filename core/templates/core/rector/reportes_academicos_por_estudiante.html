@@ -43,26 +43,51 @@
     .np-btn:active{ transform: translateY(0) scale(.985); }
     .np-btn--ghost{ background:#b51415; }
     @media (max-width:1020px){ .np-grid{ grid-template-columns:1fr; } }
+
+    /* === Fallback móvil para menú hamburguesa en esta página === */
+    .menu-toggle{ display:none; background:transparent; border:0; padding:8px; color:#fff; }
+    .menu-toggle i{ font-size:22px; line-height:1; }
+
+    @media (max-width:1020px){
+      .menu-toggle{ display:inline-grid; place-items:center; margin-left:6px; }
+      .nav-left { display:flex; align-items:center; gap:8px; }
+      .nav-menu[data-collapsible]{ display:none; }
+      .nav-menu[data-collapsible].is-open{ display:flex; flex-wrap:wrap; gap:10px; }
+    }
+
+
+
+
+
   </style>
 </head>
 <body>
-  <header class="navbar" role="navigation" aria-label="Barra principal">
-    <div class="nav-left">
-      <img src="{% static 'img/logo2.jpeg' %}" alt="Logo colegio" class="logo">
-      <div class="nav-title">
-        <h3>RECTOR / <span class="nowrap">COORDINADOR</span></h3>
-        <span class="user-name">{{ request.user.usuario }}</span>
-      </div>
+  <header class="navbar" id="navbar" role="navigation" aria-label="Barra principal">
+  <!-- Botón hamburguesa (móvil) -->
+  <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menú"
+          aria-controls="nav-main" aria-expanded="false">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <div class="nav-left">
+    <img src="{% static 'img/logo2.jpeg' %}" alt="Logo colegio" class="logo">
+    <div class="nav-title">
+      <h3>RECTOR / <span class="nowrap">COORDINADOR</span></h3>
+      <span class="user-name">{{ request.user.usuario }}</span>
     </div>
-    <nav class="nav-menu" aria-label="Menú principal">
-      <a href="{% url 'dashboard_rector' %}">Inicio</a>
-      <a href="{% url 'rector_estudiantes_a_grupos' %}">Estudiante a grupos</a>
-      <a href="{% url 'rector_asignacion_docentes_grupos' %}">Asignación de Docentes a grupos</a>
-    </nav>
-    <div class="nav-right">
-      <a href="{% url 'logout' %}" class="btn-logout">Cerrar Sesión</a>
-    </div>
-  </header>
+  </div>
+
+  <nav class="nav-menu" id="nav-main" aria-label="Menú principal" data-collapsible>
+    <a href="{% url 'dashboard_rector' %}">Inicio</a>
+    <a href="{% url 'rector_estudiantes_a_grupos' %}">Estudiante a grupos</a>
+    <a href="{% url 'rector_asignacion_docentes_grupos' %}">Asignación de Docentes a grupos</a>
+  </nav>
+
+  <div class="nav-right">
+    <a href="{% url 'logout' %}" class="btn-logout">Cerrar Sesión</a>
+  </div>
+</header>
+
 
   <div class="page-title">Reportes académicos</div>
 
@@ -351,5 +376,19 @@
     },0);
   });
   </script>
+
+  <script>
+(function(){
+  const btn  = document.getElementById('menu-toggle');
+  const menu = document.querySelector('#nav-main[data-collapsible]');
+  if (!btn || !menu) return;
+
+  btn.addEventListener('click', () => {
+    const open = menu.classList.toggle('is-open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+})();
+</script>
+
 </body>
 </html>
