@@ -237,16 +237,10 @@
     for (const e of lista) {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td>${e.apellidos || 'N/A'}</td>
-        <td>${e.nombre || 'N/A'}</td>
-        <td>
-          <input class="nota" type="number" step="0.01" min="1.0" max="5.0" value=""
-                data-est="${e.id}" inputmode="decimal" lang="es">
-        </td>
-        <td>
-          <input class="fallas" type="number" step="1" min="0" value=""
-                data-est="${e.id}" inputmode="numeric">
-        </td>
+        <input class="nota"   type="number" step="0.1" min="1.0" max="5.0" value=""
+       data-est="${e.id}" inputmode="decimal" lang="es">
+        <input class="fallas" type="number" step="1"   min="0"   value=""
+       data-est="${e.id}" inputmode="numeric">
       `;
       tbody.appendChild(tr);
     }
@@ -377,10 +371,12 @@
     document.querySelectorAll('input.nota').forEach(inp=>{
       inp.addEventListener('input', ()=> { validateNota(inp, false); validateAll(); });
       inp.addEventListener('blur',  ()=>{
-        const r = validateNota(inp, true);          // ahora sí normaliza
+        const r = validateNota(inp, true); // normaliza coma→punto aquí
         if (r.ok && !r.empty){
-          const n = Math.min(5, Math.max(1, Number(normDecimal(inp.value))));
-          inp.value = n.toFixed(2);                 // 2 decimales
+          const n = Number(normDecimal(inp.value));
+          const clamped = Math.min(5, Math.max(1, n));
+          const rounded = Math.round(clamped * 10) / 10; // redondeo a décimas
+          inp.value = rounded.toFixed(1);                 // 2 decimales
         }
         validateAll();
       });
