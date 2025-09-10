@@ -176,6 +176,17 @@
     </div>
   </footer>
 
+  <!-- ===== FORM OCULTO PARA DESCARGA POR ESTUDIANTE (abre en nueva pestaña) ===== -->
+  <form id="exportEstForm"
+        action="{% url 'rector_reportes_academicos_export' %}"
+        method="GET" target="_blank" style="display:none">
+    <input type="hidden" name="grupo_id">
+    <input type="hidden" name="periodo_id" required>
+    <input type="hidden" name="estudiante_id" required>
+    <input type="hidden" name="formato" value="pdf">
+    <input type="hidden" name="scope" value="estudiante">
+  </form>
+
   <script>
   const $ = s => document.querySelector(s);
   const setSelect = (el, items, placeholder="Seleccione") => {
@@ -293,8 +304,10 @@
     btnBuscar.disabled = !ok;
   }
 
-  /* ====== BLOQUE DE DESCARGA (según imagen) ====== */
-  document.getElementById('btn-descargar').addEventListener('click', ()=>{
+  /* ====== DESCARGA POR ESTUDIANTE en NUEVA PESTAÑA ====== */
+  document.getElementById('btn-descargar').addEventListener('click', (e)=>{
+    e.preventDefault();
+
     const grupo   = document.getElementById('grupo_id').value;
     const periodo = document.getElementById('periodo_id').value;
     const est     = document.getElementById('estudiante_id').value;
@@ -304,13 +317,24 @@
       alert('Seleccione grupo, periodo y estudiante');
       return;
     }
-    const q = new URLSearchParams({
-      grupo_id: grupo,
-      periodo_id: periodo,
-      estudiante_id: est,
-      formato
-    });
-    window.location.href = "{% url 'rector_reportes_academicos_export' %}?"+q.toString();
+
+    // Usamos el form oculto con target="_blank"
+    const ef = document.getElementById('exportEstForm');
+
+    // Limpieza por seguridad
+    ef.querySelector('input[name="grupo_id"]').value      = '';
+    ef.querySelector('input[name="periodo_id"]').value    = '';
+    ef.querySelector('input[name="estudiante_id"]').value = '';
+    ef.querySelector('input[name="formato"]').value       = 'pdf';
+
+    // Asignación de valores reales
+    ef.querySelector('input[name="grupo_id"]').value      = grupo;
+    ef.querySelector('input[name="periodo_id"]').value    = periodo;
+    ef.querySelector('input[name="estudiante_id"]').value = est;
+    ef.querySelector('input[name="formato"]').value       = formato;
+
+    // ¡Abrirá en otra pestaña!
+    ef.submit();
   });
   /* =============================================== */
 
@@ -329,4 +353,5 @@
   </script>
 </body>
 </html>
+
 
