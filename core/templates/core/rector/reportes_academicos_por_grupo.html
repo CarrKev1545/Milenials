@@ -288,30 +288,37 @@
      DESCARGA MASIVA (grupo o grado) con FORM LIMPIO
      ========= */
     document.getElementById('btn-descargar').addEventListener('click', ()=>{
-    const grupo   = document.getElementById('grupo_id').value;
-    const grado   = document.getElementById('grado_id').value;
-    const sede    = document.getElementById('sede_id').value;
-    const periodo = document.getElementById('periodo_id').value;
-    const formato = document.getElementById('formato').value || 'pdf';
+      const grupo   = document.getElementById('grupo_id').value;
+      const grado   = document.getElementById('grado_id').value;
+      const sede    = document.getElementById('sede_id').value;
+      const periodo = document.getElementById('periodo_id').value;
+      const formato = document.getElementById('formato').value || 'pdf';
 
-    if (!periodo) {
-      alert('Seleccione periodo'); return;
-    }
+      if (!periodo) { alert('Seleccione periodo'); return; }
 
-    // Preferencia: si hay grupo => exporta GRUPO. Si no, Sede+Grado => exporta GRADO.
-    const q = new URLSearchParams({ periodo_id: periodo, formato });
-    if (grupo) {
-      q.set('grupo_id', grupo);
-    } else if (sede && grado) {
-      q.set('sede_id', sede);
-      q.set('grado_id', grado);
-    } else {
-      alert('Seleccione Grupo, o Sede + Grado.'); return;
-    }
+      // Usamos el form oculto que ya tiene target="_blank"
+      const ef = document.getElementById('exportForm');
+      ef.querySelector('input[name="periodo_id"]').value = periodo;
+      ef.querySelector('input[name="formato"]').value    = formato;
 
-    // NO enviamos estudiante_id aquí para evitar limitar a uno solo
-    window.location.href = "{% url 'rector_reportes_academicos_export' %}?" + q.toString();
-  });
+      // Prioridad: si hay grupo => exporta por GRUPO; si no, por GRADO (requiere sede+grado)
+      if (grupo) {
+        ef.querySelector('input[name="grupo_id"]').value = grupo;
+        ef.querySelector('input[name="grado_id"]').value = '';
+        ef.querySelector('input[name="sede_id"]').value  = '';
+        ef.querySelector('input[name="scope"]').value    = 'grupo';
+      } else if (sede && grado) {
+        ef.querySelector('input[name="grupo_id"]').value = '';
+        ef.querySelector('input[name="grado_id"]').value = grado;
+        ef.querySelector('input[name="sede_id"]').value  = sede;
+        ef.querySelector('input[name="scope"]').value    = 'grado';
+      } else {
+        alert('Seleccione Grupo, o Sede + Grado.'); return;
+      }
+
+      // ¡Abrirá en otra pestaña por el target="_blank" del form!
+      ef.submit();
+    });
 
   </script>
 </body>
