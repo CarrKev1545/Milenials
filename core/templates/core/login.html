@@ -9,21 +9,21 @@
 
 {% block content %}
 <main class="login-wrapper">
-  <section class="login-card" aria-label="Formulario de inicio de sesión">
-    <img class="avatar" src="{% static 'img/logo2.jpeg' %}" alt="Logo institucional">
+  <section class="login-card enter" aria-label="Formulario de inicio de sesión">
+    <img class="avatar" src="{% static 'img/logo2.jpeg' %}" alt="Logo institucional" width="104" height="104">
     <h1 class="login-title">MILLENNIALS</h1>
 
     <form class="login-form" action="" method="post" novalidate>
       {% csrf_token %}
 
       {% if error %}
-        <p class="error-message">{{ error }}</p>
+        <p class="error-message" role="status" aria-live="polite">{{ error }}</p>
       {% endif %}
 
       <label for="usuario" class="field-label">Usuario</label>
       <input id="usuario" name="usuario" type="text"
              class="field-control" placeholder="Entrar Username"
-             autocomplete="username" required>
+             autocomplete="username" spellcheck="false" autocapitalize="off" required>
 
       <label for="password" class="field-label">Contraseña</label>
       <input id="password" name="password" type="password"
