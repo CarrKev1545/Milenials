@@ -13,14 +13,12 @@ html, body{ height:100%; margin:0; }
 body{
   font-family:"Segoe UI", Roboto, Arial, sans-serif;
   color:var(--white);
-  /* Fondo global (mantengo tu enfoque sin tocar otros archivos).
-     Si prefieres usar {% static %}, puedes mover el fondo al HTML. */
+  /* Fondo global sin tocar otros archivos */
   background: url("/static/img/fondo2.jpg") center / cover no-repeat;
-  /* En móviles el 'fixed' causa saltos; lo activamos solo en desktop abajo */
-  background-color: #000; /* fallback por si no carga la imagen */
+  background-color:#000; /* fallback */
 }
 
-/* Lienzo que centra la tarjeta en toda la ventana */
+/* Lienzo que centra la tarjeta */
 .login-wrapper{
   min-height: 100dvh;                 /* mejor que 100vh en móviles */
   width:100%;
@@ -33,7 +31,7 @@ body{
 /* Tarjeta */
 .login-card{
   position:relative;
-  width: min(100%, 460px);            /* ocupa todo en móvil; limita en desktop */
+  width: min(100%, 460px);
   background:#000;
   border-radius:12px;
   padding: clamp(72px, 8vw, 92px) clamp(18px, 3vw, 34px) 28px; /* espacio para el avatar */
@@ -41,7 +39,7 @@ body{
   box-shadow: var(--card-shadow);
 }
 
-/* Avatar flotando */
+/* Avatar */
 .avatar{
   position:absolute;
   top:-52px; left:50%; transform:translateX(-50%);
@@ -50,7 +48,7 @@ body{
   box-shadow:0 10px 24px rgba(0,0,0,.55);
 }
 
-/* Título (fluido) */
+/* Título */
 .login-title{
   margin:0 0 18px 0; text-align:center;
   font-weight:800;
@@ -64,7 +62,7 @@ body{
 /* Inputs */
 .field-control{
   width:100%;
-  min-height:44px;                    /* mejor accesibilidad táctil */
+  min-height:44px;
   padding:10px 2px;
   background:transparent; border:none; border-bottom:2px solid var(--underline);
   color:var(--white); font-size:16px; outline:none;
@@ -76,10 +74,23 @@ body{
   box-shadow:0 2px 6px rgba(184,15,34,.4);
 }
 
-/* Marca visual de error (usada por el JS) */
+/* Error (si JS aplica .input-error) */
 .field-control.input-error{ border-bottom-color:#ff6b6b !important; }
 
-/* Botón */
+/* Toggle contraseña */
+.field-wrap{ position:relative; display:block; }
+.toggle-pass{
+  position:absolute; right:0; top:50%; transform:translateY(-50%);
+  width:36px; height:36px;
+  border:none; background:transparent; color:var(--muted);
+  cursor:pointer; border-radius:8px; line-height:1;
+  transition:background .12s ease, color .12s ease, transform .12s ease;
+}
+.toggle-pass:hover{ background:rgba(255,255,255,.06); color:#fff; }
+.toggle-pass.on{ color:#fff; }
+.toggle-pass i{ pointer-events:none; font-size:18px; }
+
+/* Botón submit */
 .btn-login{
   margin-top:10px; width:100%;
   min-height:44px;
@@ -94,11 +105,7 @@ body{
 .btn-login:active{ transform:translateY(0); }
 .btn-login[disabled]{ opacity:.75; cursor:wait; }
 
-/* (Si usas este link más adelante, ya queda estilizado) */
-.forgot{ margin-top:10px; display:inline-block; text-decoration:none; color:var(--muted); font-size:12px; }
-.forgot:hover{ color:#fff; }
-
-/* Animaciones que usa el JS */
+/* Animaciones */
 .login-card.enter{ animation:fadeInUp .5s ease-out both; }
 @keyframes fadeInUp{
   from{ opacity:0; transform:translateY(16px) scale(.98); }
@@ -115,12 +122,12 @@ body{
   .login-card.enter, .login-card.shake{ animation:none; }
 }
 
-/* Responsive fino */
+/* Ajuste móvil fino */
 @media (max-width:420px){
   .login-card{ padding: 72px 18px 24px; }
 }
 
-/* Sólo en desktop activamos fondo 'fixed' para suavidad en móviles */
+/* Solo en desktop, si quieres parallax suave (puedes quitarlo si hay lag) */
 @media (min-width: 992px){
   body{ background-attachment: fixed; }
 }
