@@ -1,38 +1,26 @@
-{% extends "core/base.html" %}
 {% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Millennials{% endblock %}</title>
+  <link rel="icon" href="{% static 'img/icono.ico' %}">
+  {% block extra_css %}{% endblock %}
+  <style>
+    /* Reset mínimo para evitar márgenes raros */
+    html, body { height: 100%; margin: 0; }
+  </style>
+</head>
+<body>
+  {% if request.user.is_authenticated %}
+    <div class="topbar" style="padding:8px 12px; background:#111; color:#fff;">
+      Millennials — Usuario: {{ request.user.usuario }} | Rol: {{ request.user.rol }}
+      <a href="{% url 'logout' %}" style="color:#fff; margin-left:12px;">Cerrar sesión</a>
+    </div>
+  {% endif %}
 
-{% block title %}Login{% endblock %}
+  {% block content %}{% endblock %}
 
-{% block extra_css %}
-  <link rel="stylesheet" href="{% static 'css/login.css' %}">
-{% endblock %}
-
-{% block content %}
-<main class="login-wrapper">
-  <section class="login-card enter" aria-label="Formulario de inicio de sesión">
-    <img class="avatar" src="{% static 'img/logo2.jpeg' %}" alt="Logo institucional" width="104" height="104">
-    <h1 class="login-title">MILLENNIALS</h1>
-
-    <form class="login-form" action="" method="post" novalidate>
-      {% csrf_token %}
-      {% if error %}
-        <p class="error-message" role="status" aria-live="polite">{{ error }}</p>
-      {% endif %}
-
-      <label for="usuario" class="field-label">Usuario</label>
-      <input id="usuario" name="usuario" type="text" class="field-control"
-             placeholder="Entrar Username" autocomplete="username"
-             spellcheck="false" autocapitalize="off" required>
-
-      <label for="password" class="field-label">Contraseña</label>
-      <input id="password" name="password" type="password" class="field-control"
-             placeholder="Entrar Password" autocomplete="current-password" required>
-
-      <button type="submit" class="btn-login">Log In</button>
-      <a class="forgot" href="#" tabindex="0">¿Ha perdido su contraseña?</a>
-    </form>
-  </section>
-</main>
-{% endblock %}
-
-{% block extra_js %}{% endblock %}
+  {% block extra_js %}{% endblock %}
+</body>
+</html>
