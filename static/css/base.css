@@ -1,0 +1,54 @@
+/* ===== Reset y fundamentos ===== */
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+:root{
+  --text:#111; --muted:#6b7280;
+  --bg:#f7f7fb; --panel:#ffffff; --border:#e5e7eb;
+  --accent:#b80f22;
+}
+
+/* ===== Layout general ===== */
+body{
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.45 "Segoe UI", Roboto, Arial, sans-serif;
+}
+.page-content{
+  min-height: 100dvh;
+  padding: 16px;
+}
+
+/* ===== Topbar ===== */
+.topbar{
+  padding: 8px 12px;
+  background: #111;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 14px;
+}
+.topbar a{
+  color: #fff;
+  text-decoration: none;
+}
+.topbar a:hover{
+  text-decoration: underline;
+}
+
+/* ===== Utilidades comunes ===== */
+.container{
+  width: min(100%, 1280px);
+  margin-inline: auto;
+  padding: 0 16px;
+}
+.card{
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 8px 22px rgba(0,0,0,.06);
+  padding: 16px;
+}
+

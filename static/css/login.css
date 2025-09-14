@@ -1,111 +1,92 @@
 :root{
-  --accent:#b80f22;
-  --accent-dark:#8f0c1a;
-  --white:#fff;
-  --muted:#a9a9a9;
-  --underline:#e5e5e5;
+  --accent:#b80f22; --accent-dark:#8f0c1a;
+  --white:#fff; --muted:#a9a9a9; --underline:#e5e5e5;
   --card-shadow:0 18px 48px rgba(0,0,0,.55);
 }
 
-/* Reset y base */
-*{ box-sizing:border-box; }
-html, body{ height:100%; margin:0; }
+/* Fondo global del login */
 body{
+  margin: 0;
+  min-height: 100dvh;
+  background: url("../img/fondo2.jpg") center/cover no-repeat;
+  /* Si notas “lag” en móviles, comenta la línea de abajo */
+  background-attachment: fixed; /* efecto parallax en desktop */
   font-family:"Segoe UI", Roboto, Arial, sans-serif;
-  color:var(--white);
-  /* En dev funciona bien esta ruta absoluta;
-     si usas {% static %} en la plantilla, quita esta línea. */
-  background:url("/static/img/fondo2.jpg") center center / cover no-repeat fixed !important;
+  color: var(--white);
 }
 
-/* Lienzo que centra la tarjeta en toda la ventana */
+/* Lienzo que centra la tarjeta */
 .login-wrapper{
-  min-height:100vh;
-  width:100%;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  padding:24px;
-  background:none !important;
+  min-height: 100dvh;                     /* mejor en móviles que 100vh */
+  display:flex; align-items:center; justify-content:center;
+  padding: clamp(16px, 2vw, 24px);
 }
 
 /* Tarjeta */
 .login-card{
   position:relative;
-  width:clamp(320px, 36vw, 460px);
-  background:#000;
+  width: min(100%, 460px);                 /* ocupa todo en móvil; limita en desktop */
+  background:#000; color:var(--white);
   border-radius:12px;
-  padding:92px 34px 28px; /* espacio para el avatar */
+  padding: clamp(72px, 8vw, 92px) clamp(18px, 3vw, 34px) 28px; /* espacio para el avatar */
   border:1px solid rgba(255,255,255,.06);
-  box-shadow:var(--card-shadow);
+  box-shadow: var(--card-shadow);
 }
 
-/* Avatar flotando */
+/* Avatar flotante */
 .avatar{
-  position:absolute;
-  top:-52px; left:50%; transform:translateX(-50%);
+  position:absolute; top:-52px; left:50%; transform:translateX(-50%);
   width:104px; height:104px; border-radius:50%;
   object-fit:cover; border:3px solid #fff; background:#111;
   box-shadow:0 10px 24px rgba(0,0,0,.55);
 }
 
-/* Título */
+/* Título fluido */
 .login-title{
   margin:0 0 18px 0; text-align:center;
-  font-size:22px; font-weight:800;
+  font-weight:800; font-size: clamp(1.2rem, 1rem + 1vw, 1.8rem);
 }
 
-/* Formulario */
+/* Form */
 .login-form{ display:flex; flex-direction:column; gap:10px; }
 .field-label{ font-weight:700; font-size:14px; margin-top:6px; }
 
 /* Inputs */
 .field-control{
-  width:100%; height:42px; padding:6px 36px 6px 2px;
+  width:100%; min-height:44px;
+  padding:10px 2px;
   background:transparent; border:none; border-bottom:2px solid var(--underline);
   color:var(--white); font-size:16px; outline:none;
   transition:border-color .15s ease, box-shadow .15s ease;
 }
 .field-control::placeholder{ color:#cfcfcf; opacity:.92; }
-.field-control:focus{ border-bottom-color:var(--accent); box-shadow:0 10px 24px rgba(0,0,0,.35); }
+.field-control:focus{
+  border-bottom-color:var(--accent);
+  box-shadow:0 2px 6px rgba(184,15,34,.4); /* feedback más visible */
+}
 
-/* Marca visual de error (usada por el JS) */
+/* Error (si el backend/JS aplica .input-error) */
 .field-control.input-error{ border-bottom-color:#ff6b6b !important; }
 
 /* Botón */
 .btn-login{
-  margin-top:10px; width:100%; height:44px; border:none; border-radius:22px;
+  margin-top:10px; width:100%; min-height:44px;
+  padding-block: clamp(10px, 2.5vw, 14px);
+  border:none; border-radius:22px;
   font-weight:800; font-size:16px; letter-spacing:.2px; cursor:pointer;
-  color:var(--white); background:var(--accent); box-shadow:0 14px 28px rgba(184,15,34,.35);
+  color:var(--white); background:var(--accent);
+  box-shadow:0 14px 28px rgba(184,15,34,.35);
   transition:transform .12s ease, background .12s ease, box-shadow .12s ease;
 }
 .btn-login:hover{ background:var(--accent-dark); transform:translateY(-1px); }
 .btn-login:active{ transform:translateY(0); }
-/* Estado deshabilitado durante "Ingresando…" */
 .btn-login[disabled]{ opacity:.75; cursor:wait; }
 
-/* Link */
+/* Link secundario */
 .forgot{ margin-top:10px; display:inline-block; text-decoration:none; color:var(--muted); font-size:12px; }
 .forgot:hover{ color:#fff; }
 
-/* === Bloques necesarios para el JS === */
-
-/* Contenedor para el botón "ojo" */
-.field-wrap{ position:relative; display:block; }
-
-/* Botón mostrar/ocultar contraseña */
-.toggle-pass{
-  position:absolute;
-  right:0; top:50%; transform:translateY(-50%);
-  width:36px; height:36px;
-  border:none; background:transparent; color:var(--muted);
-  cursor:pointer; border-radius:8px; font-size:18px; line-height:1;
-  transition:background .12s ease, color .12s ease, transform .12s ease;
-}
-.toggle-pass:hover{ background:rgba(255,255,255,.06); color:#fff; }
-.toggle-pass.on{ color:#fff; }
-
-/* Animaciones que usa el JS */
+/* Animaciones existentes */
 .login-card.enter{ animation:fadeInUp .5s ease-out both; }
 @keyframes fadeInUp{
   from{ opacity:0; transform:translateY(16px) scale(.98); }
@@ -122,8 +103,7 @@ body{
   .login-card.enter, .login-card.shake{ animation:none; }
 }
 
-/* Responsive */
-@media (max-width:420px){
-  .login-card{ padding:86px 22px 24px; }
-  .login-title{ font-size:20px; }
+/* Ajustes móviles */
+@media (max-width: 420px){
+  .login-card{ padding: 72px 18px 24px; }
 }
