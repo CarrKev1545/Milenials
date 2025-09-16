@@ -9,15 +9,15 @@
 
 {% block content %}
 <main class="login-wrapper">
-  <section class="login-card" aria-label="Formulario de inicio de sesión">
-    <img class="avatar" src="{% static 'img/logo2.jpeg' %}" alt="Logo institucional">
+  <section class="login-card enter" aria-label="Formulario de inicio de sesión">
+    <img class="avatar" src="{% static 'img/logo2.jpeg' %}" alt="Logo institucional" width="104" height="104">
     <h1 class="login-title">MILLENNIALS</h1>
 
     <form class="login-form" action="" method="post" novalidate>
       {% csrf_token %}
 
       {% if error %}
-        <p class="error-message">{{ error }}</p>
+        <p class="error-message" role="status" aria-live="polite">{{ error }}</p>
       {% endif %}
 
       <label for="usuario" class="field-label">Usuario</label>
@@ -26,9 +26,17 @@
              autocomplete="username" required>
 
       <label for="password" class="field-label">Contraseña</label>
-      <input id="password" name="password" type="password"
-             class="field-control" placeholder="Entrar Password"
-             autocomplete="current-password" required>
+      <span class="field-wrap">
+        <input id="password" name="password" type="password"
+               class="field-control" placeholder="Entrar Password"
+               autocomplete="current-password" required>
+        <!-- Botón ojo con SVG inline (no requiere FontAwesome) -->
+        <button type="button" class="toggle-pass" aria-label="Mostrar u ocultar contraseña" data-visible="false">
+          <svg class="icon-eye" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5c5 0 9 3.5 11 7-2 3.5-6 7-11 7S3 15.5 1 12c2-3.5 6-7 11-7Zm0 2C8.5 7 5.7 9.2 4.1 12 5.7 14.8 8.5 17 12 17s6.3-2.2 7.9-5C18.3 9.2 15.5 7 12 7Zm0 2.5A2.5 2.5 0 1 1 9.5 12 2.5 2.5 0 0 1 12 9.5Z"/>
+          </svg>
+        </button>
+      </span>
 
       <button type="submit" class="btn-login">Log In</button>
       <a class="forgot" href="#" tabindex="0">¿Ha perdido su contraseña?</a>
