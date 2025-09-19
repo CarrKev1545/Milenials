@@ -1,58 +1,10 @@
 {% extends "core/base_dashboard.html" %}
 {% block title %}Estudiantes a Grupos{% endblock %}
-
 {% block content %}
-<section class="cards home-cards" aria-label="Estudiantes a Grupos">
-  <article class="card home-card center" tabindex="0" aria-describedby="wip-desc">
-    <div class="card-box icon" aria-hidden="true">
-      <i class="fa-solid fa-people-arrows"></i>
-    </div>
-    <div id="wip-desc" class="label text-muted">Módulo en construcción</div>
-    <div class="mt-4">
-      <button type="button" class="btn btn--muted" disabled>Pronto</button>
-    </div>
-  </article>
-</section>
-
-{# ================== ESQUELETO LISTO PARA CUANDO ACTIVES LA LÓGICA ==================
-<form method="post" class="mb-4">
-  {% csrf_token %}
-  <div class="form-row">
-    <select id="grado" name="grado" class="select">
-      <option value="">Todos los grados</option>
-      <!-- ... -->
-    </select>
-    <select id="grupo" name="grupo" class="select">
-      <option value="">Todos los grupos</option>
-      <!-- ... -->
-    </select>
-    <button type="submit" class="btn">Filtrar</button>
+<section class="cards" aria-label="Estudiantes a Grupos">
+  <div class="card" tabindex="0">
+    <div class="card-box"><i class="fa-solid fa-people-arrows" aria-hidden="true"></i></div>
+    <div class="label">Estudiantes → Grupos (en construcción)</div>
   </div>
-</form>
-
-<div class="table-wrap">
-  <table class="table">
-    <thead>
-      <tr>
-        <th>Estudiante</th>
-        <th>Grado</th>
-        <th>Grupo</th>
-        <th class="cell-actions">Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- Renderiza aquí tus filas -->
-      <tr>
-        <td>Nombre Apellido</td>
-        <td>6°</td>
-        <td>A</td>
-        <td class="cell-actions">
-          <button type="button" class="btn btn--ghost">Ver</button>
-          <button type="button" class="btn">Asignar</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-#}
+</section>
 {% endblock %}

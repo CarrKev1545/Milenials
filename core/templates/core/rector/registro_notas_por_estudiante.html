@@ -1,420 +1,414 @@
-{% extends "core/base_dashboard.html" %}
 {% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Registro de notas — Por estudiante</title>
 
-{% block title %}Registro de notas — Por estudiante{% endblock %}
-
-{% block extra_css %}
-<style>
-  /* ===== Barra roja ===== */
-  .page-title{
-    position:sticky; top:var(--navbar-height); z-index:40;
-    background:var(--accent); color:#fff; font-weight:800; letter-spacing:.2px;
-    text-align:center; padding:10px 12px; box-shadow:0 4px 12px rgba(0,0,0,.35);
-  }
-
-  /* ===== Panel glass ===== */
-  .rg{ width:100%; max-width:1280px; margin:0 auto; padding-inline:clamp(12px,3vw,20px); }
-  .rg-wrap{ position:relative; margin-top:14px; display:block; overflow:hidden; }
-  .rg-wrap::before{
-    content:""; position:absolute; inset:-18px -22px; border-radius:18px;
-    background:
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    .page-title{position:sticky;top:var(--navbar-height);z-index:40;background:var(--accent);color:#fff;font-weight:800;letter-spacing:.2px;text-align:center;padding:10px 12px;box-shadow:0 4px 12px rgba(0,0,0,.35)}
+    .rg{width:100%;max-width:1280px;margin:0 auto;padding:0 20px}
+    .rg-wrap{position:relative;margin-top:14px}
+    .rg-wrap::before{content:"";position:absolute;inset:-18px -22px;border-radius:18px;background:
       radial-gradient(140% 160% at 10% 0%, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 45%),
       linear-gradient(135deg, rgba(22,22,24,.88) 0%, rgba(16,16,18,.86) 100%);
-    border:1px solid rgba(255,255,255,.10);
-    backdrop-filter:blur(6px) saturate(115%);
-    box-shadow:0 22px 44px rgba(0,0,0,.50);
-    z-index:0; pointer-events:none;
-  }
-  .rg-inner{
-    position:relative; z-index:1; text-align:initial;
-    padding:28px 24px max(96px, env(safe-area-inset-bottom, 24px));
-  }
+      border:1px solid rgba(255,255,255,.10);backdrop-filter: blur(6px) saturate(115%);
+      box-shadow:0 22px 44px rgba(0,0,0,.50);z-index:0}
+    .rg-inner{position:relative;z-index:1;padding:28px 24px 24px}
+    .rg-badge{width:370px;max-width:90vw;margin:0 auto;margin-top:-22px;background:#0c0c0c;border-radius:16px;
+      box-shadow:0 16px 30px rgba(0,0,0,.55), inset 0 -8px 22px rgba(0,0,0,.22);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px 16px 12px}
+    .rg-badge i{font-size:82px;color:#fff;filter:drop-shadow(0 10px 30px rgba(0,0,0,.6))}
+    .rg-chip{margin-top:12px;background:var(--accent);color:#fff;padding:8px 18px;border-radius:999px;font-weight:800;letter-spacing:.2px}
+    .rg-grid{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;align-items:center}
+    .rg-field{position:relative;display:flex;align-items:center;gap:10px;height:48px;padding:0 14px 0 50px;background:#fff;border-radius:14px;border:1px solid rgba(0,0,0,.06);box-shadow:0 10px 20px rgba(0,0,0,.22);width:100%}
+    .rg-field select,.rg-field input{appearance:none;width:100%;border:none;outline:none;background:transparent;color:#111;font-weight:600}
+    .rg-field input::placeholder{color:#777;font-weight:600}
+    .rg-ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:26px;display:grid;place-items:center;color:#111;opacity:.95}
+    .rg-caret{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#111;opacity:.85}
+    .rg-actions{margin-top:18px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+    .rg-btn{height:48px;min-width:180px;border-radius:12px;border:none;cursor:pointer;font-weight:800;color:#fff;background:var(--accent);box-shadow:0 12px 22px rgba(156,15,16,.38);transition:.12s transform ease,.12s box-shadow ease,.12s background ease}
+    .rg-btn:hover{transform:translateY(-2px);box-shadow:0 18px 28px rgba(156,15,16,.48)}
+    .rg-btn:active{transform:translateY(0) scale(.985)}
+    .rg-btn--ghost{background:#b51415}
+    .disabled{opacity:.55;pointer-events:none}
+    .hint{color:#cfd8dc;font-size:.9rem;margin:8px 6px 0}
+    .ok{color:#c8e6c9}.bad{color:#ffccbc}
+    @media (max-width:1020px){ .rg-grid{ grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
 
-  /* ===== Badge ===== */
-  .rg-badge{
-    width:min(420px,90vw);
-    margin:-22px auto 0;
-    background:#0c0c0c; border-radius:16px;
-    box-shadow:0 16px 30px rgba(0,0,0,.55), inset 0 -8px 22px rgba(0,0,0,.22);
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    padding:18px 16px 12px; position:relative;
-  }
-  @media (min-width:900px){ .rg-badge{ left:50%; transform:translateX(-50%); } }
-  .rg-badge i{ font-size:82px; color:#fff; filter:drop-shadow(0 10px 30px rgba(0,0,0,.6)); }
-  .rg-chip{ margin-top:12px; background:var(--accent); color:#fff; padding:8px 18px; border-radius:999px; font-weight:800; letter-spacing:.2px; }
+  <header class="navbar" id="navbar" role="navigation" aria-label="Barra principal">
+    <div class="nav-left">
+      <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menú" aria-controls="main-menu" aria-expanded="false">
+        <i class="fa-solid fa-bars"></i>
+      </button>
 
-  /* ===== Grid ===== */
-  .rg-grid{ margin-top:18px; display:grid; grid-template-columns:1fr 1fr; gap:14px 20px; align-items:center; }
-  @media (max-width:1020px){ .rg-grid{ grid-template-columns:1fr; } }
+      <img src="{% static 'img/logo2.jpeg' %}" alt="Logo colegio" class="logo">
 
-  /* ===== Campos ===== */
-  .rg-field{
-    position:relative; display:flex; align-items:center; gap:10px;
-    height:48px; padding:0 14px; /* <-- sin hueco izquierdo */
-    width:100%;
-    background:#fff; border-radius:14px; border:1px solid rgba(0,0,0,.06);
-    box-shadow:0 10px 20px rgba(0,0,0,.22);
-    cursor:pointer; /* sensación de clic en todo el cuadro */
-  }
-  .rg-field select, .rg-field input{
-    appearance:none; width:100%; border:none; outline:none; background:transparent;
-    color:#111; font-weight:600;
-    cursor:pointer;
-  }
-  .rg-field input{ cursor:text; } /* inputs siguen con cursor de texto al estar encima */
-  .rg-field input::placeholder{ color:#777; font-weight:600; }
-
-  /* Ocultar los íconos de la izquierda (sin tocar el HTML) */
-  .rg-ico{ display:none !important; }
-  /* Mantener caret de la derecha */
-  .rg-caret{ position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#111; opacity:.85; pointer-events:none; }
-
-  /* ===== Acciones pegajosas ===== */
-  .rg-actions{
-    position:sticky; bottom:calc(12px + env(safe-area-inset-bottom, 0px)); z-index:2;
-    background:linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.12) 45%, rgba(0,0,0,.22));
-    padding-top:8px; display:grid; gap:12px; grid-template-columns:1fr;
-  }
-  @media (min-width:700px){ .rg-actions{ grid-template-columns:repeat(3,1fr); } }
-  .rg-btn{
-    height:48px; border-radius:12px; border:none; cursor:pointer; font-weight:800; color:#fff;
-    background:var(--accent); box-shadow:0 12px 22px rgba(156,15,16,.38);
-    transition:.12s transform ease,.12s box-shadow ease,.12s background ease;
-    width:100%; min-width:0;
-  }
-  .rg-btn:hover{ transform:translateY(-2px); box-shadow:0 18px 28px rgba(156,15,16,.48); }
-  .rg-btn:active{ transform:translateY(0) scale(.985); }
-  .rg-btn--ghost{ background:#b51415; }
-  .disabled{ opacity:.55; pointer-events:none; }
-
-  /* Micro-ajuste ≤360px */
-  @media (max-width:360px){
-    .rg-field{ height:44px; }
-    .rg-badge i{ font-size:68px; }
-  }
-
-  /* Centrado robusto del badge en desktop */
-  @media (min-width:900px){
-    .rg-inner{ display:grid; grid-auto-rows:auto; justify-items:center; }
-    .rg-inner > .rg-badge{ left:auto !important; transform:none !important; margin-left:0 !important; margin-right:0 !important; justify-self:center; }
-    .rg-inner > .rg-grid, .rg-inner > .rg-actions{ justify-self:stretch; width:100%; }
-  }
-</style>
-{% endblock %}
-
-{% block page_banner %}
-  <div class="page-title">Registro de notas</div>
-{% endblock %}
-
-{% block content %}
-  <!-- CSRF “invisible” -->
-  <form id="csrf-form" style="display:none">{% csrf_token %}</form>
-
-  <section class="rg" aria-label="Filtros por estudiante">
-    <div class="rg-wrap">
-      <div class="rg-inner">
-        <div class="rg-badge" aria-hidden="true">
-          <i class="fa-solid fa-user-graduate"></i>
-          <div class="rg-chip">POR ESTUDIANTE</div>
-        </div>
-
-        <!-- Selecciones -->
-        <div class="rg-grid">
-          <label class="rg-field">
-            <span class="rg-ico"><i class="fa-solid fa-building-columns"></i></span>
-            <select id="sede">
-              <option value="">Seleccione la sede</option>
-            </select>
-            <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
-          </label>
-
-          <label class="rg-field">
-            <span class="rg-ico"><i class="fa-solid fa-id-card"></i></span>
-            <input id="doc" type="text" placeholder="Número de identificación" inputmode="numeric" autocomplete="off">
-          </label>
-
-          <label class="rg-field">
-            <span class="rg-ico"><i class="fa-solid fa-sitemap"></i></span>
-            <select id="grado" disabled>
-              <option value="">Seleccione el grado</option>
-            </select>
-            <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
-          </label>
-
-          <label class="rg-field">
-            <span class="rg-ico"><i class="fa-solid fa-user"></i></span>
-            <input id="est_nombre" type="text" placeholder="Nombre del estudiante" disabled>
-          </label>
-
-          <label class="rg-field">
-            <span class="rg-ico"><i class="fa-solid fa-people-roof"></i></span>
-            <select id="grupo" disabled>
-              <option value="">Seleccione el grupo</option>
-            </select>
-            <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
-          </label>
-
-          <label class="rg-field">
-            <span class="rg-ico"><i class="fa-solid fa-calendar-days"></i></span>
-            <select id="periodo" disabled>
-              <option value="">Seleccione periodo</option>
-            </select>
-            <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
-          </label>
-
-          <label class="rg-field">
-            <span class="rg-ico"><i class="fa-solid fa-book-open-reader"></i></span>
-            <select id="asignatura" disabled>
-              <option value="">Seleccione asignatura</option>
-            </select>
-            <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
-          </label>
-        </div>
-
-        <!-- Captura directa -->
-        <div class="rg-grid" style="margin-top:12px">
-          <label class="rg-field">
-            <span class="rg-ico"><i class="fa-solid fa-pen"></i></span>
-            <input id="nota" type="number" step="0.1" min="1.0" max="5.0" placeholder="Nota (1.0 – 5.0)">
-          </label>
-          <label class="rg-field">
-            <span class="rg-ico"><i class="fa-solid fa-ban"></i></span>
-            <input id="fallas" type="number" step="1" min="0" placeholder="Fallas (0+)">
-          </label>
-        </div>
-
-        <div class="hint" id="msg"></div>
-
-        <div class="rg-actions">
-          <button class="rg-btn" id="btn-guardar-uno" type="button" disabled>Guardar nota</button>
-          <button class="rg-btn" id="btn-buscar" type="button" disabled>Ir a tabla</button>
-          <button class="rg-btn rg-btn--ghost" type="button" id="btn-limpiar">Eliminar</button>
-        </div>
+      <div class="nav-title">
+        <h3>RECTOR / <span class="nowrap">COORDINADOR</span></h3>
+        <span class="user-name">{{ request.user.usuario }}</span>
       </div>
     </div>
-  </section>
-{% endblock %}
 
-{% block extra_js %}
-<script src="{% static 'core/js/registro_notas_api.js' %}"></script>
-<script>
-  /* === Tu JS original (sin cambios funcionales) === */
-  let seleccion = { sede_id:"", grado_id:"", grupo_id:"", asignatura_id:"", periodo_id:"", estudiante_id:"", estudiante_en_grupo:false };
-  const $ = s => document.querySelector(s);
-  const msg = $("#msg");
+    <nav class="nav-menu" id="main-menu" aria-label="Menú principal">
+      <a href="{% url 'dashboard_rector' %}">Inicio</a>
+      <a href="{% url 'rector_estudiantes_a_grupos' %}">Estudiante a grupos</a>
+      <a href="{% url 'rector_asignacion_docentes_grupos' %}">Asignación de Docentes a grupos</a>
+    </nav>
 
-  function resetSelect(sel, placeholder, disabled=true){
-    sel.innerHTML = `<option value="">${placeholder}</option>`;
-    sel.disabled = disabled;
-  }
-  function setMsg(text, ok=false){
-    msg.textContent = text || "";
-    msg.className = "hint " + (ok ? "ok" : (text ? "bad" : "")); }
+    <div class="nav-right">
+      <a href="{% url 'logout' %}" class="btn-logout">Cerrar Sesión</a>
+    </div>
 
-  async function loadInit(){
-    try{
-      const r = await fetch("{% url 'api_sedes' %}").then(x=>x.json());
-      const selSede = $("#sede");
-      resetSelect(selSede, "Seleccione la sede", false);
-      (r.sedes || []).forEach(s => selSede.insertAdjacentHTML("beforeend", `<option value="${s.id}">${s.nombre}</option>`));
+    <!-- Fondo oscuro para el menú en móvil -->
+    <div class="nav-backdrop" id="nav-backdrop" hidden></div>
+  </header>
 
-      const p = await fetch("{% url 'api_periodos_abiertos' %}").then(x=>x.json());
-      const selPer = $("#periodo");
-      resetSelect(selPer, "Seleccione periodo", false);
-      if (p.periodos && p.periodos.length){
-        p.periodos.forEach(pe => selPer.insertAdjacentHTML("beforeend", `<option value="${pe.id}">${pe.nombre}</option>`));
-        selPer.value = String(p.periodos[0].id);
-        seleccion.periodo_id = String(p.periodos[0].id);
-      }else{ setMsg("No hay periodos abiertos.", false); }
-    }catch(_){ setMsg("Error cargando sedes/periodos.", false); }
-    validate();
-  }
+  <div class="page-title">Registro de notas</div>
 
-  $("#sede").addEventListener("change", async e=>{
-    seleccion.sede_id = e.target.value || "";
-    resetSelect($("#grado"), "Seleccione el grado");
-    resetSelect($("#grupo"), "Seleccione el grupo");
-    resetSelect($("#asignatura"), "Seleccione asignatura");
+  <!-- form “invisible” para disponer del CSRF -->
+  <form id="csrf-form" style="display:none">{% csrf_token %}</form>
 
-    if(!seleccion.sede_id) { validate(); return; }
+  <main class="main" role="main">
+    <section class="rg" aria-label="Filtros por estudiante">
+      <div class="rg-wrap">
+        <div class="rg-inner">
+          <div class="rg-badge" aria-hidden="true">
+            <i class="fa-solid fa-user-graduate"></i>
+            <div class="rg-chip">POR ESTUDIANTE</div>
+          </div>
 
-    try{
-      const r = await fetch("{% url 'api_grados_por_sede' %}?sede_id="+seleccion.sede_id).then(r=>r.json());
-      resetSelect($("#grado"), "Seleccione el grado", false);
-      (r.grados || []).forEach(g => $("#grado").insertAdjacentHTML("beforeend", `<option value="${g.id}">${g.nombre}</option>`));
-    }catch(_){ setMsg("Error cargando grados.", false); }
-    validate();
-  });
+          <!-- Selecciones (igual que antes) -->
+          <div class="rg-grid">
+            <label class="rg-field">
+              <span class="rg-ico"><i class="fa-solid fa-building-columns"></i></span>
+              <select id="sede">
+                <option value="">Seleccione la sede</option>
+              </select>
+              <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
+            </label>
 
-  $("#grado").addEventListener("change", async e=>{
-    seleccion.grado_id = e.target.value || "";
-    resetSelect($("#grupo"), "Seleccione el grupo");
-    resetSelect($("#asignatura"), "Seleccione asignatura");
-    if(!seleccion.grado_id){ validate(); return; }
+            <label class="rg-field">
+              <span class="rg-ico"><i class="fa-solid fa-id-card"></i></span>
+              <input id="doc" type="text" placeholder="Número de identificación" inputmode="numeric" autocomplete="off">
+            </label>
 
-    try{
-      const url = "{% url 'api_grupos_por_sede_grado' %}?sede_id="+seleccion.sede_id+"&grado_id="+seleccion.grado_id;
-      const r = await fetch(url).then(x=>x.json());
-      resetSelect($("#grupo"), "Seleccione el grupo", false);
-      (r.grupos || []).forEach(g => $("#grupo").insertAdjacentHTML("beforeend", `<option value="${g.id}">${g.nombre}</option>`));
-    }catch(_){ setMsg("Error cargando grupos.", false); }
-    validate();
-  });
+            <label class="rg-field">
+              <span class="rg-ico"><i class="fa-solid fa-sitemap"></i></span>
+              <select id="grado" disabled>
+                <option value="">Seleccione el grado</option>
+              </select>
+              <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
+            </label>
 
-  $("#grupo").addEventListener("change", async e=>{
-    seleccion.grupo_id = e.target.value || "";
-    resetSelect($("#asignatura"), "Seleccione asignatura");
-    if(!seleccion.grupo_id){ validate(); return; }
+            <label class="rg-field">
+              <span class="rg-ico"><i class="fa-solid fa-user"></i></span>
+              <input id="est_nombre" type="text" placeholder="Nombre del estudiante" disabled>
+            </label>
 
-    try{
-      const r = await fetch("{% url 'api_asignaturas_por_grupo' %}?grupo_id="+seleccion.grupo_id).then(x=>x.json());
-      const lista = r.asignaturas || [];
-      resetSelect($("#asignatura"), "Seleccione asignatura", false);
+            <label class="rg-field">
+              <span class="rg-ico"><i class="fa-solid fa-people-roof"></i></span>
+              <select id="grupo" disabled>
+                <option value="">Seleccione el grupo</option>
+              </select>
+              <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
+            </label>
 
-      if (!lista.length){
-        setMsg("Este grupo no tiene asignaturas vinculadas.", false);
-        validate(); return;
-      }
-      lista.forEach(a => {
-        const asigId = (a.id != null ? a.id : a.asignatura_id);
-        const gaId  = a.ga_id != null ? a.ga_id : (a.id_ga || "");
-        $("#asignatura").insertAdjacentHTML("beforeend", `<option value="${asigId}" data-ga="${gaId}">${a.nombre}</option>`);
-      });
-      setMsg("");
-    }catch(_){ setMsg("Error cargando asignaturas.", false); }
-    validate();
+            <label class="rg-field">
+              <span class="rg-ico"><i class="fa-solid fa-calendar-days"></i></span>
+              <select id="periodo" disabled>
+                <option value="">Seleccione periodo</option>
+              </select>
+              <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
+            </label>
 
-    if(seleccion.estudiante_id){
+            <label class="rg-field">
+              <span class="rg-ico"><i class="fa-solid fa-book-open-reader"></i></span>
+              <select id="asignatura" disabled>
+                <option value="">Seleccione asignatura</option>
+              </select>
+              <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
+            </label>
+          </div>
+
+          <!-- NUEVO: captura directa -->
+          <div class="rg-grid" style="margin-top:12px">
+            <label class="rg-field">
+              <span class="rg-ico"><i class="fa-solid fa-pen"></i></span>
+              <input id="nota" type="number" step="0.1" min="1.0" max="5.0" placeholder="Nota (1.0 – 5.0)">
+            </label>
+            <label class="rg-field">
+              <span class="rg-ico"><i class="fa-solid fa-ban"></i></span>
+              <input id="fallas" type="number" step="1" min="0" placeholder="Fallas (0+)">
+            </label>
+          </div>
+
+          <div class="hint" id="msg"></div>
+
+          <div class="rg-actions">
+              <button class="rg-btn" id="btn-guardar-uno" type="button" disabled>Guardar nota</button>
+              <button class="rg-btn" id="btn-buscar" type="button" disabled>Ir a tabla</button>
+              <button class="rg-btn rg-btn--ghost" type="button" id="btn-limpiar">Eliminar</button>
+          </div>
+
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  {% include "core/partials/footer.html" %}
+
+  <!-- Helper para POST de notas -->
+  <script src="{% static 'core/js/registro_notas_api.js' %}"></script>
+
+  <script>
+    // ===== Estado =====
+    let seleccion = {
+      sede_id: "", grado_id: "", grupo_id: "",
+      asignatura_id: "", periodo_id: "",
+      estudiante_id: "", estudiante_en_grupo: false
+    };
+
+    const $ = s => document.querySelector(s);
+    const msg = $("#msg");
+
+    function resetSelect(sel, placeholder, disabled=true){
+      sel.innerHTML = `<option value="">${placeholder}</option>`;
+      sel.disabled = disabled;
+    }
+    function setMsg(text, ok=false){
+      msg.textContent = text || "";
+      msg.className = "hint " + (ok ? "ok" : (text ? "bad" : ""));
+    }
+
+    // Cargar sedes y periodos al entrar
+    async function loadInit(){
       try{
-        const eg = await fetch("{% url 'api_estudiantes_por_grupo' %}?grupo_id="+seleccion.grupo_id).then(x=>x.json());
-        seleccion.estudiante_en_grupo = (eg.estudiantes || []).some(e => String(e.id) === String(seleccion.estudiante_id));
-        setMsg(seleccion.estudiante_en_grupo ? "El estudiante pertenece al grupo seleccionado." : "El estudiante NO pertenece a este grupo.", seleccion.estudiante_en_grupo);
-      }catch(_){ setMsg("No se pudo validar pertenencia del estudiante al grupo.", false); }
+        const r = await fetch("{% url 'api_sedes' %}").then(x=>x.json());
+        const selSede = $("#sede");
+        resetSelect(selSede, "Seleccione la sede", false);
+        (r.sedes || []).forEach(s => selSede.insertAdjacentHTML("beforeend", `<option value="${s.id}">${s.nombre}</option>`));
+
+        const p = await fetch("{% url 'api_periodos_abiertos' %}").then(x=>x.json());
+        const selPer = $("#periodo");
+        resetSelect(selPer, "Seleccione periodo", false);
+        if (p.periodos && p.periodos.length){
+          p.periodos.forEach(pe => selPer.insertAdjacentHTML("beforeend", `<option value="${pe.id}">${pe.nombre}</option>`));
+          selPer.value = String(p.periodos[0].id);
+          seleccion.periodo_id = String(p.periodos[0].id);
+        }else{
+          setMsg("No hay periodos abiertos.", false);
+        }
+      }catch(_){ setMsg("Error cargando sedes/periodos.", false); }
       validate();
     }
-  });
 
-  $("#periodo").addEventListener("change", e=>{ seleccion.periodo_id = e.target.value || ""; validate(); });
-  $("#asignatura").addEventListener("change", e=>{ seleccion.asignatura_id = e.target.value || ""; validate(); });
+    // ===== Cambios encadenados =====
+    $("#sede").addEventListener("change", async e=>{
+      seleccion.sede_id = e.target.value || "";
+      resetSelect($("#grado"), "Seleccione el grado");
+      resetSelect($("#grupo"), "Seleccione el grupo");
+      resetSelect($("#asignatura"), "Seleccione asignatura");
 
-  let timer = null;
-  $("#doc").addEventListener("input", e=>{
-    clearTimeout(timer);
-    const raw = (e.target.value || "").replace(/\D+/g,"");
-    e.target.value = raw;
-    $("#est_nombre").value = "";
-    seleccion.estudiante_id = "";
-    seleccion.estudiante_en_grupo = false;
-    setMsg("");
+      if(!seleccion.sede_id) { validate(); return; }
 
-    if(raw.length < 5){ validate(); return; }
-
-    timer = setTimeout(async ()=>{
       try{
-        const r = await fetch("{% url 'api_estudiante_por_documento' %}?doc=" + raw);
-        if(!r.ok){ setMsg("Documento no existe."); validate(); return; }
-        const data = await r.json();
-        $("#est_nombre").value = data.nombre_completo + " • DOC: " + data.documento;
-        seleccion.estudiante_id = data.id;
+        const r = await fetch("{% url 'api_grados_por_sede' %}?sede_id="+seleccion.sede_id).then(r=>r.json());
+        resetSelect($("#grado"), "Seleccione el grado", false);
+        (r.grados || []).forEach(g => $("#grado").insertAdjacentHTML("beforeend", `<option value="${g.id}">${g.nombre}</option>`));
+      }catch(_){ setMsg("Error cargando grados.", false); }
+      validate();
+    });
 
-        if(seleccion.grupo_id){
+    $("#grado").addEventListener("change", async e=>{
+      seleccion.grado_id = e.target.value || "";
+      resetSelect($("#grupo"), "Seleccione el grupo");
+      resetSelect($("#asignatura"), "Seleccione asignatura");
+      if(!seleccion.grado_id){ validate(); return; }
+
+      try{
+        const url = "{% url 'api_grupos_por_sede_grado' %}?sede_id="+seleccion.sede_id+"&grado_id="+seleccion.grado_id;
+        const r = await fetch(url).then(x=>x.json());
+        resetSelect($("#grupo"), "Seleccione el grupo", false);
+        (r.grupos || []).forEach(g => $("#grupo").insertAdjacentHTML("beforeend", `<option value="${g.id}">${g.nombre}</option>`));
+      }catch(_){ setMsg("Error cargando grupos.", false); }
+      validate();
+    });
+
+    $("#grupo").addEventListener("change", async e=>{
+      seleccion.grupo_id = e.target.value || "";
+      resetSelect($("#asignatura"), "Seleccione asignatura");
+      if(!seleccion.grupo_id){ validate(); return; }
+
+      try{
+        const r = await fetch("{% url 'api_asignaturas_por_grupo' %}?grupo_id="+seleccion.grupo_id).then(x=>x.json());
+        const lista = r.asignaturas || [];
+        resetSelect($("#asignatura"), "Seleccione asignatura", false);
+
+        if (!lista.length){
+          setMsg("Este grupo no tiene asignaturas vinculadas.", false);
+          validate(); return;
+        }
+        lista.forEach(a => {
+          const asigId = (a.id != null ? a.id : a.asignatura_id);
+          const gaId  = a.ga_id != null ? a.ga_id : (a.id_ga || "");
+          $("#asignatura").insertAdjacentHTML("beforeend", `<option value="${asigId}" data-ga="${gaId}">${a.nombre}</option>`);
+        });
+        setMsg("");
+      }catch(_){ setMsg("Error cargando asignaturas.", false); }
+      validate();
+
+      if(seleccion.estudiante_id){
+        try{
           const eg = await fetch("{% url 'api_estudiantes_por_grupo' %}?grupo_id="+seleccion.grupo_id).then(x=>x.json());
           seleccion.estudiante_en_grupo = (eg.estudiantes || []).some(e => String(e.id) === String(seleccion.estudiante_id));
           setMsg(seleccion.estudiante_en_grupo ? "El estudiante pertenece al grupo seleccionado." : "El estudiante NO pertenece a este grupo.", seleccion.estudiante_en_grupo);
-        }
+        }catch(_){ setMsg("No se pudo validar pertenencia del estudiante al grupo.", false); }
         validate();
-      }catch(_){ setMsg("Error consultando el documento.", false); validate(); }
-    }, 350);
-  });
+      }
+    });
 
-  function validate(){
-    const baseOK = !!(seleccion.sede_id && seleccion.grado_id && seleccion.grupo_id &&
-                      seleccion.asignatura_id && seleccion.periodo_id &&
-                      seleccion.estudiante_id && seleccion.estudiante_en_grupo);
-    $("#btn-buscar").disabled = !baseOK;
-    $("#btn-buscar").classList.toggle('disabled', !baseOK);
+    $("#periodo").addEventListener("change", e=>{ seleccion.periodo_id = e.target.value || ""; validate(); });
+    $("#asignatura").addEventListener("change", e=>{ seleccion.asignatura_id = e.target.value || ""; validate(); });
 
-    const notaVal = parseFloat($("#nota").value);
-    const notaOK = Number.isFinite(notaVal) && notaVal >= 1.0 && notaVal <= 5.0;
-    const canSave = baseOK && notaOK;
-    $("#btn-guardar-uno").disabled = !canSave;
-    $("#btn-guardar-uno").classList.toggle('disabled', !canSave);
-  }
+    // Buscar estudiante por documento (usa ?doc=)
+    let timer = null;
+    $("#doc").addEventListener("input", e=>{
+      clearTimeout(timer);
+      const raw = (e.target.value || "").replace(/\D+/g,"");
+      e.target.value = raw;
+      $("#est_nombre").value = "";
+      seleccion.estudiante_id = "";
+      seleccion.estudiante_en_grupo = false;
+      setMsg("");
 
-  $("#nota").addEventListener("input", validate);
-  $("#fallas").addEventListener("input", validate);
+      if(raw.length < 5){ validate(); return; }
 
-  $("#btn-guardar-uno").addEventListener("click", async () => {
+      timer = setTimeout(async ()=>{
+        try{
+          const r = await fetch("{% url 'api_estudiante_por_documento' %}?doc=" + raw);
+          if(!r.ok){ setMsg("Documento no existe."); validate(); return; }
+          const data = await r.json();
+          $("#est_nombre").value = data.nombre_completo + " • DOC: " + data.documento;
+          seleccion.estudiante_id = data.id;
+
+          if(seleccion.grupo_id){
+            const eg = await fetch("{% url 'api_estudiantes_por_grupo' %}?grupo_id="+seleccion.grupo_id).then(x=>x.json());
+            seleccion.estudiante_en_grupo = (eg.estudiantes || []).some(e => String(e.id) === String(seleccion.estudiante_id));
+            setMsg(seleccion.estudiante_en_grupo ? "El estudiante pertenece al grupo seleccionado." : "El estudiante NO pertenece a este grupo.", seleccion.estudiante_en_grupo);
+          }
+          validate();
+        }catch(_){ setMsg("Error consultando el documento.", false); validate(); }
+      }, 350);
+    });
+
+    // Validación global (habilita botones)
+    function validate(){
+      const baseOK = !!(seleccion.sede_id && seleccion.grado_id && seleccion.grupo_id &&
+                        seleccion.asignatura_id && seleccion.periodo_id &&
+                        seleccion.estudiante_id && seleccion.estudiante_en_grupo);
+      $("#btn-buscar").disabled = !baseOK;
+      $("#btn-buscar").classList.toggle('disabled', !baseOK);
+
+      // para guardar nota también exigimos que haya un número válido en “nota”
+      const notaVal = parseFloat($("#nota").value);
+      const notaOK = Number.isFinite(notaVal) && notaVal >= 1.0 && notaVal <= 5.0;
+      const canSave = baseOK && notaOK;
+      $("#btn-guardar-uno").disabled = !canSave;
+      $("#btn-guardar-uno").classList.toggle('disabled', !canSave);
+    }
+
+    // Revalidar cuando cambien nota/fallas
+    $("#nota").addEventListener("input", validate);
+    $("#fallas").addEventListener("input", validate);
+
+    // Guardar una nota
+    $("#btn-guardar-uno").addEventListener("click", async () => {
     const nota   = parseFloat($("#nota").value);
     const fallas = parseInt($("#fallas").value || "0", 10);
-    if (!Number.isFinite(nota) || nota < 1.0 || nota > 5.0) { alert("La nota debe estar entre 1.0 y 5.0"); return; }
-    if (!Number.isInteger(fallas) || fallas < 0) { alert("Fallas debe ser un entero ≥ 0"); return; }
+
+    if (!Number.isFinite(nota) || nota < 1.0 || nota > 5.0) {
+      alert("La nota debe estar entre 1.0 y 5.0");
+      return;
+    }
+    if (!Number.isInteger(fallas) || fallas < 0) {
+      alert("Fallas debe ser un entero ≥ 0");
+      return;
+    }
 
     try {
-      const res = await guardarNota(seleccion.estudiante_id, seleccion.asignatura_id, seleccion.periodo_id, nota, fallas);
-      if (!res || !res.ok) { console.error("Fallo al guardar nota:", res); alert(res?.error || "No se pudo guardar la nota."); return; }
+      const res = await guardarNota(
+        seleccion.estudiante_id,
+        seleccion.asignatura_id,
+        seleccion.periodo_id,
+        nota,
+        fallas
+      );
+
+      // ⬇️ Antes ignorábamos las respuestas no-2xx; ahora mostrarlas
+      if (!res || !res.ok) {
+        console.error("Fallo al guardar nota:", res);
+        alert(res?.error || "No se pudo guardar la nota.");
+        return;
+      }
+
+      // Éxito: feedback simple
       alert(`Nota guardada (${res.accion === "UPDATE" ? "actualizada" : "creada"}) correctamente.`);
+      // si quieres limpiar campos, descomenta:
+      // $("#nota").value = "";
+      // $("#fallas").value = "";
+      // validate();
     } catch (err) {
-      console.error(err); alert("No se pudo guardar la nota (error de red).");
+      console.error(err);
+      alert("No se pudo guardar la nota (error de red).");
     }
   });
 
-  $("#btn-buscar").addEventListener("click", () => {
-    if ($("#btn-buscar").disabled) return;
-    const q = new URLSearchParams({
-      sede_id: seleccion.sede_id, grado_id: seleccion.grado_id, grupo_id: seleccion.grupo_id,
-      asignatura_id: seleccion.asignatura_id, periodo_id: seleccion.periodo_id, estudiante_id: seleccion.estudiante_id
-    });
-    location.href = "{% url 'rector_reporte_notas_tabla' %}?" + q.toString();
-  });
+      // Ir a la tabla (reporte)
+    $("#btn-buscar").addEventListener("click", () => {
+      if ($("#btn-buscar").disabled) return;
 
-  $("#btn-limpiar").addEventListener("click", ()=>{
-    document.querySelectorAll("select").forEach(s=> s.selectedIndex = 0);
-    $("#doc").value = ""; $("#est_nombre").value = "";
-    $("#nota").value = ""; $("#fallas").value = "";
-    seleccion = {sede_id:"",grado_id:"",grupo_id:"",asignatura_id:"",periodo_id:"",estudiante_id:"",estudiante_en_grupo:false};
-    resetSelect($("#grado"), "Seleccione el grado", true);
-    resetSelect($("#grupo"), "Seleccione el grupo", true);
-    resetSelect($("#asignatura"), "Seleccione asignatura", true);
-    resetSelect($("#periodo"), "Seleccione periodo", false);
-    fetch("{% url 'api_periodos_abiertos' %}").then(r=>r.json()).then(p=>{
-      const selPer = $("#periodo");
-      resetSelect(selPer, "Seleccione periodo", false);
-      (p.periodos||[]).forEach(pe => selPer.insertAdjacentHTML("beforeend", `<option value="${pe.id}">${pe.nombre}</option>`));
+      const q = new URLSearchParams({
+        sede_id:        seleccion.sede_id,
+        grado_id:       seleccion.grado_id,
+        grupo_id:       seleccion.grupo_id,
+        asignatura_id:  seleccion.asignatura_id,
+        periodo_id:     seleccion.periodo_id,
+        estudiante_id:  seleccion.estudiante_id
+      });
+
+      // Redirige al reporte en tabla
+      location.href = "{% url 'rector_reporte_notas_tabla' %}?" + q.toString();
+    });
+
+    // Limpiar todo
+    $("#btn-limpiar").addEventListener("click", ()=>{
+      document.querySelectorAll("select").forEach(s=> s.selectedIndex = 0);
+      $("#doc").value = ""; $("#est_nombre").value = "";
+      $("#nota").value = ""; $("#fallas").value = "";
+      seleccion = {sede_id:"",grado_id:"",grupo_id:"",asignatura_id:"",periodo_id:"",estudiante_id:"",estudiante_en_grupo:false};
+      resetSelect($("#grado"), "Seleccione el grado", true);
+      resetSelect($("#grupo"), "Seleccione el grupo", true);
+      resetSelect($("#asignatura"), "Seleccione asignatura", true);
+      resetSelect($("#periodo"), "Seleccione periodo", false);
+      fetch("{% url 'api_periodos_abiertos' %}").then(r=>r.json()).then(p=>{
+        const selPer = $("#periodo");
+        resetSelect(selPer, "Seleccione periodo", false);
+        (p.periodos||[]).forEach(pe => selPer.insertAdjacentHTML("beforeend", `<option value="${pe.id}">${pe.nombre}</option>`));
+        validate();
+      });
+      setMsg("");
       validate();
     });
-    setMsg(""); validate();
-  });
 
-  loadInit();
-
-  /* ====== NUEVO: abrir selects al tocar cualquier parte del cuadro ====== */
-  function openPicker(el){
-    if (!el || el.disabled) return;
-    try{
-      if (typeof el.showPicker === 'function') { el.showPicker(); return; }
-    }catch(_){}
-    el.focus();
-    // Fallback razonable para navegadores que no soportan showPicker
-    el.dispatchEvent(new MouseEvent('mousedown', {bubbles:true}));
-    el.click();
-  }
-
-  document.querySelectorAll('.rg-field').forEach(lbl=>{
-    const sel = lbl.querySelector('select');
-    const inp = lbl.querySelector('input');
-    if (sel){
-      lbl.addEventListener('click', (e)=>{
-        if (e.target.tagName.toLowerCase() !== 'select') {
-          e.preventDefault();
-          openPicker(sel);
-        }
-      });
-    }else if (inp){
-      lbl.addEventListener('click', (e)=>{
-        if (e.target !== inp){ inp.focus(); }
-      });
-    }
-  });
-</script>
-{% endblock %}
+    loadInit();
+  </script>
+</body>
+</html>

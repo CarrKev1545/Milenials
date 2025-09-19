@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
+from django.utils import timezone   # ← añade esto
 
 class UsuarioManager(BaseUserManager):
     def create_user(self, usuario, email, password=None, **extra_fields):
@@ -7,7 +8,7 @@ class UsuarioManager(BaseUserManager):
             raise ValueError("Debe indicar un nombre de usuario")
         email = self.normalize_email(email)
         user = self.model(usuario=usuario, email=email, **extra_fields)
-        user.set_password(password)  # guarda hash compatible con Django en password_hash
+        user.set_password(password)
         user.save(using=self._db)
         return user
 
@@ -19,7 +20,7 @@ class UsuarioManager(BaseUserManager):
 class Usuario(AbstractBaseUser):
     class Meta:
         db_table = "usuarios"
-        managed = False  # ¡No dejar que Django cree/modifique esta tabla!
+        managed = True
 
     id = models.BigAutoField(primary_key=True)
     nombre = models.CharField(max_length=80)
@@ -29,13 +30,12 @@ class Usuario(AbstractBaseUser):
     rol = models.CharField(max_length=10)
     usuario = models.CharField(max_length=50, unique=True)
 
-    # Django espera 'password' como atributo. Lo mapeamos a tu columna 'password_hash'
+    # Django espera 'password'; lo mapeamos a tu columna real:
     password = models.CharField(max_length=255, db_column="password_hash")
 
     activo = models.BooleanField(default=True)
-    creado_en = models.DateTimeField()
+    creado_en = models.DateTimeField(default=timezone.now)  # ← FIX (o usa auto_now_add=True)
 
-    # Requerido por AbstractBaseUser
     last_login = models.DateTimeField(null=True, blank=True)
 
     USERNAME_FIELD = "usuario"

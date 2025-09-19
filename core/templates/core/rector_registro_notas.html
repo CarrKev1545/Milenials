@@ -1,94 +1,10 @@
 {% extends "core/base_dashboard.html" %}
 {% block title %}Registro de Notas{% endblock %}
-
 {% block content %}
-<section class="cards home-cards" aria-label="Registro de Notas">
-  <article class="card home-card center" tabindex="0" aria-describedby="wip-desc">
-    <div class="card-box icon" aria-hidden="true">
-      <i class="fa-solid fa-user-pen"></i>
-    </div>
-    <div id="wip-desc" class="label text-muted">Módulo en construcción</div>
-    <div class="mt-4">
-      <button type="button" class="btn btn--muted" disabled>Pronto</button>
-    </div>
-  </article>
+<section class="cards" aria-label="Registro de Notas">
+  <div class="card" tabindex="0">
+    <div class="card-box"><i class="fa-solid fa-user-pen" aria-hidden="true"></i></div>
+    <div class="label">Registro de Notas (en construcción)</div>
+  </div>
 </section>
-
-{# ================== ESQUELETO PARA CUANDO CONECTES LA LÓGICA ==================
-
-<!-- Filtros / Selecciones superiores -->
-<form method="post" class="mb-4">
-  {% csrf_token %}
-  <div class="card">
-    <div class="form-row">
-      <select id="grado" name="grado" class="select">
-        <option value="">Grado</option>
-        <!-- opciones -->
-      </select>
-      <select id="grupo" name="grupo" class="select">
-        <option value="">Grupo</option>
-        <!-- opciones -->
-      </select>
-      <select id="asignatura" name="asignatura" class="select">
-        <option value="">Asignatura</option>
-        <!-- opciones -->
-      </select>
-      <select id="periodo" name="periodo" class="select">
-        <option value="">Periodo</option>
-        <option value="1">Periodo 1</option>
-        <option value="2">Periodo 2</option>
-        <option value="3">Periodo 3</option>
-        <option value="4">Periodo 4</option>
-      </select>
-      <button type="submit" class="btn">Aplicar</button>
-    </div>
-  </div>
-</form>
-
-<!-- Búsqueda rápida -->
-<div class="card mb-4">
-  <div class="form-row">
-    <input id="buscar_estudiante" name="buscar_estudiante" class="input" placeholder="Buscar estudiante">
-    <button type="button" class="btn btn--ghost">Limpiar</button>
-  </div>
-</div>
-
-<!-- Tabla de registro de notas -->
-<div class="table-wrap">
-  <table class="table">
-    <thead>
-      <tr>
-        <th>Estudiante</th>
-        <th>Asignatura</th>
-        <th>Periodo</th>
-        <th>Nota</th>
-        <th class="cell-actions">Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      {# Ejemplo de fila; aquí iteras tus registros #}
-      <tr>
-        <td>Nombre Apellido</td>
-        <td>Matemáticas</td>
-        <td>1</td>
-        <td>
-          <input type="number" step="0.1" min="0" max="5" class="input" value="4.5" style="max-width:120px">
-        </td>
-        <td class="cell-actions">
-          <button type="button" class="btn btn--ghost">Ver</button>
-          <button type="submit" class="btn">Guardar</button>
-          <button type="button" class="btn btn--danger">Eliminar</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-<!-- Acciones secundarias -->
-<div class="mt-4">
-  <button type="button" class="btn">Exportar</button>
-  <button type="button" class="btn btn--ghost">Imprimir</button>
-</div>
-
-#}
 {% endblock %}

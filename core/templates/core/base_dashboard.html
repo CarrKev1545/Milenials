@@ -11,10 +11,6 @@
 
   <!-- CSS global del dashboard -->
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-  <!-- CSS responsivo (drop-in) -->
-  <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
-  <!-- Patch final: corrige footer y capas del menú (cargar SIEMPRE de último) -->
-  <link rel="stylesheet" href="{% static 'css/dashboard.patch.css' %}">
 
   <!-- Iconos (Font Awesome) -->
   <link rel="stylesheet"
@@ -62,9 +58,7 @@
 
   <!-- CONTENIDO -->
   <main class="main" role="main">
-    <div class="container">
-      {% block content %}{% endblock %}
-    </div>
+    {% block content %}{% endblock %}
   </main>
 
   <!-- FOOTER -->
