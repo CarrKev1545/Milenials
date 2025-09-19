@@ -1,26 +1,45 @@
-{% load static %}
+{% load static %} 
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Millennials{% endblock %}</title>
+
+  <!-- Favicon -->
   <link rel="icon" href="{% static 'img/icono.ico' %}">
+
+  <!-- CSS global -->
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <!-- CSS responsivo compartido (no cambia lógica) -->
+  <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+
+  <!-- CSS extra por página -->
   {% block extra_css %}{% endblock %}
-  <style>
-    /* Reset mínimo para evitar márgenes raros */
-    html, body { height: 100%; margin: 0; }
-  </style>
 </head>
 <body>
+
   {% if request.user.is_authenticated %}
-    <div class="topbar" style="padding:8px 12px; background:#111; color:#fff;">
-      Millennials — Usuario: {{ request.user.usuario }} | Rol: {{ request.user.rol }}
-      <a href="{% url 'logout' %}" style="color:#fff; margin-left:12px;">Cerrar sesión</a>
+  <!-- Barra superior: conservamos .topbar y sumamos utilitarias -->
+  <header class="topbar navbar" role="navigation" aria-label="Barra superior">
+    <div class="container" style="display:flex; align-items:center; gap:.75rem;">
+      <div class="brand" style="font-weight:800;">Millennials</div>
+      <div class="spacer" style="flex:1;"></div>
+      <div class="user-name text-muted" aria-live="polite">
+        Usuario: {{ request.user.usuario }} · Rol: {{ request.user.rol }}
+      </div>
+      <a class="btn btn--ghost" href="{% url 'logout' %}">Cerrar sesión</a>
     </div>
+  </header>
   {% endif %}
 
-  {% block content %}{% endblock %}
+  <main class="page-content" role="main">
+    <div class="container">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
 
+  <!-- JS extra por página -->
   {% block extra_js %}{% endblock %}
 </body>
 </html>

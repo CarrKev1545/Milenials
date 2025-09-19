@@ -5,11 +5,24 @@
 
 {% block extra_css %}
 <style>
-  /* Pista visual cuando el nombre viene autocompletado */
+  /* Solo ajustes puntuales para esta página (todo lo demás lo da dashboard.patch.css) */
+
+  /* Nombre autocompletado: pista visual */
   #eg-nombre[readonly]{ font-style: italic; opacity:.95; }
-  .re-msg{margin:.5rem 0; padding:.6rem .9rem; border-radius:.5rem; font-weight:600;}
-  .re-msg--ok{background:#0f5132; color:#d1e7dd;}
-  .re-msg--err{background:#842029; color:#f8d7da;}
+
+  /* Inputs dentro de .re-field (ya tenemos los selects en el patch) */
+  .re-field input{
+    flex: 1 1 auto; min-width:0;
+    height: 64px;
+    font-size: clamp(1rem,.95rem + .2vw,1.08rem);
+    color:#f6f6fa;
+    background: transparent;
+    border:none; outline:none;
+  }
+  .re-field input::placeholder{ color:#c8c8cf; opacity:.9; }
+
+  /* Estado deshabilitado para selects dependientes */
+  .is-disabled{ opacity:.6; cursor:not-allowed; }
 </style>
 {% endblock %}
 
@@ -28,7 +41,6 @@
     <!-- Columna derecha: formulario -->
     <div class="re-right">
 
-      {# mensajes de Django (éxito / error) #}
       {% if messages %}
         {% for m in messages %}
           <div class="re-msg {% if m.tags == 'success' %}re-msg--ok{% else %}re-msg--err{% endif %}">
@@ -37,73 +49,76 @@
         {% endfor %}
       {% endif %}
 
-      <form class="re-form" id="eg-form" method="post" autocomplete="off" novalidate>
-        {% csrf_token %}
+      <div class="re-card">
+        <form class="re-form" id="eg-form" method="post" autocomplete="off" novalidate>
+          {% csrf_token %}
 
-        <!-- Documento -->
-        <label class="re-field" for="eg-doc">
-          <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-id-card"></i></span>
-          <input id="eg-doc" name="documento" type="text" inputmode="numeric" pattern="[0-9]{4,30}"
-                 placeholder="Cédula de Ciudadanía/Tarjeta de identidad"
-                 aria-label="Documento del estudiante" required>
-        </label>
+          <!-- Documento -->
+          <label class="re-field" for="eg-doc">
+            <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-id-card"></i></span>
+            <input id="eg-doc" name="documento" type="text" inputmode="numeric" pattern="[0-9]{4,30}"
+                   placeholder="Cédula de ciudadanía / Tarjeta de identidad"
+                   aria-label="Documento del estudiante" required>
+          </label>
 
-        <!-- Nombre estudiante (solo lectura; se rellena con el documento) -->
-        <label class="re-field" for="eg-nombre">
-          <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
-          <input id="eg-nombre" name="nombre_estudiante" type="text"
-                 placeholder="Nombre del estudiante" aria-label="Nombre del estudiante"
-                 readonly>
-        </label>
+          <!-- Nombre (solo lectura) -->
+          <label class="re-field" for="eg-nombre">
+            <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+            <input id="eg-nombre" name="nombre_estudiante" type="text"
+                   placeholder="Nombre del estudiante" aria-label="Nombre del estudiante"
+                   readonly>
+          </label>
 
-        <!-- Seleccione la sede (desde BD) -->
-        <label class="re-field" for="eg-sede">
-          <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-building"></i></span>
-          <select id="eg-sede" name="sede_id" required aria-label="Seleccione la Sede">
-            <option value="">Seleccione la Sede</option>
-            {% for s in sedes %}
-              <option value="{{ s.id }}">{{ s.nombre }}</option>
-            {% endfor %}
-          </select>
-          <span class="re-caret" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
-        </label>
+          <!-- Sede -->
+          <label class="re-field" for="eg-sede">
+            <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-building"></i></span>
+            <select id="eg-sede" name="sede_id" required aria-label="Seleccione la sede">
+              <option value="">Seleccione la sede</option>
+              {% for s in sedes %}
+                <option value="{{ s.id }}">{{ s.nombre }}</option>
+              {% endfor %}
+            </select>
+            <span class="re-caret" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+          </label>
 
-        <!-- Seleccione el grado (desde BD / filtrado por sede) -->
-        <label class="re-field" for="eg-grado">
-          <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-graduation-cap"></i></span>
-          <select id="eg-grado" name="grado_id" required aria-label="Seleccione el Grado">
-            <option value="">Seleccione el Grado</option>
-            {% for g in grados %}
-              <option value="{{ g.id }}">{{ g.nombre }}</option>
-            {% endfor %}
-          </select>
-          <span class="re-caret" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
-        </label>
+          <!-- Grado (se activa al elegir sede) -->
+          <label class="re-field" for="eg-grado">
+            <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-graduation-cap"></i></span>
+            <select id="eg-grado" name="grado_id" required aria-label="Seleccione el grado" disabled>
+              <option value="">Seleccione el grado</option>
+            </select>
+            <span class="re-caret" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+          </label>
 
-        <!-- Seleccione el grupo (dinámico por sede+grado) -->
-        <label class="re-field" for="eg-grupo">
-          <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-users-rectangle"></i></span>
-          <select id="eg-grupo" name="grupo_id" required aria-label="Seleccione el Grupo" disabled>
-            <option value="">Seleccione el Grupo</option>
-          </select>
-          <span class="re-caret" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
-        </label>
-      </form>
+          <!-- Grupo (se activa al elegir grado) -->
+          <label class="re-field" for="eg-grupo">
+            <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-users-rectangle"></i></span>
+            <select id="eg-grupo" name="grupo_id" required aria-label="Seleccione el grupo" disabled>
+              <option value="">Seleccione el grupo</option>
+            </select>
+            <span class="re-caret" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+          </label>
+        </form>
 
-      <!-- Acciones -->
-      <div class="re-actions">
-        <button type="submit" form="eg-form" class="re-btn" id="btn-asignar">Asignar</button>
-        <button type="reset"  form="eg-form" class="re-btn re-btn--ghost" id="btn-eliminar">Eliminar datos</button>
+        <!-- Acciones -->
+        <div class="re-actions">
+          <button type="submit" form="eg-form" class="btn btn--danger">Asignar</button>
+          <button type="reset"  form="eg-form" class="btn btn--danger">Limpiar</button>
+        </div>
       </div>
     </div>
   </div>
 </section>
+
+<!-- Toast (reutiliza estilos del patch) -->
+<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 (function(){
-  const $        = s => document.querySelector(s);
+  const $ = (s) => document.querySelector(s);
+
   const form     = $('#eg-form');
   const csrfInp  = form.querySelector('input[name=csrfmiddlewaretoken]');
   const docInp   = $('#eg-doc');
@@ -112,100 +127,99 @@
   const gradoSel = $('#eg-grado');
   const grupoSel = $('#eg-grupo');
 
-  // Helpers
-  function clearSelect(sel, placeholder){
+  /* ---------- helpers ---------- */
+  function showToast(msg, ok=true){
+    const el = $('#toast');
+    el.textContent = msg;
+    el.style.background = ok ? '#065f46' : '#7f1d1d';
+    el.classList.remove('hidden');
+    setTimeout(() => el.classList.add('hidden'), 2600);
+  }
+  function clearSelect(sel, ph){
     sel.innerHTML = '';
     const opt = document.createElement('option');
-    opt.value = '';
-    opt.textContent = placeholder;
+    opt.value = ''; opt.textContent = ph;
     sel.appendChild(opt);
   }
-  function setDisabled(sel, disabled){
-    sel.disabled = !!disabled;
-    sel.classList.toggle('is-disabled', !!disabled);
+  function setDisabled(sel, on){
+    sel.disabled = !!on;
+    sel.classList.toggle('is-disabled', !!on);
   }
   async function fetchJSON(url){
     const r = await fetch(url, {headers: {'X-Requested-With':'fetch'}});
-    if (!r.ok) throw new Error('HTTP '+r.status);
+    if(!r.ok) throw new Error('HTTP '+r.status);
     return await r.json();
   }
 
-  // 1) Documento -> pinta NOMBRE COMPLETO (debounce + blur)
+  /* ---------- Documento → nombre (debounce + blur) ---------- */
   let timer = null;
   function sanitizeDoc(){
     docInp.value = docInp.value.replace(/\D+/g, '').slice(0, 30);
-    if (!docInp.value) nameInp.value = '';
+    if(!docInp.value) nameInp.value = '';
   }
   async function lookupByDoc(){
     const doc = docInp.value.trim();
-    if (!doc) { nameInp.value = ''; return; }
-    try {
+    if(!doc){ nameInp.value=''; return; }
+    try{
       const data = await fetchJSON("{% url 'api_estudiante_por_documento' %}?doc="+encodeURIComponent(doc));
-      nameInp.value = data.nombre_completo || `${data.nombre || ''} ${data.apellidos || ''}`.trim();
-    } catch(_) {
-      nameInp.value = '';
-    }
+      nameInp.value = data.nombre_completo || `${data.nombre||''} ${data.apellidos||''}`.trim();
+    }catch{ nameInp.value=''; }
   }
   docInp.addEventListener('input', () => {
     sanitizeDoc();
     clearTimeout(timer);
-    if (docInp.value.length >= 5){
-      timer = setTimeout(lookupByDoc, 350);
-    } else {
-      nameInp.value = '';
-    }
+    if(docInp.value.length >= 5){ timer = setTimeout(lookupByDoc, 350); }
+    else{ nameInp.value=''; }
   });
   docInp.addEventListener('blur', lookupByDoc);
 
-  // 2) Sede -> carga grados para esa sede
+  /* ---------- Cascada Sede → Grado → Grupo ---------- */
+  // Estado inicial
+  setDisabled(gradoSel, true);
+  setDisabled(grupoSel, true);
+
   sedeSel.addEventListener('change', async () => {
-    clearSelect(gradoSel, 'Seleccione el Grado');
-    clearSelect(grupoSel, 'Seleccione el Grupo');
+    clearSelect(gradoSel, 'Seleccione el grado');
+    clearSelect(grupoSel, 'Seleccione el grupo');
     setDisabled(grupoSel, true);
 
     const sede_id = sedeSel.value;
-    if (!sede_id) return;
+    setDisabled(gradoSel, !sede_id);
+    if(!sede_id) return;
 
-    try {
+    try{
       const data = await fetchJSON("{% url 'api_grados_por_sede' %}?sede_id="+encodeURIComponent(sede_id));
       const grados = Array.isArray(data) ? data : (data.grados || []);
-      grados.forEach(g => {
+      grados.forEach(g=>{
         const opt = document.createElement('option');
-        opt.value = g.id;
-        opt.textContent = g.nombre;
+        opt.value = g.id; opt.textContent = g.nombre;
         gradoSel.appendChild(opt);
       });
-    } catch(e) {
-      console.warn('Error cargando grados:', e);
-    }
+    }catch(e){ console.warn('Error cargando grados:', e); }
   });
 
-  // 3) Grado -> carga grupos por sede+grado
   gradoSel.addEventListener('change', async () => {
-    clearSelect(grupoSel, 'Seleccione el Grupo');
+    clearSelect(grupoSel, 'Seleccione el grupo');
     setDisabled(grupoSel, true);
 
     const sede_id  = sedeSel.value;
     const grado_id = gradoSel.value;
-    if (!sede_id || !grado_id) return;
+    if(!sede_id || !grado_id) return;
 
-    try {
+    try{
       const data = await fetchJSON("{% url 'api_grupos_por_sede_grado' %}?sede_id="+encodeURIComponent(sede_id)+"&grado_id="+encodeURIComponent(grado_id));
       const grupos = Array.isArray(data) ? data : (data.grupos || []);
-      grupos.forEach(g => {
+      grupos.forEach(g=>{
         const opt = document.createElement('option');
-        opt.value = g.id;
-        opt.textContent = g.nombre;
+        opt.value = g.id; opt.textContent = g.nombre;
         grupoSel.appendChild(opt);
       });
       setDisabled(grupoSel, grupos.length === 0);
-    } catch(e) {
-      console.warn('Error cargando grupos:', e);
-    }
+    }catch(e){ console.warn('Error cargando grupos:', e); }
   });
 
-  // 4) Envío: valida y llama al endpoint de asignación
-  form.addEventListener('submit', async (e) => {
+  /* ---------- Envío ---------- */
+  form.addEventListener('submit', async (e)=>{
     e.preventDefault();
     const payload = {
       documento: docInp.value.trim(),
@@ -213,40 +227,57 @@
       grado_id:  gradoSel.value,
       grupo_id:  grupoSel.value,
     };
-    if (!payload.documento || !payload.sede_id || !payload.grado_id || !payload.grupo_id) {
-      alert('Completa documento, sede, grado y grupo.');
-      return;
+    if(!payload.documento || !payload.sede_id || !payload.grado_id || !payload.grupo_id){
+      showToast('Completa documento, sede, grado y grupo.', false); return;
     }
-    try {
+    try{
       const r = await fetch("{% url 'rector_estudiantes_a_grupos_asignar' %}", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        method:'POST',
+        headers:{
+          'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8',
           'X-CSRFToken': csrfInp ? csrfInp.value : '',
         },
         body: new URLSearchParams(payload),
       });
       const data = await r.json();
-      if (data.ok) {
-        alert(data.msg || 'Estudiante asignado con éxito.');
-      } else {
-        alert(data.msg || 'No se pudo asignar.');
-      }
-    } catch (e) {
-      alert('Error de red al asignar.');
-    }
+      if(data.ok){ showToast(data.msg || 'Estudiante asignado con éxito.'); }
+      else{ showToast(data.msg || 'No se pudo asignar.', false); }
+    }catch{ showToast('Error de red al asignar.', false); }
   });
 
-  // Reset: limpia selects dependientes
-  form.addEventListener('reset', () => {
-    setTimeout(() => {
-      clearSelect(gradoSel, 'Seleccione el Grado');
-      clearSelect(grupoSel, 'Seleccione el Grupo');
+  /* ---------- Reset ---------- */
+  form.addEventListener('reset', ()=>{
+    setTimeout(()=>{
+      clearSelect(gradoSel, 'Seleccione el grado');
+      clearSelect(grupoSel, 'Seleccione el grupo');
+      setDisabled(gradoSel, true);
       setDisabled(grupoSel, true);
       nameInp.value = '';
-    }, 0);
+    },0);
   });
 
+  /* ---------- UX extra: que toda la franja enfoque el control ---------- */
+  document.querySelectorAll('.re-field').forEach(label=>{
+    if(!label.hasAttribute('tabindex')) label.tabIndex = 0;
+    const ctl = label.querySelector('select, input');
+    if(!ctl) return;
+
+    label.addEventListener('click',(ev)=>{
+      if(ev.target === ctl) return;
+      if(ctl.disabled) return;
+      ev.preventDefault();
+      ctl.focus();
+      if(ctl.tagName === 'SELECT' && typeof ctl.showPicker === 'function'){ try{ ctl.showPicker(); }catch{} }
+    });
+    label.addEventListener('keydown',(ev)=>{
+      if(ev.key === 'Enter' || ev.key === ' '){
+        ev.preventDefault();
+        if(ctl.disabled) return;
+        ctl.focus();
+        if(ctl.tagName === 'SELECT' && typeof ctl.showPicker === 'function'){ try{ ctl.showPicker(); }catch{} }
+      }
+    });
+  });
 })();
 </script>
 {% endblock %}

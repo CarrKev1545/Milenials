@@ -62,14 +62,16 @@ AUTH_USER_MODEL = 'core.Usuario'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',   # ← súbelo aquí
-    'django.middleware.gzip.GZipMiddleware',        # ← añade esto (comprime HTML/JSON)
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.middleware.gzip.GZipMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'core.middleware.NoCacheForAuthenticatedHTMLMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -168,9 +170,3 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "ksantiagocarrilloucundinama
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "ghhe hwva vgaw hgvn")  # tu contraseña/app password
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
 SERVER_EMAIL = DEFAULT_FROM_EMAIL  # para errores de Django
-
-
-
-
-
-

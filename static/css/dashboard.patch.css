@@ -1,0 +1,285 @@
+/* =========================
+   dashboard.patch.css  (DROP-IN)
+   Cárgalo SIEMPRE al final (después de dashboard.css y responsive.css).
+   Corrige: stacking navbar/menú, footer fijo en desktop, y estilos ADG.
+   ========================= */
+
+/* ---------- Utilidades globales pequeñas ---------- */
+[hidden]{ display:none !important; }
+
+/* Navbar y menú por encima de todo el contenido/backdrop */
+.navbar{ position: sticky; top:0; z-index: 1000 !important; }
+.nav-menu{ position: relative; z-index: 1001 !important; }
+.nav-backdrop{
+  position: fixed; inset: 0;
+  z-index: 900 !important;
+  pointer-events: auto;
+}
+
+/* ---------- Footer ---------- */
+/* Desktop: footer fijo y reserva espacio en el main */
+:root{ --footer-height: 72px; } /* fallback */
+@media (min-width: 993px){
+  .site-footer{
+    position: fixed !important;
+    left: 0; right: 0; bottom: 0;
+    height: var(--footer-height, 86px);
+  }
+  .main{
+    padding-bottom: var(--footer-height, 86px) !important;
+  }
+}
+/* Safe-area para móviles con notch cuando el footer es fijo */
+@supports(padding: max(0px)){
+  @media (min-width: 993px){
+    .site-footer{ padding-bottom: max(14px, env(safe-area-inset-bottom)) !important; }
+  }
+}
+/* Tablets y móvil: footer normal (no fijo), más compacto */
+@media (max-width: 992px){
+  .site-footer{
+    position: static !important;
+    inset: auto !important;
+    height: auto !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    z-index: 1 !important;
+    background: rgba(0,0,0,.65) !important;
+    padding: 8px 0 !important;
+  }
+  .site-footer .footer-inner{
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    text-align: center !important;
+    min-height: 0 !important;
+  }
+  .footer-left, .footer-center, .footer-right{
+    flex: none !important;
+    width: 100% !important;
+  }
+  .footer-links{ justify-content: center !important; }
+  .main{
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)) !important;
+    margin-bottom: 0 !important;
+  }
+}
+
+/* ==================================================
+   ADG — Asignación Docentes → Grupos (scoped por clases .re*)
+   ================================================== */
+
+/* Mensajes flash */
+.re-msg{ margin:.5rem 0; padding:.6rem .9rem; border-radius:.8rem; font-weight:600; }
+.re-msg--ok{ background:#0f5132; color:#d1e7dd; }
+.re-msg--err{ background:#842029; color:#f8d7da; }
+
+/* Título/franja bajo la navbar */
+.re-title{
+  display:block; width:fit-content;
+  margin:0 auto var(--s-6,16px);
+  padding:.6rem 1rem;
+  background:var(--brand,#9c0f10); color:#fff;
+  border-radius:14px; box-shadow:var(--shadow,0 8px 30px rgba(0,0,0,.25));
+}
+
+/* Overlay (el “cuadro” oscuro) responsive, centrado, con efecto glass */
+.re-wrap{
+  width: min(100%, 1200px);
+  margin: clamp(10px, 2.5vh, 28px) auto clamp(16px, 2.5vh, 28px);
+  padding: clamp(14px, 2vw, 24px);
+  display: grid; gap: clamp(12px, 2vw, 24px);
+  grid-template-columns: clamp(200px, 26%, 340px) minmax(0,1fr);
+  background: linear-gradient(180deg, rgba(15,15,18,.46), rgba(15,15,18,.60));
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 28px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.35);
+  backdrop-filter: blur(3px);
+}
+@media (max-width: 1100px){
+  .re-wrap{ grid-template-columns: 1fr; }
+}
+
+/* Columna izquierda: avatar centrado y proporcional */
+.re-left{ display:grid; place-items:center; }
+.re-left .re-avatar{
+  width: clamp(160px, 28vw, 240px);
+  height: clamp(200px, 36vw, 300px);
+  display:grid; place-items:center;
+  background: var(--surface);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+}
+.re-left .re-avatar i{ font-size: clamp(70px, 10vw, 120px); color:#fff; }
+
+/* Columna derecha: card sin límite artificial de ancho */
+.re-right{ display: block; }
+.re-right .re-card{
+  width: 100%; margin: 0;
+  background:
+    radial-gradient(140% 180% at 50% 0%, rgba(255,255,255,.03), transparent 60%)
+    #151518;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 24px;
+  padding: clamp(16px, 3vw, 24px);
+  box-shadow: var(--shadow);
+}
+
+/* Formulario: franjas largas SIEMPRE (1 columna) */
+.re-form{ display:grid; gap: var(--s-4, 16px); grid-template-columns: 1fr !important; }
+
+/* Franjas/selects: altura 64px, foco visible y click en toda la franja */
+.re-field{
+  min-height: 64px;
+  display: flex; align-items: center; gap: .7rem;
+  padding: .35rem .75rem;
+  background:#17171a;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius: 1rem;
+  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+  cursor: pointer;
+}
+.re-field:hover{ border-color: rgba(255,255,255,.26); }
+.re-field:focus-within{
+  border-color: var(--brand,#9c0f10);
+  box-shadow: 0 0 0 3px rgba(156,15,16,.28);
+}
+.re-field .re-ico{ display:none !important; }  /* ocultamos icono izquierdo */
+.re-caret{ flex: 0 0 26px; color:#d9d9df; pointer-events:none; }
+.re-field select{
+  flex: 1 1 auto; min-width: 0;
+  height: 64px;
+  font-size: clamp(1rem, .95rem + .2vw, 1.08rem);
+  color:#f6f6fa; background: transparent;
+  border:none; outline:none; appearance:none;
+}
+
+/* Acciones: tres botones rojos, mismos tamaños, accesibles */
+.re-actions{
+  display: grid; gap: 12px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px){
+  .re-actions{ grid-template-columns: repeat(3, 1fr); }
+}
+.re-actions .btn{
+  width: 100%; min-width: 0;
+  height: 48px; border-radius: 999px;
+  background: var(--brand); color:#fff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(156,15,16,.35);
+  transition: transform .05s ease, box-shadow .2s ease;
+}
+.re-actions .btn:hover{ transform: translateY(-1px); }
+.re-actions .btn[disabled]{ opacity:.6; cursor:not-allowed; transform:none; }
+.re-actions .btn:focus-visible{
+  outline: 3px solid rgba(156,15,16,.35);
+  outline-offset: 2px;
+}
+
+/* Modal + Toast (encima de navbar/menú) */
+.backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.45);
+  display:grid; place-items:center; z-index:1200; }
+.hidden{ display:none !important; }
+.modal{
+  width: min(520px, 92vw);
+  background: var(--surface); color: var(--text);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  padding: 18px 18px 14px;
+  box-shadow: var(--shadow);
+}
+.modal h3{ margin:0 0 8px; font-size: var(--fs-lg, 1.25rem); }
+.modal p{ margin:0 0 16px; color: var(--muted, #b5b5bd); }
+.modal-actions{ display:flex; gap:10px; justify-content:flex-end; }
+
+.toast{
+  position: fixed; right: 16px; bottom: 16px; z-index: 1100;
+  background:#111827; color:#fff; padding:10px 12px;
+  border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.25);
+  max-width: 60ch;
+}
+.toast.hidden{ display:none; }
+
+/* Micro-animación de entrada (respetando accesibilidad) */
+@media (prefers-reduced-motion: no-preference){
+  .re-wrap{ animation: adgFadeUp .35s ease both; }
+  @keyframes adgFadeUp{
+    from{ opacity:0; transform: translateY(8px); }
+    to{ opacity:1; transform: none; }
+  }
+}
+
+/* === EG / ADG – Más aire vs. footer fijo en desktop === */
+:root{ --footer-height: 72px; } /* fallback por si no existe */
+@media (min-width: 993px){
+  /* reserva más espacio cuando el footer es fixed */
+  .main{
+    padding-bottom: calc(var(--footer-height,72px) + 56px) !important;
+  }
+  /* y baja un poco el overlay para que no “rozque” el pie */
+  .re-wrap{
+    margin-bottom: clamp(32px, 5vh, 72px);
+  }
+}
+
+/* === Select nativo en modo oscuro (lista desplegable legible) === */
+/* Indica a los navegadores que pinten controles nativos en dark */
+.re{ color-scheme: dark; }
+
+/* Colores de opciones (Chrome/Edge/Firefox) */
+.re-field select option,
+.re-field select optgroup{
+  background: #0f0f12;
+  color: #f6f6fa;
+}
+
+/* Safari/WebKit: asegura fondo oscuro del popup */
+@supports(-webkit-backdrop-filter: blur(0)){
+  .re-field select{ background-color:#0f0f12; }
+}
+
+/* Accesibilidad en High Contrast: deja que el SO gestione colores */
+@media (forced-colors: active){
+  .re-field select option{
+    forced-color-adjust: auto;
+  }
+}
+
+/* ============================
+   UI: ajuste responsivo 2025-09-18 (patch)
+   Afinado visual sin tocar estilos globales originales
+   ============================ */
+
+h1, h2, h3 { line-height: 1.2; }
+section, .section, .block { margin-block: 1rem; }
+@media (min-width: 768px){ section, .section, .block { margin-block: 1.25rem; } }
+
+/* Tablas: legibilidad y truncado seguro */
+table { border-collapse: collapse; }
+th, td { vertical-align: middle; }
+td { text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 32ch; }
+
+/* Estado vacío opt-in */
+.empty {
+  padding: 1rem;
+  border: 1px dashed #d1d5db;
+  border-radius: 10px;
+  text-align: center;
+  font-size: .95rem;
+  opacity: .85;
+}
+
+/* Barra de filtros adaptable */
+.filter-bar{ display:grid; gap:.5rem; grid-template-columns:1fr; }
+@media (min-width: 768px){ .filter-bar{ grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; } }
+
+/* Paginación flexible */
+.pagination{ display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; }
+.pagination > * { min-height: 36px; }
+
+/* Controles embebidos en tabla */
+table input[type="number"], table select{ max-width: 100%; min-width: 88px; }
