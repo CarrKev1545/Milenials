@@ -1,132 +1,124 @@
+{# reporte_notas_tabla.html — versión que hereda base_dashboard #}
+{% extends "core/base_dashboard.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<title>Registro de notas — Tabla</title>
-<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-<style>
-  :root{
-    --panel-bg: rgba(10,10,12,.92);
-    --panel-bd: rgba(255,255,255,.08);
-    --panel-shadow: 0 20px 50px rgba(0,0,0,.55);
-    --row-bg: #ffffff;
-    --row-bd: #e8eef2;
-    --header-bg: #0ea061;
-    --header-fg: #ffffff;
-    --text-main:#1b2730;
-    --text-dim:#546e7a;
-    --chip-bg:#203036;
-    --chip-fg:#d5e7ef;
-    --accent:#c62828;
-    --accent-2:#b51415;
-    --input-bd:#b0bec5;
-    --input-focus:#0ea061;
-  }
+{% block title %}Registro de notas — Tabla{% endblock %}
 
-  .page-title{position:sticky;top:var(--navbar-height);z-index:40;background:var(--accent);color:#fff;font-weight:800;letter-spacing:.2px;text-align:center;padding:10px 12px;box-shadow:0 4px 12px rgba(0,0,0,.35)}
+{% block extra_css %}
+  {# Si base_dashboard ya incluye dashboard.css, no hace falta volver a linkearlo #}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root{
+      --panel-bg: rgba(10,10,12,.92);
+      --panel-bd: rgba(255,255,255,.08);
+      --panel-shadow: 0 20px 50px rgba(0,0,0,.55);
+      --row-bg: #ffffff;
+      --row-bd: #e8eef2;
+      --header-bg: #0ea061;
+      --header-fg: #ffffff;
+      --text-main:#1b2730;
+      --text-dim:#546e7a;
+      --chip-bg:#203036;
+      --chip-fg:#d5e7ef;
+      --accent:#c62828;
+      --accent-2:#b51415;
+      --input-bd:#b0bec5;
+      --input-focus:#0ea061;
+    }
 
-  .sheet{
-    width:100%;max-width:1280px;margin:18px auto;padding:22px 22px 18px;
-    background:var(--panel-bg); border:1px solid var(--panel-bd);
-    border-radius:20px; box-shadow:var(--panel-shadow); backdrop-filter:saturate(115%) blur(4px);
-  }
+    /* Título pegajoso bajo la navbar global */
+    .page-title{
+      position:sticky; top:var(--navbar-height); z-index:40;
+      background:var(--accent); color:#fff; font-weight:800; letter-spacing:.2px;
+      text-align:center; padding:10px 12px; box-shadow:0 4px 12px rgba(0,0,0,.35);
+    }
 
-  .meta{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-  .tag{background:var(--chip-bg);color:var(--chip-fg);border:1px solid rgba(255,255,255,.06);
-       border-radius:999px;padding:6px 12px;font-weight:700;font-size:.88rem}
+    .sheet{
+      width:100%; max-width:1280px; margin:18px auto; padding:22px 22px 18px;
+      background:var(--panel-bg); border:1px solid var(--panel-bd);
+      border-radius:20px; box-shadow:var(--panel-shadow); backdrop-filter:saturate(115%) blur(4px);
+    }
 
-  #docente{color:#e6f4ea;margin-bottom:10px;font-weight:700}
+    .meta{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+    .tag{background:var(--chip-bg);color:var(--chip-fg);border:1px solid rgba(255,255,255,.06);
+         border-radius:999px;padding:6px 12px;font-weight:700;font-size:.88rem}
 
-  .table-wrap{background:rgba(255,255,255,.06);border:1px solid var(--panel-bd);
-              border-radius:14px;overflow:hidden}
-  table{width:100%;border-collapse:collapse;table-layout:fixed}
-  col.apellidos{width:36%}
-  col.nombres{width:30%}
-  col.nota{width:17%}
-  col.fallas{width:17%}
+    #docente{color:#e6f4ea;margin-bottom:10px;font-weight:700}
 
-  thead th{
-    background:var(--header-bg);color:var(--header-fg);
-    padding:14px 12px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;
-    border-bottom:1px solid rgba(0,0,0,.15); text-align:left
-  }
-  thead th:nth-child(3), thead th:nth-child(4){ text-align:center }
+    .table-wrap{background:rgba(255,255,255,.06);border:1px solid var(--panel-bd);
+                border-radius:14px;overflow:hidden}
+    table{width:100%;border-collapse:collapse;table-layout:fixed}
+    col.apellidos{width:36%}
+    col.nombres{width:30%}
+    col.nota{width:17%}
+    col.fallas{width:17%}
 
-  tbody tr{background:var(--row-bg)}
-  tbody td{
-    color:var(--text-main); font-weight:600; padding:12px 14px; border-bottom:1px solid var(--row-bd);
-  }
-  tbody tr:last-child td{ border-bottom:none }
-  tbody td:first-child, tbody td:nth-child(2){ color:#0b1720 }
-  tbody td:nth-child(3), tbody td:nth-child(4){ text-align:center }
+    thead th{
+      background:var(--header-bg);color:var(--header-fg);
+      padding:14px 12px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;
+      border-bottom:1px solid rgba(0,0,0,.15); text-align:left
+    }
+    thead th:nth-child(3), thead th:nth-child(4){ text-align:center }
 
-  .nota, .fallas{
-    width:110px; max-width:95%;
-    text-align:center; font-weight:800; color:#102028;
-    background:#fff; border:1px solid var(--input-bd); border-radius:10px; padding:8px 10px;
-    transition:.15s border-color ease, .15s box-shadow ease;
-    display:inline-block;
-  }
-  .nota:focus, .fallas:focus{
-    outline:none; border-color:var(--input-focus); box-shadow:0 0 0 4px rgba(14,160,97,.18)
-  }
+    tbody tr{background:var(--row-bg)}
+    tbody td{
+      color:var(--text-main); font-weight:600; padding:12px 14px; border-bottom:1px solid var(--row-bd);
+    }
+    tbody tr:last-child td{ border-bottom:none }
+    tbody td:first-child, tbody td:nth-child(2){ color:#0b1720 }
+    tbody td:nth-child(3), tbody td:nth-child(4){ text-align:center }
 
-  tbody tr:hover td{ background:#f7fbff }
+    .nota, .fallas{
+      width:110px; max-width:95%;
+      text-align:center; font-weight:800; color:#102028;
+      background:#fff; border:1px solid var(--input-bd); border-radius:10px; padding:8px 10px;
+      transition:.15s border-color ease, .15s box-shadow ease;
+      display:inline-block;
+    }
+    .nota:focus, .fallas:focus{
+      outline:none; border-color:var(--input-focus); box-shadow:0 0 0 4px rgba(14,160,97,.18)
+    }
 
-  .actions{display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}
-  .btn{
-    height:44px; border:none; border-radius:12px; padding:0 18px; color:#fff; font-weight:900; cursor:pointer;
-    box-shadow:0 14px 28px rgba(0,0,0,.25); transition:.12s transform ease,.12s box-shadow ease,.12s background ease
-  }
-  .btn:hover{ transform:translateY(-2px) }
-  .btn:active{ transform:translateY(0) scale(.985) }
-  .btn-primary{ background:var(--accent) }
-  .btn-primary:hover{ background:#a01f1f }
-  .btn-ghost{ background:#38424a }
-  .btn-ghost:hover{ background:#2b3339 }
+    tbody tr:hover td{ background:#f7fbff }
 
-  .small{font-size:.92rem;color:#e2edf4}
-  ::selection { background:#ffcc80; color:#000 }
-  ::-moz-selection { background:#ffcc80; color:#000 }
-</style>
+    .actions{display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}
+    .btn{
+      height:44px; border:none; border-radius:12px; padding:0 18px; color:#fff; font-weight:900; cursor:pointer;
+      box-shadow:0 14px 28px rgba(0,0,0,.25); transition:.12s transform ease,.12s box-shadow ease,.12s background ease
+    }
+    .btn:hover{ transform:translateY(-2px) }
+    .btn:active{ transform:translateY(0) scale(.985) }
+    .btn-primary{ background:var(--accent) }
+    .btn-primary:hover{ background:#a01f1f }
+    .btn-ghost{ background:#38424a }
+    .btn-ghost:hover{ background:#2b3339 }
 
-<!-- Bloque UX duro: validación + toast -->
-<style>
-  .cell-ok    input{ border-color:#059669 !important; box-shadow:0 0 0 3px rgba(5,150,105,.18) }
-  .cell-bad   input{ border-color:#b91c1c !important; box-shadow:0 0 0 3px rgba(185,28,28,.18) }
-  .cell-empty input{ border-color:#b0bec5 !important; box-shadow:none }
-  .hint-bar{ margin-top:8px; font-size:.92rem; color:#e2edf4 }
-  .hint-bar .bad{ color:#fecaca; font-weight:700 }
-  #toast{
-    position:fixed; right:16px; bottom:16px; z-index:2000;
-    background:#111827; color:#fff; padding:10px 12px; border-radius:10px;
-    box-shadow:0 8px 24px rgba(0,0,0,.25); max-width:60ch; opacity:0; pointer-events:none;
-    transition:opacity .18s ease, transform .18s ease; transform:translateY(6px);
-  }
-  #toast.show{ opacity:1; transform:translateY(0) }
-</style>
-</head>
+    .small{font-size:.92rem;color:#e2edf4}
+    ::selection { background:#ffcc80; color:#000 }
+    ::-moz-selection { background:#ffcc80; color:#000 }
 
-<body>
-<header class="navbar">
-  <div class="nav-left">
-    <img src="{% static 'img/logo2.jpeg' %}" class="logo" alt="logo">
-    <div class="nav-title"><h3>RECTOR / COORDINADOR</h3></div>
-  </div>
-  <nav class="nav-menu">
-    <a href="{% url 'dashboard_rector' %}">Inicio</a>
-    <a href="{% url 'rector_estudiantes_a_grupos' %}">Estudiante a grupos</a>
-    <a href="{% url 'rector_asignacion_docentes_grupos' %}">Asignación de Docentes a grupos</a>
-  </nav>
-  <div class="nav-right"><a href="{% url 'logout' %}" class="btn-logout">Cerrar Sesión</a></div>
-</header>
+    /* UX duro: validación + toast */
+    .cell-ok    input{ border-color:#059669 !important; box-shadow:0 0 0 3px rgba(5,150,105,.18) }
+    .cell-bad   input{ border-color:#b91c1c !important; box-shadow:0 0 0 3px rgba(185,28,28,.18) }
+    .cell-empty input{ border-color:#b0bec5 !important; box-shadow:none }
+    .hint-bar{ margin-top:8px; font-size:.92rem; color:#e2edf4 }
+    .hint-bar .bad{ color:#fecaca; font-weight:700 }
+    #toast{
+      position:fixed; right:16px; bottom:16px; z-index:2000;
+      background:#111827; color:#fff; padding:10px 12px; border-radius:10px;
+      box-shadow:0 8px 24px rgba(0,0,0,.25); max-width:60ch; opacity:0; pointer-events:none;
+      transition:opacity .18s ease, transform .18s ease; transform:translateY(6px);
+    }
+    #toast.show{ opacity:1; transform:translateY(0) }
+  </style>
+{% endblock %}
 
-<div class="page-title">Registro de notas</div>
+{% block page_banner %}
+  <!-- UI: ajuste responsivo 2025-09-18 -->
+  <div class="admin-bar">Registro de notas</div>
+{% endblock %}
 
-<main class="main">
+{% block content %}
   <section class="sheet">
     <!-- CSRF oculto (lo usa el helper JS) -->
     <form id="csrf-holder" style="display:none">{% csrf_token %}</form>
@@ -134,7 +126,8 @@
     <div id="meta" class="meta"></div>
     <div class="small" id="docente"></div>
 
-    <div class="table-wrap">
+    <!-- Tabla con wrapper scrollable para móvil -->
+    <div class="table-wrap r-table-scroll">
       <table id="tabla">
         <colgroup>
           <col class="apellidos"><col class="nombres"><col class="nota"><col class="fallas">
@@ -151,7 +144,7 @@
       </table>
     </div>
 
-    <div class="actions">
+    <div class="actions btn-group">
       <button class="btn btn-ghost" id="btn-limpiar-celdas" type="button">
         <i class="fa-solid fa-eraser"></i> Limpiar celdas
       </button>
@@ -163,319 +156,332 @@
     <div class="hint-bar" id="hint-bar"></div>
     <div id="toast" role="status" aria-live="polite"></div>
   </section>
-</main>
+{% endblock %}
 
-<!-- helper para registrar/actualizar una nota -->
-<script src="{% static 'core/js/registro_notas_api.js' %}"></script>
+{% block extra_js %}
+  <script src="{% static 'core/js/registro_notas_api.js' %}"></script>
+  <script>
+    // === Parámetros ===
+    const params = new URLSearchParams(location.search);
+    const grupo_id      = params.get('grupo_id');
+    const asignatura_id = params.get('asignatura_id');
+    const periodo_id    = params.get('periodo_id');
+    const sede_id       = params.get('sede_id');
+    const grado_id      = params.get('grado_id');
+    const area_id       = params.get('area_id');
+    const estFiltro     = params.get('estudiante_id'); // si vienes "por estudiante"
 
-<script>
-  // === Parámetros ===
-  const params = new URLSearchParams(location.search);
-  const grupo_id      = params.get('grupo_id');
-  const asignatura_id = params.get('asignatura_id');
-  const periodo_id    = params.get('periodo_id');
-  const sede_id       = params.get('sede_id');
-  const grado_id      = params.get('grado_id');
-  const area_id       = params.get('area_id');
-  const estFiltro     = params.get('estudiante_id'); // si vienes "por estudiante"
+    // === Encabezado (chips) ===
+    async function fillMeta() {
+      const meta = document.getElementById('meta');
+      const pieces = [];
 
-  // === Encabezado (chips) ===
-  async function fillMeta() {
-    const meta = document.getElementById('meta');
-    const pieces = [];
+      try{
+        const sede = await fetch("{% url 'api_sedes' %}").then(r=>r.json());
+        const sed = sede.sedes.find(s=> String(s.id) === String(sede_id));
+        if (sed) pieces.push(['Sede', sed.nombre]);
 
-    try{
-      const sede = await fetch("{% url 'api_sedes' %}").then(r=>r.json());
-      const sed = sede.sedes.find(s=> String(s.id) === String(sede_id));
-      if (sed) pieces.push(['Sede', sed.nombre]);
+        const gds = await fetch("{% url 'api_grados_por_sede' %}?sede_id=" + sede_id).then(r=>r.json());
+        const grd = gds.grados.find(g=> String(g.id) === String(grado_id));
+        if (grd) pieces.push(['Grado', grd.nombre]);
 
-      const gds = await fetch("{% url 'api_grados_por_sede' %}?sede_id=" + sede_id).then(r=>r.json());
-      const grd = gds.grados.find(g=> String(g.id) === String(grado_id));
-      if (grd) pieces.push(['Grado', grd.nombre]);
+        const grs = await fetch("{% url 'api_grupos_por_sede_grado' %}?sede_id=" + sede_id + "&grado_id=" + grado_id).then(r=>r.json());
+        const grp = grs.grupos.find(g=> String(g.id) === String(grupo_id));
+        if (grp) pieces.push(['Grupo', grp.nombre]);
 
-      const grs = await fetch("{% url 'api_grupos_por_sede_grado' %}?sede_id=" + sede_id + "&grado_id=" + grado_id).then(r=>r.json());
-      const grp = grs.grupos.find(g=> String(g.id) === String(grupo_id));
-      if (grp) pieces.push(['Grupo', grp.nombre]);
+        if (area_id){
+          const ars = await fetch("{% url 'api_areas_por_grupo' %}?grupo_id=" + grupo_id).then(r=>r.json());
+          const ar = ars.areas.find(a=> String(a.id) === String(area_id));
+          if (ar) pieces.push(['Área', ar.nombre]);
 
-      if (area_id){
-        const ars = await fetch("{% url 'api_areas_por_grupo' %}?grupo_id=" + grupo_id).then(r=>r.json());
-        const ar = ars.areas.find(a=> String(a.id) === String(area_id));
-        if (ar) pieces.push(['Área', ar.nombre]);
+          const asjs = await fetch("{% url 'api_asignaturas_por_grupo_area' %}?grupo_id=" + grupo_id + "&area_id=" + area_id).then(r=>r.json());
+          const asig = asjs.asignaturas.find(a=> String(a.id) === String(asignatura_id));
+          if (asig) pieces.push(['Asignatura', asig.nombre]);
+        }else{
+          pieces.push(['Asignatura', '—']);
+        }
 
-        const asjs = await fetch("{% url 'api_asignaturas_por_grupo_area' %}?grupo_id=" + grupo_id + "&area_id=" + area_id).then(r=>r.json());
-        const asig = asjs.asignaturas.find(a=> String(a.id) === String(asignatura_id));
-        if (asig) pieces.push(['Asignatura', asig.nombre]);
-      }else{
-        pieces.push(['Asignatura', '—']);
-      }
+        const pers = await fetch("{% url 'api_periodos_abiertos' %}").then(r=>r.json());
+        const per = pers.periodos.find(p=> String(p.id) === String(periodo_id));
+        if (per) pieces.push(['Periodo', per.nombre]);
+      }catch(_){}
 
-      const pers = await fetch("{% url 'api_periodos_abiertos' %}").then(r=>r.json());
-      const per = pers.periodos.find(p=> String(p.id) === String(periodo_id));
-      if (per) pieces.push(['Periodo', per.nombre]);
-    }catch(_){}
+      meta.innerHTML = pieces.map(([k,v]) => `<div class="tag"><b>${k}:</b> ${v}</div>`).join('');
 
-    meta.innerHTML = pieces.map(([k,v]) => `<div class="tag"><b>${k}:</b> ${v}</div>`).join('');
-
-    try{
-      const d = await fetch("{% url 'api_docente_de_grupo_asignatura' %}?grupo_id=" + grupo_id + "&asignatura_id=" + asignatura_id).then(r=>r.json());
-      document.getElementById('docente').textContent =
-        d.docente ? ("Docente: " + d.docente.nombre + " " + d.docente.apellidos) : "Docente: N/A";
-    }catch(_){}
-  }
-
-  // === Tabla (con precarga de NOTAS/FALLAS desde BD) ===
-  async function loadTabla() {
-    const tbody = document.querySelector('#tabla tbody');
-    tbody.innerHTML = '';
-
-    // 1) lista de estudiantes (opcionalmente filtrada a 1)
-    const resp = await fetch("{% url 'api_estudiantes_por_grupo' %}?grupo_id=" + grupo_id).then(r=>r.json());
-    let lista = resp.estudiantes || [];
-    if (estFiltro) lista = lista.filter(e => String(e.id) === String(estFiltro));
-
-    // 2) pintar filas
-    for (const e of lista) {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${e.apellidos || 'N/A'}</td>
-        <td>${e.nombre || 'N/A'}</td>
-        <td><input class="nota"   type="number" step="0.01" min="1.0" max="5.0" value="" data-est="${e.id}" inputmode="decimal" lang="es"></td>
-        <td><input class="fallas" type="number" step="1"    min="0"            value="" data-est="${e.id}" inputmode="numeric"></td>
-      `;
-      tbody.appendChild(tr);
+      try{
+        const d = await fetch("{% url 'api_docente_de_grupo_asignatura' %}?grupo_id=" + grupo_id + "&asignatura_id=" + asignatura_id).then(r=>r.json());
+        document.getElementById('docente').textContent =
+          d.docente ? ("Docente: " + d.docente.nombre + " " + d.docente.apellidos) : "Docente: N/A";
+      }catch(_){}
     }
 
-    // 3) traer notas de BD y precargar
-    try{
-      const rNotas = await fetch(
-        "{% url 'api_notas_por_grupo_asignatura_periodo' %}?grupo_id=" + grupo_id +
-        "&asignatura_id=" + asignatura_id + "&periodo_id=" + periodo_id
-      ).then(r=>r.json());
+    // === Tabla (con precarga de NOTAS/FALLAS desde BD) ===
+    async function loadTabla() {
+      const tbody = document.querySelector('#tabla tbody');
+      tbody.innerHTML = '';
 
-      const map = Object.create(null);
-      (rNotas.notas || []).forEach(n => { map[String(n.estudiante_id)] = n; });
+      // 1) lista de estudiantes (opcionalmente filtrada a 1)
+      const resp = await fetch("{% url 'api_estudiantes_por_grupo' %}?grupo_id=" + grupo_id).then(r=>r.json());
+      let lista = resp.estudiantes || [];
+      if (estFiltro) lista = lista.filter(e => String(e.id) === String(estFiltro));
 
+      // 2) pintar filas
+      for (const e of lista) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${e.apellidos || 'N/A'}</td>
+          <td>${e.nombre || 'N/A'}</td>
+          <!-- FIX coma/punto: type='text' + inputmode para evitar borrado/salto -->
+          <td><input class="nota"   type="text" inputmode="decimal" step="0.1" min="1.0" max="5.0" value="" data-est="${e.id}"></td>
+          <td><input class="fallas" type="text" inputmode="numeric" pattern="\\d*" step="1"   min="0"   value="" data-est="${e.id}"></td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      // 3) traer notas de BD y precargar
+      try{
+        const rNotas = await fetch(
+          "{% url 'api_notas_por_grupo_asignatura_periodo' %}?grupo_id=" + grupo_id +
+          "&asignatura_id=" + asignatura_id + "&periodo_id=" + periodo_id
+        ).then(r=>r.json());
+
+        const map = Object.create(null);
+        (rNotas.notas || []).forEach(n => { map[String(n.estudiante_id)] = n; });
+
+        document.querySelectorAll('input.nota').forEach(inp => {
+          const n = map[inp.dataset.est];
+          if (n && typeof n.nota !== 'undefined' && n.nota !== null) {
+            const val = Number(n.nota);
+            inp.value = isFinite(val) ? val.toFixed(1) : '';
+          }
+        });
+        document.querySelectorAll('input.fallas').forEach(inp => {
+          const n = map[inp.dataset.est];
+          if (n && typeof n.fallas !== 'undefined' && n.fallas !== null) {
+            inp.value = String(n.fallas);
+          }
+        });
+      }catch(_){
+        /* si falla, quedan vacías como antes */
+      }
+    }
+
+    /* ================= UX DURA: validaciones, estados y toast ================= */
+
+    function showToast(msg, ok=true){
+      const el=document.getElementById('toast'); if(!el) return;
+      el.textContent = msg || '';
+      el.style.background = ok ? '#065f46' : '#7f1d1d';
+      el.classList.add('show');
+      setTimeout(()=> el.classList.remove('show'), 2400);
+    }
+
+    const $tbody   = document.querySelector('#tabla tbody');
+    const $guardar = document.getElementById('btn-guardar');
+    const $hintBar = document.getElementById('hint-bar');
+
+    function normDecimal(str){
+      if (str == null) return '';
+      str = String(str).trim().replace(',', '.');
+      str = str.replace(/[^0-9.]/g,'');
+      const parts = str.split('.');
+      if (parts.length > 2){
+        str = parts[0] + '.' + parts.slice(1).join('');
+      }
+      return str;
+    }
+
+    function validateNota(input){
+      const td = input.closest('td');
+      let v = normDecimal(input.value);
+      input.value = v;
+
+      if (v === ''){
+        td.classList.remove('cell-ok','cell-bad'); td.classList.add('cell-empty');
+        return {ok:true, empty:true};
+      }
+      const num = Number(v);
+      const ok = Number.isFinite(num) && num >= 1.0 && num <= 5.0;
+      if (!ok){
+        td.classList.remove('cell-ok','cell-empty'); td.classList.add('cell-bad');
+        return {ok:false, empty:false};
+      }
+      td.classList.remove('cell-bad','cell-empty'); td.classList.add('cell-ok');
+      return {ok:true, empty:false, value:num};
+    }
+
+    function validateFallas(input){
+      const td = input.closest('td');
+      let vv = (input.value || '').trim();
+      vv = vv.replace(/[^\d-]/g,'');
+      input.value = vv;
+
+      if (vv === ''){
+        td.classList.remove('cell-ok','cell-bad'); td.classList.add('cell-empty');
+        return {ok:true, empty:true};
+      }
+      if (!/^-?\d+$/.test(vv)){
+        td.classList.remove('cell-ok','cell-empty'); td.classList.add('cell-bad');
+        return {ok:false, empty:false};
+      }
+      const n = parseInt(vv,10);
+      if (n < 0){
+        td.classList.remove('cell-ok','cell-empty'); td.classList.add('cell-bad');
+        return {ok:false, empty:false};
+      }
+      td.classList.remove('cell-bad','cell-empty'); td.classList.add('cell-ok');
+      return {ok:true, empty:false, value:n};
+    }
+
+    function validateAll(){
+      let errors = 0;
+      document.querySelectorAll('input.nota').forEach(inp => { if (!validateNota(inp).ok) errors++; });
+      document.querySelectorAll('input.fallas').forEach(inp => { if (!validateFallas(inp).ok) errors++; });
+
+      const disabled = errors > 0;
+      $guardar.disabled = disabled;
+      $guardar.classList.toggle('disabled', disabled);
+      if ($hintBar){
+        $hintBar.innerHTML = disabled
+          ? `Hay <span class="bad">${errors}</span> campo(s) con error. Corrígelos para poder guardar.`
+          : `Todo listo. Puedes guardar.`;
+      }
+      return errors;
+    }
+
+    function updateSaveState(){
+      const errors = document.querySelectorAll('td.cell-bad').length;
+      $guardar.disabled = errors > 0;
+      $guardar.classList.toggle('disabled', errors > 0);
+      if ($hintBar){
+        $hintBar.innerHTML = errors > 0
+          ? `Hay <span class="bad">${errors}</span> campo(s) con error. Corrígelos para poder guardar.`
+          : `Todo listo. Puedes guardar.`;
+      }
+    }
+
+    // Handlers que no reescriben el valor mientras escribes (evita salto de caret)
+    function attachFieldHandlers(){
+      document.querySelectorAll('input.nota').forEach(inp=>{
+        const td = inp.closest('td');
+        td.classList.add('cell-empty');
+
+        inp.addEventListener('input', ()=>{
+          const raw = String(inp.value);
+          const normalized = raw.replace(',', '.'); // evaluar sin asignar
+          const empty = normalized.trim() === '';
+          const num = Number(normalized);
+          const ok = !empty && Number.isFinite(num) && num >= 1.0 && num <= 5.0;
+
+          td.classList.toggle('cell-ok',    ok);
+          td.classList.toggle('cell-bad',  !ok && !empty);
+          td.classList.toggle('cell-empty', empty);
+          updateSaveState();
+        });
+
+        inp.addEventListener('blur', ()=>{
+          const r = validateNota(inp);         // aquí sí normalizamos/escribimos
+          if (r.ok && !r.empty){ inp.value = Number(inp.value).toFixed(1); }
+          validateAll();
+        });
+      });
+
+      document.querySelectorAll('input.fallas').forEach(inp=>{
+        const td = inp.closest('td');
+        td.classList.add('cell-empty');
+
+        inp.addEventListener('input', ()=>{
+          const raw = String(inp.value);
+          const empty = raw.trim() === '';
+          const ok = !empty && /^\d+$/.test(raw); // sólo dígitos
+
+          td.classList.toggle('cell-ok',    ok);
+          td.classList.toggle('cell-bad',  !ok && !empty);
+          td.classList.toggle('cell-empty', empty);
+          updateSaveState();
+        });
+
+        inp.addEventListener('blur', ()=>{
+          validateFallas(inp);
+          validateAll();
+        });
+      });
+
+      validateAll(); // estado inicial
+    }
+
+    // Engancha handlers después de pintar la tabla
+    (function interceptAfterLoad(){
+      const originalLoadTabla = window.loadTabla;
+      if (typeof originalLoadTabla === 'function'){
+        window.loadTabla = async function(){
+          await originalLoadTabla();
+          attachFieldHandlers();
+        }
+      } else {
+        const obs = new MutationObserver(()=>{ attachFieldHandlers(); obs.disconnect(); validateAll(); });
+        obs.observe($tbody, {childList:true});
+      }
+    })();
+
+    // === Guardar usando la API fila-a-fila (rector_registrar_nota) ===
+    document.getElementById('btn-guardar').addEventListener('click', async (ev) => {
+      if (validateAll() > 0){
+        ev.preventDefault();
+        showToast('Corrige los campos marcados antes de guardar.', false);
+        return;
+      }
+
+      const filas = [];
       document.querySelectorAll('input.nota').forEach(inp => {
-        const n = map[inp.dataset.est];
-        if (n && typeof n.nota !== 'undefined' && n.nota !== null) {
-          const val = Number(n.nota);
-          inp.value = isFinite(val) ? val.toFixed(1) : '';
-        }
+        const id = inp.dataset.est;
+        const nota = inp.value;
+        const fallas = document.querySelector(`input.fallas[data-est="${id}"]`).value;
+        filas.push({estudiante_id: id, nota, fallas});
       });
-      document.querySelectorAll('input.fallas').forEach(inp => {
-        const n = map[inp.dataset.est];
-        if (n && typeof n.fallas !== 'undefined' && n.fallas !== null) {
-          inp.value = String(n.fallas);
+
+      let ok = 0, fail = 0, inserts = 0, updates = 0;
+      $guardar.disabled = true;
+
+      try{
+        for (const f of filas) {
+          const hasNota   = String(f.nota   || '').trim().length > 0;
+          const hasFallas = String(f.fallas || '').trim().length > 0;
+          if (!hasNota && !hasFallas) continue;
+
+          const res = await guardarNota(
+            f.estudiante_id,
+            asignatura_id,
+            periodo_id,
+            hasNota ? f.nota : '',
+            hasFallas ? f.fallas : '0'
+          );
+
+          if (res && res.ok) {
+            ok++;
+            if (res.accion === 'INSERT') inserts++;
+            if (res.accion === 'UPDATE') updates++;
+          } else {
+            fail++;
+          }
         }
-      });
-    }catch(_){
-      /* si falla, quedan vacías como antes */
-    }
-  }
 
-  /* ================= UX DURA: validaciones, estados y toast ================= */
-
-  function showToast(msg, ok=true){
-    const el=document.getElementById('toast'); if(!el) return;
-    el.textContent = msg || '';
-    el.style.background = ok ? '#065f46' : '#7f1d1d';
-    el.classList.add('show');
-    setTimeout(()=> el.classList.remove('show'), 2400);
-  }
-
-  const $tbody   = document.querySelector('#tabla tbody');
-  const $guardar = document.getElementById('btn-guardar');
-  const $hintBar = document.getElementById('hint-bar');
-
-  function normDecimal(str){
-  if (str == null) return '';
-  str = String(str).trim().replace(/,/g, '.'); // acepta coma, la convierte a punto
-  // deja solo dígitos y un punto decimal
-  const cleaned = str.replace(/[^\d.]/g, '');
-  const i = cleaned.indexOf('.');
-  return i === -1 ? cleaned : cleaned.slice(0, i + 1) + cleaned.slice(i + 1).replace(/\./g, '');
-  }
-
-
-  function validateNota(input){
-    const td  = input.closest('td');
-    const raw = (input.value || '').trim();
-
-    if (raw === ''){
-      td.classList.remove('cell-ok','cell-bad'); td.classList.add('cell-empty');
-      return {ok:true, empty:true};
-    }
-
-    const num = Number(normDecimal(raw));          // calcula con copia normalizada
-    const ok  = Number.isFinite(num) && num >= 1.0 && num <= 5.0;
-
-    td.classList.remove('cell-empty');
-    td.classList.toggle('cell-ok',  ok);
-    td.classList.toggle('cell-bad', !ok);
-
-    return {ok, empty:false, value:num};
-  }
-
-  function validateFallas(input){
-    const td = input.closest('td');
-    let vv = (input.value || '').trim();
-    vv = vv.replace(/[^\d-]/g,'');
-    input.value = vv;
-
-    if (vv === ''){
-      td.classList.remove('cell-ok','cell-bad'); td.classList.add('cell-empty');
-      return {ok:true, empty:true};
-    }
-    if (!/^-?\d+$/.test(vv)){
-      td.classList.remove('cell-ok','cell-empty'); td.classList.add('cell-bad');
-      return {ok:false, empty:false};
-    }
-    const n = parseInt(vv,10);
-    if (n < 0){
-      td.classList.remove('cell-ok','cell-empty'); td.classList.add('cell-bad');
-      return {ok:false, empty:false};
-    }
-    td.classList.remove('cell-bad','cell-empty'); td.classList.add('cell-ok');
-    return {ok:true, empty:false, value:n};
-  }
-
-  function validateAll(){
-    let errors = 0;
-    document.querySelectorAll('input.nota').forEach(inp => { if (!validateNota(inp).ok) errors++; });
-    document.querySelectorAll('input.fallas').forEach(inp => { if (!validateFallas(inp).ok) errors++; });
-
-    const disabled = errors > 0;
-    $guardar.disabled = disabled;
-    $guardar.classList.toggle('disabled', disabled);
-    if ($hintBar){
-      $hintBar.innerHTML = disabled
-        ? `Hay <span class="bad">${errors}</span> campo(s) con error. Corrígelos para poder guardar.`
-        : `Todo listo. Puedes guardar.`;
-    }
-    return errors;
-  }
-
-  function attachFieldHandlers(){
-    document.querySelectorAll('input.nota').forEach(inp=>{
-      inp.addEventListener('input', ()=> { validateNota(inp); validateAll(); });
-      inp.addEventListener('blur',  ()=> { validateNota(inp); validateAll(); }); // sin toFixed
-      inp.closest('td').classList.add('cell-empty');
-    });
-
-    document.querySelectorAll('input.fallas').forEach(inp=>{
-      inp.addEventListener('input', ()=> validateAll());
-      inp.addEventListener('blur',  ()=> validateAll());
-      inp.closest('td').classList.add('cell-empty');
-    });
-
-    validateAll();
-  }
-
-
-  // Parche: engancha handlers justo después de tu loadTabla()
-  (function interceptAfterLoad(){
-    const originalLoadTabla = window.loadTabla;
-    if (typeof originalLoadTabla === 'function'){
-      window.loadTabla = async function(){
-        await originalLoadTabla();
-        attachFieldHandlers();
+        showToast(`Guardado: ${ok} OK (ins: ${inserts}, upd: ${updates}) · ${fail} fallos`, fail===0);
+        await loadTabla();            // repinta
+        attachFieldHandlers();        // reengancha validadores
+      } catch(e){
+        showToast('Error de red guardando notas.', false);
+      } finally{
+        $guardar.disabled = false;
       }
-    } else {
-      const obs = new MutationObserver(()=>{ attachFieldHandlers(); obs.disconnect(); validateAll(); });
-      obs.observe($tbody, {childList:true});
-    }
-  })();
-
-  // === Guardar usando la API fila-a-fila (rector_registrar_nota) ===
-  document.getElementById('btn-guardar').addEventListener('click', async (ev) => {
-    // Bloqueo si hay errores visibles
-    if (validateAll() > 0){
-      ev.preventDefault();
-      showToast('Corrige los campos marcados antes de guardar.', false);
-      return;
-    }
-
-    const filas = [];
-    document.querySelectorAll('input.nota').forEach(inp => {
-      const id = inp.dataset.est;
-      const notaRaw    = inp.value;
-      const notaNorm   = normDecimal(notaRaw); // lo que enviamos
-      const fallasRaw  = document.querySelector(`input.fallas[data-est="${id}"]`).value;
-      const fallasNorm = (fallasRaw || '').trim();
-
-      filas.push({estudiante_id: id, nota: notaNorm, fallas: fallasNorm});
     });
 
+    // Limpiar celdas (solo UI)
+    document.getElementById('btn-limpiar-celdas').addEventListener('click', () => {
+      document.querySelectorAll('input.nota, input.fallas').forEach(i => i.value = '');
+      attachFieldHandlers(); // re-colorea como vacías
+    });
 
-    let ok = 0, fail = 0, inserts = 0, updates = 0;
-    $guardar.disabled = true;
-
-    try{
-      for (const f of filas) {
-        // Nota vacía = no enviamos (omite filas totalmente vacías)
-        const hasNota   = String(f.nota   || '').trim().length > 0;
-        const hasFallas = String(f.fallas || '').trim().length > 0;
-        if (!hasNota && !hasFallas) continue;
-
-        const res = await guardarNota(
-          f.estudiante_id,
-          asignatura_id,
-          periodo_id,
-          hasNota ? f.nota : '',           // servidor entiende vacío
-          hasFallas ? f.fallas : '0'
-        );
-
-        if (res && res.ok) {
-          ok++;
-          if (res.accion === 'INSERT') inserts++;
-          if (res.accion === 'UPDATE') updates++;
-        } else {
-          fail++;
-        }
-      }
-
-      showToast(`Guardado: ${ok} OK (ins: ${inserts}, upd: ${updates}) · ${fail} fallos`, fail===0);
-      // refrescar (vuelve a pintar y reengancha validadores)
-      await loadTabla();
-      attachFieldHandlers();
-    } catch(e){
-      showToast('Error de red guardando notas.', false);
-    } finally{
-      $guardar.disabled = false;
-    }
-  });
-
-  // Limpiar celdas (UI)
-  document.getElementById('btn-limpiar-celdas').addEventListener('click', () => {
-    document.querySelectorAll('input.nota, input.fallas').forEach(i => i.value = '');
-    attachFieldHandlers(); // re-colorea como vacías
-  });
-
-  fillMeta().then(loadTabla);
-</script>
-
-<footer class="site-footer" role="contentinfo" aria-label="Pie de página del sitio">
-  <div class="footer-inner">
-    <div class="footer-left">
-      <img src="{% static 'img/logo2.jpeg' %}" alt="Logo colegio" class="footer-logo">
-      <div class="footer-school">
-        <div class="school-name">Nombre del Colegio</div>
-        <div class="school-sub">Sede / Ciudad</div>
-      </div>
-    </div>
-    <div class="footer-center">
-      Dirección: Calle Falsa 123<br>
-      Tel: (+57) 300 000 0000 · Email: info@colegio.edu.co
-    </div>
-    <div class="footer-right">
-      <nav class="footer-links">
-        <a href="#">Privacidad</a>
-        <a href="#">Términos</a>
-        <a href="#">Contacto</a>
-      </nav>
-      <div class="copyright">© {% now "Y" %} Nombre del Colegio</div>
-    </div>
-  </div>
-</footer>
-</body>
-</html>
+    fillMeta().then(loadTabla);
+  </script>
+{% endblock %}

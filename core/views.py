@@ -36,9 +36,12 @@ from openpyxl.utils import get_column_letter
 import json
 import re
 
+from django.views.decorators.cache import never_cache  # <-- importa esto
+
 # =========================================================
 # Login / Logout
 # =========================================================
+@never_cache
 def login_view(request: HttpRequest) -> HttpResponse:
     """GET: login • POST: autentica y redirige por rol (respeta ?next=)."""
     if request.user.is_authenticated:
@@ -55,9 +58,7 @@ def login_view(request: HttpRequest) -> HttpResponse:
             error = "Usuario o contraseña incorrectos"
         else:
             login(request, user)
-            if next_url and url_has_allowed_host_and_scheme(
-                next_url, allowed_hosts={request.get_host()}
-            ):
+            if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
                 return redirect(next_url)
             return _redir_por_rol(user)
 
@@ -429,14 +430,6 @@ def api_docente_notas_por_grupo_asignatura_periodo(request):
 
     notas = [{"estudiante_id": r[0], "nota": r[1], "fallas": r[2]} for r in rows]
     return JsonResponse({"notas": notas})
-
-@login_required(login_url="login")
-def docente_registro_notas_por_grupo(request):
-    if (resp := _guard_docente(request)) is not None:
-        return resp
-    return render(request, "core/docente/registro_notas_por_grupo.html")
-
-
 
 # ===== DOCENTE: páginas de registro de notas =====
 @login_required(login_url="login")
