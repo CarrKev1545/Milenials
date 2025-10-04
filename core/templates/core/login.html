@@ -5,6 +5,110 @@
 
 {% block extra_css %}
   <link rel="stylesheet" href="{% static 'css/login.css' %}">
+  <link rel="stylesheet" href="{% static 'css/login.patch.css' %}">
+
+  <style>
+
+    :root { font-size: 16px; }
+    @media (max-width: 75em) { :root { font-size: 15px; } } /* ~1200px */
+    @media (max-width: 62em) { :root { font-size: 14px; } } /* ~992px  */
+    @media (max-width: 48em) { :root { font-size: 13px; } } /* ~768px  */
+    @media (max-width: 36em) { :root { font-size: 12px; } } /* ~576px  */
+
+
+    .login-wrapper { 
+      min-height: 100vh; 
+      padding: 2rem 1rem; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+    }
+
+ 
+    .login-card { 
+      width: 100%; 
+      max-width: 26.25rem; /* 420px */
+      padding: 2rem 2rem 1.75rem; 
+      border-radius: 1rem; 
+    }
+
+    /* Logo/Avatar */
+    .avatar { 
+      width: 6.5rem; 
+      height: 6.5rem; 
+      border-radius: 50%; 
+      object-fit: cover; 
+      margin-bottom: 1rem; 
+    }
+
+    /* Título */
+    .login-title { 
+      font-size: 1.5rem; 
+      line-height: 1.2; 
+      margin-bottom: 1.25rem; 
+    }
+
+    /* Formulario y campos */
+    .login-form { display: flex; flex-direction: column; gap: 0.75rem; }
+    .field-label { font-size: 0.95rem; font-weight: 600; margin-top: 0.25rem; }
+    .field-control { padding: 0.75rem 0.875rem; font-size: 1rem; border-radius: 0.5rem; }
+
+    /* Botón ojo (sin cambiar tu JS) */
+    .field-wrap { position: relative; display: flex; align-items: center; }
+    .toggle-pass { position: absolute; right: 0.75rem; padding: 0.25rem; background: none; border: none; cursor: pointer; }
+    .toggle-pass .icon-eye { width: 1.25rem; height: 1.25rem; }
+
+    /* Botón ingresar */
+    .btn-login { 
+      margin-top: 1.25rem; 
+      font-size: 1rem; 
+      padding: 0.75rem 1rem; 
+      border-radius: 0.5rem; 
+      width: 100%; 
+    }
+
+    /* Link recuperar */
+    .forgot { margin-top: 0.75rem; font-size: 0.9rem; }
+
+    /* Ajustes en móviles */
+    @media (max-width: 40em) { /* ~640px */
+      .login-card { padding: 1.5rem; max-width: 22.5rem; }
+      .avatar { width: 5.5rem; height: 5.5rem; }
+      .login-title { font-size: 1.35rem; }
+      .btn-login { font-size: 0.95rem; }
+    }
+
+    /* --- Fix: avatar flotando centrado sobre la tarjeta --- */
+.login-card{
+  position: relative;
+  overflow: visible;              /* evita que el borde redondeado lo recorte */
+  padding-top: 4.25rem;           /* espacio interno para que no tape el título */
+}
+
+/* Logo redondo flotante */
+.login-card .avatar{
+  position: absolute;
+  top: 0;                         /* pegado al borde superior de la card */
+  left: 50%;
+  transform: translate(-50%, -50%); /* sube medio alto para “flotar” */
+  width: 6.25rem;                 /* 100px aprox */
+  height: 6.25rem;
+  border-radius: 50%;
+  object-fit: cover;
+
+  /* aro blanco + aro oscuro para separarlo del fondo */
+  border: 0.25rem solid #fff;     /* aro blanco */
+  outline: 0.25rem solid #0b0b0b; /* aro negro fino (mismo color que la card) */
+  box-shadow: 0 .5rem 1.25rem rgba(0,0,0,.35);
+  margin: 0;                      /* quita márgenes que lo empujen hacia abajo */
+}
+
+/* Ajuste fino en móviles */
+@media (max-width: 40em){
+  .login-card{ padding-top: 3.75rem; }
+  .login-card .avatar{ width: 5.5rem; height: 5.5rem; }
+}
+  </style>
 {% endblock %}
 
 {% block content %}

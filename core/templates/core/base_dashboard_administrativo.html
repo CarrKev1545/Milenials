@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>{% block title %}Panel del Docente{% endblock %}</title>
+  <title>{% block title %}Panel del Administrativo{% endblock %}</title>
 
   <!-- === Mismos CSS que usa el Rector === -->
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
@@ -18,17 +18,17 @@
 </head>
 <body>
 
-  <!-- === NAVBAR (idéntico en estructura, opciones del Docente) === -->
+  <!-- === NAVBAR (idéntico en estructura, opciones del Administrativo) === -->
   <header class="navbar" role="navigation" aria-label="Barra principal">
     <div class="nav-left">
       <img src="{% static 'img/logo2.jpeg' %}" alt="Logo colegio" class="logo" />
       <div class="nav-title">
         <h3>MILLENNIALS</h3>
-        <span class="user-name">{{ request.user.usuario }} · DOCENTE</span>
+        <span class="user-name">{{ request.user.usuario }} · ADMINISTRATIVO</span>
       </div>
     </div>
     <nav class="nav-menu" aria-label="Menú principal">
-      <a href="{% url 'dashboard_docente' %}">Inicio</a>
+      <a href="{% url 'dashboard_admin' %}">Inicio</a>
     </nav>
     <div class="nav-right">
       <a href="{% url 'logout' %}" class="btn-logout">Cerrar Sesión</a>

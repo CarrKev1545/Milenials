@@ -1,0 +1,70 @@
+/* boletin.patch.css — escalado rem y mejoras visuales coherentes con dashboard/login patches */
+
+/* ===== Escala base fluida ===== */
+:root {
+  font-size: 16px;
+}
+@media (max-width: 75em){ :root{ font-size: 15px; } }
+@media (max-width: 62em){ :root{ font-size: 14px; } }
+@media (max-width: 48em){ :root{ font-size: 13px; } }
+@media (max-width: 36em){ :root{ font-size: 12px; } }
+
+/* ===== Tipografía relativa (mantiene proporciones PDF) ===== */
+body {
+  font-size: 0.875rem; /* 14px → rem */
+  line-height: 1.6;
+}
+
+/* ===== Títulos fluidos ===== */
+.header-center h1 {
+  font-size: clamp(1.25rem, 1.1rem + 1vw, 1.75rem); /* 20–28px */
+}
+.subtitle {
+  font-size: 0.8125rem; /* 13px */
+}
+.doc-title {
+  font-size: 0.875rem;
+  padding: 0.5rem 1.125rem; /* 8px 18px */
+}
+
+/* ===== Métricas ===== */
+.metric-top { font-size: 0.8125rem; }
+.metric-main {
+  font-size: clamp(1.5rem, 2vw + 1rem, 1.75rem);
+}
+
+/* ===== Tabla ===== */
+.grades thead th {
+  font-size: 0.75rem; /* 12px */
+  padding: 0.625rem 0.375rem; /* 10px 6px */
+}
+.grades tbody td {
+  font-size: 0.875rem; /* 14px */
+  padding: 0.625rem 0.375rem;
+}
+
+/* ===== Footer y diagnósticos ===== */
+.footer {
+  font-size: 0.75rem; /* 12px */
+  padding-block: 0.625rem 1.75rem;
+}
+.diag-box { padding: 0.75rem; }
+.diag-hint { font-size: 0.75rem; }
+
+/* ===== Responsivo fino ===== */
+@media (max-width: 56.25em){ /* ~900px */
+  .meta-summary { grid-template-columns: 1fr; }
+  .summary.one-row { grid-template-columns: repeat(2, 1fr); }
+  .header-center h1 { font-size: 1.25rem; }
+  .doc-title { font-size: 0.8125rem; }
+}
+
+/* ===== Ajuste para impresión (PDF) ===== */
+@media print {
+  :root { font-size: 14px !important; }
+  body { font-size: 0.875rem !important; }
+  .header-center h1 { font-size: 1.5rem !important; }
+  .doc-title { font-size: 0.875rem !important; }
+  .grades thead th,
+  .grades tbody td { font-size: 0.8125rem !important; }
+}

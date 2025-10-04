@@ -1,0 +1,288 @@
+{% extends "core/base_dashboard_administrativo.html" %}
+{% load static %}
+
+{% block title %}Reportes académicos — Tabla{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== Escala base rem + ajustes fluidos ===== */
+  :root { font-size: 16px; } /* 1rem = 16px */
+  @media (max-width: 75em) { :root { font-size: 15px; } }
+  @media (max-width: 62em) { :root { font-size: 14px; } }
+  @media (max-width: 48em) { :root { font-size: 13px; } }
+  @media (max-width: 36em) { :root { font-size: 12px; } }
+
+  .page-title {
+    position: sticky; top: var(--navbar-height, 3.5rem); z-index: 40;
+    background: var(--accent); color: #fff; font-weight: 800; text-align: center;
+    padding: .625rem .75rem; box-shadow: 0 .25rem .75rem rgba(0,0,0,.35);
+  }
+
+  .main { padding: 1.25rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+
+  .actions {
+    display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; width: 100%; max-width: 73.75rem;
+  }
+  .btn {
+    border: none; border-radius: .5rem; padding: .625rem 1.125rem; font-weight: 700; cursor: pointer; color: #fff;
+    transition: transform .15s ease; display: inline-grid; grid-auto-flow: column; place-items: center; gap: .5rem;
+  }
+  .btn:hover { transform: translateY(-.0625rem); }
+  .btn-danger { background: #b51415; }
+
+  /* Toolbar de tabla */
+  .table-toolbar{
+    width: 100%; max-width: 73.75rem; display: flex; gap: .75rem; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  }
+  .search{
+    display: grid; grid-auto-flow: column; gap: .5rem; align-items: center;
+    background: #fff; border: 1px solid rgba(0,0,0,.1); border-radius: .5rem; padding: .5rem .75rem;
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.08);
+  }
+  .search input{
+    border: none; outline: none; min-width: 16rem; font-size: .95rem;
+  }
+  .counter{
+    font-weight: 800; color: #0b1220; background: #fff; border: 1px solid rgba(0,0,0,.08);
+    border-radius: .5rem; padding: .5rem .75rem; box-shadow: 0 .5rem 1rem rgba(0,0,0,.08);
+  }
+
+  .table-wrapper {
+    width: 100%; max-width: 73.75rem; overflow: auto; background: rgba(255,255,255,0.97);
+    border-radius: .75rem; box-shadow: 0 1rem 1.875rem rgba(0,0,0,.25); padding: 1rem;
+  }
+
+  table {
+    width: 100%; border-collapse: separate; border-spacing: 0 .625rem; font-weight: 600; color: #111; font-size: .95rem;
+  }
+
+  thead th{
+    position: sticky; top: 0; z-index: 5; color: #fff; text-align: left; padding: .875rem 1rem;
+    background: linear-gradient(180deg,#0f172a,#0b1220);
+    box-shadow: 0 .25rem 0 rgba(255,255,255,.05);
+    text-transform: uppercase; letter-spacing: .03em; user-select: none; cursor: pointer;
+  }
+  thead th.sortable::after{
+    content: "↕"; margin-left: .5rem; font-weight: 900; opacity: .6;
+  }
+  thead th.sorted-asc::after{ content: "↑"; }
+  thead th.sorted-desc::after{ content: "↓"; }
+
+  tbody td{
+    background: #f7f9fc; color: #0b1220; border: 1px solid #e6ebf3; padding: .875rem 1rem; vertical-align: middle;
+  }
+  tbody tr td:first-child{ border-top-left-radius: .75rem; border-bottom-left-radius: .75rem; }
+  tbody tr td:last-child { border-top-right-radius: .75rem; border-bottom-right-radius: .75rem; }
+  tbody tr:nth-child(odd) td{ background: #eef2f6; }
+  tbody tr:hover td{ filter: saturate(110%); box-shadow: 0 .5rem 1.125rem rgba(2,6,23,.08); }
+
+  /* Documento con monospace + botón copiar */
+  .doc-wrap{ display: grid; grid-auto-flow: column; align-items: center; gap: .5rem; }
+  .doc{ font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  .copy{
+    border: 1px solid rgba(0,0,0,.12); background: #fff; border-radius: .5rem; height: 2rem; padding: 0 .6rem; cursor: pointer;
+    display: grid; place-items: center; font-weight: 800; box-shadow: 0 .25rem .75rem rgba(0,0,0,.08);
+  }
+  .copy:active{ transform: scale(.98); }
+
+  .no-data { text-align: center; padding: 1.125rem; font-weight: 700; color: #666; }
+
+  /* Skeleton */
+  .skeleton{ position: relative; overflow: hidden; background: #eef2f6; }
+  .skeleton::after{
+    content:""; position:absolute; inset:0; transform: translateX(-100%);
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0, rgba(255,255,255,.6) 50%, rgba(255,255,255,0) 100%);
+    animation: shimmer 1.2s infinite;
+  }
+  @keyframes shimmer { 100% { transform: translateX(100%); } }
+
+  /* Responsive: compactar en móviles */
+  @media (max-width: 40em) {
+    thead tr th:nth-child(3),
+    thead tr th:nth-child(4),
+    tbody tr td:nth-child(3),
+    tbody tr td:nth-child(4) { display: none; }
+    thead tr th:nth-child(2){ border-top-right-radius: .5rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="page-title">Estudiantes del grupo</div>
+
+  <main class="main">
+    <div class="actions">
+      <a href="{% url 'administrativo_reportes_academicos_filtro' %}" class="btn btn-danger">
+        <i class="fa-solid fa-arrow-left"></i> Volver al filtro
+      </a>
+    </div>
+
+    <!-- Toolbar: buscador y contador -->
+    <div class="table-toolbar">
+      <label class="search" aria-label="Buscar estudiante por nombre, apellidos o documento">
+        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+        <input id="filtro" type="search" placeholder="Buscar… (nombre, apellidos o documento)" />
+      </label>
+      <div class="counter"><span id="count">0</span> estudiante(s)</div>
+    </div>
+
+    <div id="tabla-container" class="table-wrapper">
+      <div id="loading">Cargando estudiantes...</div>
+      <table id="tabla" style="display:none;">
+        <thead>
+          <tr>
+            <th class="sortable" data-key="index">#</th>
+            <th class="sortable" data-key="documento">Documento</th>
+            <th class="sortable" data-key="apellidos">Apellidos</th>
+            <th class="sortable" data-key="nombre">Nombres</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div id="no-data" class="no-data" style="display:none;">No hay estudiantes en este grupo.</div>
+    </div>
+  </main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const grupo_id = params.get('grupo_id');
+
+  const $loading = document.getElementById('loading');
+  const $tbody   = document.getElementById('tbody');
+  const $tabla   = document.getElementById('tabla');
+  const $nodata  = document.getElementById('no-data');
+  const $count   = document.getElementById('count');
+  const $filtro  = document.getElementById('filtro');
+
+  // Estado local (no toca backend)
+  let alumnos = [];
+  let view = [];
+  let sortKey = 'index';
+  let sortDir = 'asc'; // 'asc' | 'desc'
+
+  if (!grupo_id) {
+    $loading.textContent = 'Falta el parámetro del grupo.';
+  } else {
+    // Skeleton mientras llega
+    putSkeleton(6);
+    cargarEstudiantes(grupo_id);
+  }
+
+  async function cargarEstudiantes(grupo_id) {
+    try {
+      const resp = await fetch("{% url 'api_admin_estudiantes_por_grupo' %}?grupo_id=" + encodeURIComponent(grupo_id));
+      if (!resp.ok) throw new Error("Error al consultar estudiantes");
+      const data = await resp.json();
+      alumnos = (data.estudiantes || []).map((e, i) => ({
+        index: i + 1,
+        documento: e.documento || '',
+        apellidos: (e.apellidos || '').toUpperCase(),
+        nombre: (e.nombre || '').toUpperCase(),
+      }));
+      view = alumnos.slice();
+      $loading.style.display = 'none';
+      $tabla.style.display = 'table';
+      render();
+    } catch (err) {
+      console.error(err);
+      $loading.textContent = 'Error al cargar los estudiantes.';
+    }
+  }
+
+  function putSkeleton(n=5){
+    const frag = document.createDocumentFragment();
+    for (let i=0;i<n;i++){
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="skeleton">&nbsp;</td>
+        <td class="skeleton">&nbsp;</td>
+        <td class="skeleton">&nbsp;</td>
+        <td class="skeleton">&nbsp;</td>`;
+      frag.appendChild(tr);
+    }
+    $tbody.appendChild(frag);
+  }
+
+  function render(){
+    // Filtro
+    const q = ($filtro.value || '').trim().toLowerCase();
+    view = !q ? alumnos.slice() : alumnos.filter(a =>
+      a.documento.toLowerCase().includes(q) ||
+      a.apellidos.toLowerCase().includes(q) ||
+      a.nombre.toLowerCase().includes(q)
+    );
+
+    // Orden
+    view.sort((a,b)=>{
+      const A = (a[sortKey] ?? '').toString();
+      const B = (b[sortKey] ?? '').toString();
+      return sortDir === 'asc' ? A.localeCompare(B, 'es', {numeric: true}) : B.localeCompare(A, 'es', {numeric: true});
+    });
+
+    // Pintar
+    $tbody.innerHTML = '';
+    if (!view.length){
+      $nodata.style.display = 'block';
+      $count.textContent = '0';
+      return;
+    }
+    $nodata.style.display = 'none';
+
+    const frag = document.createDocumentFragment();
+    view.forEach((a)=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${a.index}</td>
+        <td>
+          <span class="doc-wrap">
+            <span class="doc">${a.documento}</span>
+            <button class="copy" title="Copiar documento" aria-label="Copiar documento" data-doc="${a.documento}">⧉</button>
+          </span>
+        </td>
+        <td>${a.apellidos}</td>
+        <td>${a.nombre}</td>`;
+      frag.appendChild(tr);
+    });
+    $tbody.appendChild(frag);
+
+    // Activar copiar
+    $tbody.querySelectorAll('.copy').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        try{
+          await navigator.clipboard.writeText(btn.dataset.doc || '');
+          btn.textContent = '✓'; setTimeout(()=>btn.textContent='⧉', 900);
+        }catch{}
+      });
+    });
+
+    // Contador
+    $count.textContent = String(view.length);
+
+    // Estado visual de orden
+    document.querySelectorAll('thead th').forEach(th=>{
+      th.classList.remove('sorted-asc','sorted-desc');
+      if (th.dataset.key === sortKey) th.classList.add(sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc');
+    });
+  }
+
+  // Buscar en vivo
+  $filtro.addEventListener('input', render);
+
+  // Ordenar por encabezado
+  document.querySelectorAll('thead th').forEach(th=>{
+    th.classList.add('sortable');
+    th.addEventListener('click', ()=>{
+      const key = th.dataset.key;
+      if (!key) return;
+      if (sortKey === key) {
+        sortDir = (sortDir === 'asc' ? 'desc' : 'asc');
+      } else {
+        sortKey = key; sortDir = 'asc';
+      }
+      render();
+    });
+  });
+</script>
+{% endblock %}

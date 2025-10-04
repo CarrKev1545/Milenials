@@ -1,7 +1,5 @@
-# core/urls.py
 from django.urls import path
 from . import views
-
 
 urlpatterns = [
     # ===== Autenticación =====
@@ -214,6 +212,8 @@ urlpatterns = [
         name="docente_reportes_academicos_export",
     ),
 
+    
+
     # ===== APIs de filtros para DOCENTE =====
     path("api/docente/sedes", views.api_docente_sedes, name="api_docente_sedes"),
     path("api/docente/grados-por-sede", views.api_docente_grados_por_sede, name="api_docente_grados_por_sede"),
@@ -222,10 +222,24 @@ urlpatterns = [
     path("api/docente/asignaturas-por-grupo-area", views.api_docente_asignaturas_por_grupo_area, name="api_docente_asignaturas_por_grupo_area"),
     path("api/docente/periodos-abiertos", views.api_docente_periodos_abiertos, name="api_docente_periodos_abiertos"),
 
-    # Página de tabla (si no la tenías)
-    path("docente/registro-notas/grupo/", views.docente_registro_notas_por_grupo, name="docente_registro_notas_por_grupo"),
-
-    # APIs para tabla
+    # ✅ UNA sola vez:
     path("api/docente/estudiantes-por-grupo", views.api_docente_estudiantes_por_grupo, name="api_docente_estudiantes_por_grupo"),
-    path("api/docente/notas-por-grupo-asignatura-periodo", views.api_docente_notas_por_grupo_asignatura_periodo, name="api_docente_notas_por_grupo_asignatura_periodo"),
+
+    # ✅ Endpoint de notas:
+    path("api/docente/notas-por-grupo-asignatura-periodo",
+        views.api_docente_notas_por_grupo_asignatura_periodo,
+        name="api_docente_notas_por_grupo_asignatura_periodo"),
+
+    # ===== ADMINISTRATIVO: Reportes académicos (páginas HTML) =====
+    path("administrativo/reportes-academicos/", views.administrativo_reportes_academicos_filtro, name="administrativo_reportes_academicos_filtro"),
+    path("administrativo/reportes-academicos/grupo/", views.administrativo_reportes_academicos_por_grupo, name="administrativo_reportes_academicos_por_grupo"),
+    path("administrativo/reportes-academicos/estudiante/", views.administrativo_reportes_academicos_por_estudiante, name="administrativo_reportes_academicos_por_estudiante"),  # opcional
+    path("administrativo/reportes-academicos/tabla/", views.administrativo_reportes_academicos_tabla, name="administrativo_reportes_academicos_tabla"),  # opcional
+
+    # ===== ADMINISTRATIVO: APIs de filtros (JSON) =====
+    path("api/admin/sedes/", views.api_admin_sedes, name="api_admin_sedes"),
+    path("api/admin/grados-por-sede/", views.api_admin_grados_por_sede, name="api_admin_grados_por_sede"),
+    path("api/admin/grupos-por-sede-grado/", views.api_admin_grupos_por_sede_grado, name="api_admin_grupos_por_sede_grado"),
+    path("api/admin/periodos-abiertos/", views.api_admin_periodos_abiertos, name="api_admin_periodos_abiertos"),
+    path("api/admin/estudiantes-por-grupo/", views.api_admin_estudiantes_por_grupo, name="api_admin_estudiantes_por_grupo"),
 ]

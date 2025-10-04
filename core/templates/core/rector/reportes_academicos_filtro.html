@@ -30,40 +30,47 @@
 
 {% block extra_css %}
 <style>
-  /* 2) Ponerlas más cerca y centradas */
+  /* ===== Escala base rem + ajustes fluidos (no afecta lógica) ===== */
+  :root { font-size: 16px; }                  /* 1rem = 16px */
+  @media (max-width: 75em) { :root { font-size: 15px; } } /* ~1200px */
+  @media (max-width: 62em) { :root { font-size: 14px; } } /* ~992px  */
+  @media (max-width: 48em) { :root { font-size: 13px; } } /* ~768px  */
+  @media (max-width: 36em) { :root { font-size: 12px; } } /* ~576px  */
+
+  /* ===== Layout de tarjetas ===== */
   .cards.home-cards{
-    /* ancho controlado -> reduce separación horizontal */
-    max-width: 900px;
+    max-width: 56.25rem;                     /* 900px -> 56.25rem */
     margin-inline: auto;
 
-    /* 2 columnas en desktop, 1 en móvil */
     display: grid;
-    grid-template-columns: repeat(2, minmax(260px, 1fr));
-    gap: clamp(12px, 2vw, 22px);
+    grid-template-columns: repeat(2, minmax(16.25rem, 1fr)); /* 260px -> 16.25rem */
+    gap: clamp(.75rem, 2vw, 1.375rem);       /* 12px–22px */
     place-items: center;
+    padding: 0 1rem;
   }
-  @media (max-width: 680px){
+
+  @media (max-width: 42.5em){                /* ~680px */
     .cards.home-cards{ grid-template-columns: 1fr; }
   }
 
-  /* Iconos un pelín más compactos para que todo respire */
-  .home-card .icon i{ font-size: clamp(72px, 7vw, 100px); }
+  /* Iconos más fluidos y label compacto */
+  .home-card .icon i{ font-size: clamp(4.5rem, 7vw, 6.25rem); } /* 72–100px */
   .home-card .label{ margin-top: .2rem; }
 
-  /* Quita subrayado en las tarjetas del filtro */
+  /* Quitar subrayado en las tarjetas y blindaje visual */
   .cards.home-cards .card{
     text-decoration: none !important;
   }
   .cards.home-cards .card .card-box i{
-    text-decoration: none;      /* por si algún reset lo añade */
-    border: 0;                  /* blindaje extra */
+    text-decoration: none;
+    border: 0;
   }
 
-  /* Mantén un foco visible para teclado */
+  /* Foco visible para accesibilidad por teclado */
   .cards.home-cards .card:focus-visible{
-    outline: 3px solid rgba(156,15,16,.55);
-    outline-offset: 4px;
-    border-radius: 18px;
+    outline: .1875rem solid rgba(156,15,16,.55);  /* 3px */
+    outline-offset: .25rem;                       /* 4px */
+    border-radius: 1.125rem;                      /* 18px */
   }
 </style>
 {% endblock %}

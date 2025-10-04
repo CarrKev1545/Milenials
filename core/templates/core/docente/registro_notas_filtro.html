@@ -4,34 +4,86 @@
 {% block title %}Registro de notas — Por grupo{% endblock %}
 
 {% block extra_css %}
+{{ block.super }}
 <style>
-  /* === Clonado del look del rector para filtros === */
-  .page-title{position:sticky;top:var(--navbar-height);z-index:40;background:var(--accent);color:#fff;font-weight:800;letter-spacing:.2px;text-align:center;padding:10px 12px;box-shadow:0 4px 12px rgba(0,0,0,.35)}
-  .rg{width:100%;max-width:1280px;margin:0 auto;padding:0 20px}
-  .rg-wrap{position:relative;margin-top:14px}
-  .rg-wrap::before{content:"";position:absolute;inset:-18px -22px;border-radius:18px;background:
-    radial-gradient(140% 160% at 10% 0%, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 45%),
-    linear-gradient(135deg, rgba(22,22,24,.88) 0%, rgba(16,16,18,.86) 100%);
-    border:1px solid rgba(255,255,255,.10);backdrop-filter: blur(6px) saturate(115%);
-    box-shadow:0 22px 44px rgba(0,0,0,.50);z-index:0}
-  .rg-inner{position:relative;z-index:1;padding:28px 24px 24px}
-  .rg-badge{width:370px;max-width:90vw;margin:0 auto;margin-top:-22px;background:#0c0c0c;border-radius:16px;
-    box-shadow:0 16px 30px rgba(0,0,0,.55), inset 0 -8px 22px rgba(0,0,0,.22);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px 16px 12px}
-  .rg-badge i{font-size:82px;color:#fff;filter:drop-shadow(0 10px 30px rgba(0,0,0,.6))}
-  .rg-chip{margin-top:12px;background:var(--accent);color:#fff;padding:8px 18px;border-radius:999px;font-weight:800;letter-spacing:.2px}
-  .rg-grid{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;align-items:center}
-  .rg-field{position:relative;display:flex;align-items:center;gap:10px;height:48px;padding:0 14px 0 50px;background:#fff;border-radius:14px;border:1px solid rgba(0,0,0,.06);box-shadow:0 10px 20px rgba(0,0,0,.22);width:100%}
-  .rg-field select{appearance:none;width:100%;border:none;outline:none;background:transparent;color:#111;font-weight:600}
-  .rg-ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:26px;display:grid;place-items:center;color:#111;opacity:.95}
-  .rg-caret{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#111;opacity:.85}
-  .rg-actions{margin-top:18px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
-  .rg-btn{height:48px;min-width:180px;border-radius:12px;border:none;cursor:pointer;font-weight:800;color:#fff;background:var(--accent);box-shadow:0 12px 22px rgba(156,15,16,.38);transition:.12s transform ease,.12s box-shadow ease,.12s background ease}
-  .rg-btn:hover{transform:translateY(-2px);box-shadow:0 18px 28px rgba(156,15,16,.48)}
-  .rg-btn:active{transform:translateY(0) scale(.985)}
-  .rg-btn--ghost{background:#b51415}
-  .disabled{opacity:.55;pointer-events:none}
-  @media (max-width:1020px){ .rg-grid{ grid-template-columns:1fr; } }
+  /* ===== Escala base rem + ajustes fluidos ===== */
+  :root { font-size: 16px; } /* 1rem = 16px */
+  @media (max-width: 75em) { :root { font-size: 15px; } } /* ~1200px */
+  @media (max-width: 62em) { :root { font-size: 14px; } } /* ~992px  */
+  @media (max-width: 48em) { :root { font-size: 13px; } } /* ~768px  */
+  @media (max-width: 36em) { :root { font-size: 12px; } } /* ~576px  */
+
+  /* === Look original con medidas en rem === */
+  .page-title{
+    position:sticky;top:var(--navbar-height);z-index:40;
+    background:var(--accent);color:#fff;font-weight:800;letter-spacing:.0125em;
+    text-align:center;padding:.625rem .75rem;
+    box-shadow:0 .25rem .75rem rgba(0,0,0,.35);
+  }
+
+  .rg{width:100%;max-width:80rem;margin:0 auto;padding:0 1.25rem;} /* 1280px */
+  .rg-wrap{position:relative;margin-top:.875rem;}
+  .rg-wrap::before{
+    content:"";position:absolute;inset:-1.125rem -1.375rem;border-radius:1.125rem;
+    background:
+      radial-gradient(140% 160% at 10% 0%, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 45%),
+      linear-gradient(135deg, rgba(22,22,24,.88) 0%, rgba(16,16,18,.86) 100%);
+    border:1px solid rgba(255,255,255,.10);
+    backdrop-filter:blur(.375rem) saturate(115%);
+    box-shadow:0 1.375rem 2.75rem rgba(0,0,0,.50);
+    z-index:0;
+  }
+
+  .rg-inner{position:relative;z-index:1;padding:1.75rem 1.5rem 1.5rem;}
+  .rg-badge{
+    width:23rem;max-width:90vw;margin:0 auto;margin-top:-1.375rem;
+    background:#0c0c0c;border-radius:1rem;
+    box-shadow:0 1rem 1.875rem rgba(0,0,0,.55),inset 0 -.5rem 1.375rem rgba(0,0,0,.22);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:1.125rem 1rem .75rem;
+  }
+  .rg-badge i{font-size:5.125rem;color:#fff;filter:drop-shadow(0 .625rem 1.875rem rgba(0,0,0,.6));}
+  .rg-chip{
+    margin-top:.75rem;background:var(--accent);color:#fff;
+    padding:.5rem 1.125rem;border-radius:999rem;font-weight:800;letter-spacing:.02em;
+  }
+
+  .rg-grid{
+    margin-top:1.125rem;display:grid;grid-template-columns:1fr 1fr;
+    gap:.875rem 1.25rem;align-items:center;
+  }
+  .rg-field{
+    position:relative;display:flex;align-items:center;gap:.625rem;
+    height:3rem;padding:0 .875rem 0 3.125rem;
+    background:#fff;border-radius:.875rem;border:1px solid rgba(0,0,0,.06);
+    box-shadow:0 .625rem 1.25rem rgba(0,0,0,.22);width:100%;
+  }
+  .rg-field select{
+    appearance:none;width:100%;border:none;outline:none;background:transparent;color:#111;font-weight:600;
+  }
+  .rg-ico{position:absolute;left:.875rem;top:50%;transform:translateY(-50%);width:1.625rem;display:grid;place-items:center;color:#111;opacity:.95;}
+  .rg-caret{position:absolute;right:.625rem;top:50%;transform:translateY(-50%);color:#111;opacity:.85;}
+
+  .rg-actions{
+    margin-top:1.125rem;display:flex;gap:.875rem;justify-content:center;flex-wrap:wrap;
+  }
+  .rg-btn{
+    height:3rem;min-width:11.25rem;border-radius:.75rem;border:none;cursor:pointer;
+    font-weight:800;color:#fff;background:var(--accent);
+    box-shadow:0 .75rem 1.375rem rgba(156,15,16,.38);
+    transition:.12s transform ease,.12s box-shadow ease,.12s background ease;
+  }
+  .rg-btn:hover{transform:translateY(-.125rem);box-shadow:0 1.125rem 1.75rem rgba(156,15,16,.48);}
+  .rg-btn:active{transform:translateY(0) scale(.985);}
+  .rg-btn--ghost{background:#b51415;}
+  .disabled{opacity:.55;pointer-events:none;}
+
+  @media (max-width:63.75em){ /* ~1020px */
+    .rg-grid{grid-template-columns:1fr;}
+  }
+  @media (max-width:40em){ /* ~640px */
+    .rg-btn{min-width:9rem;height:2.75rem;font-size:.9rem;}
+  }
 </style>
 {% endblock %}
 
@@ -47,19 +99,12 @@
             <div class="rg-chip">POR GRUPO</div>
           </div>
 
+          <!-- Orden lógico: Sede → Grado → Grupo → Área → Asignatura → Periodo -->
           <form id="form-grupo" class="rg-grid" autocomplete="off" novalidate>
             <label class="rg-field">
               <span class="rg-ico"><i class="fa-solid fa-building-columns"></i></span>
               <select id="sede" name="sede_id" required>
                 <option value="">Seleccione la sede</option>
-              </select>
-              <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
-            </label>
-
-            <label class="rg-field">
-              <span class="rg-ico"><i class="fa-solid fa-list"></i></span>
-              <select id="area" name="area_id" required disabled>
-                <option value="">Seleccione el área</option>
               </select>
               <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
             </label>
@@ -73,17 +118,25 @@
             </label>
 
             <label class="rg-field">
-              <span class="rg-ico"><i class="fa-solid fa-book-open-reader"></i></span>
-              <select id="asignatura" name="asignatura_id" required disabled>
-                <option value="">Seleccione la asignatura</option>
+              <span class="rg-ico"><i class="fa-solid fa-people-roof"></i></span>
+              <select id="grupo" name="grupo_id" required disabled>
+                <option value="">Seleccione el grupo</option>
               </select>
               <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
             </label>
 
             <label class="rg-field">
-              <span class="rg-ico"><i class="fa-solid fa-people-roof"></i></span>
-              <select id="grupo" name="grupo_id" required disabled>
-                <option value="">Seleccione el grupo</option>
+              <span class="rg-ico"><i class="fa-solid fa-list"></i></span>
+              <select id="area" name="area_id" required disabled>
+                <option value="">Seleccione el área</option>
+              </select>
+              <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
+            </label>
+
+            <label class="rg-field">
+              <span class="rg-ico"><i class="fa-solid fa-book-open-reader"></i></span>
+              <select id="asignatura" name="asignatura_id" required disabled>
+                <option value="">Seleccione la asignatura</option>
               </select>
               <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
             </label>
@@ -99,7 +152,7 @@
 
           <div class="rg-actions">
             <button type="button" class="rg-btn disabled" id="btn-buscar" aria-disabled="true">Buscar</button>
-            <button type="button" class="rg-btn rg-btn--ghost" id="btn-limpiar">Eliminar</button>
+            <button type="button" class="rg-btn rg-btn--ghost" id="btn-limpiar">Limpiar</button>
           </div>
         </div>
       </div>
@@ -137,7 +190,7 @@
       });
     });
 
-  // 2) al cambiar sede -> grados + periodos (ambos filtrados)
+  // 2) al cambiar sede -> grados + periodos
   $sede.addEventListener('change', async () => {
     disable($grado); disable($grupo); disable($area); disable($asignatura); disable($periodo);
     $grado.innerHTML = '<option value="">Seleccione el grado</option>';
@@ -163,7 +216,7 @@
     enableBuscarIfReady();
   });
 
-  // 3) al cambiar grado -> grupos (filtrados)
+  // 3) al cambiar grado -> grupos
   $grado.addEventListener('change', async () => {
     disable($grupo); disable($area); disable($asignatura);
     $grupo.innerHTML = '<option value="">Seleccione el grupo</option>';
@@ -197,7 +250,7 @@
     enableBuscarIfReady();
   });
 
-  // 5) al cambiar área -> asignaturas (de ese grupo en esa área)
+  // 5) al cambiar área -> asignaturas
   $area.addEventListener('change', async () => {
     disable($asignatura);
     $asignatura.innerHTML = '<option value="">Seleccione la asignatura</option>';
@@ -224,7 +277,7 @@
     window.location.href = "{% url 'docente_registro_notas_por_grupo' %}?" + params.toString();
   });
 
-  // 8) "Eliminar"
+  // 8) "Limpiar"
   document.getElementById('btn-limpiar').addEventListener('click', () => {
     document.getElementById('form-grupo').reset();
     [$grado,$grupo,$area,$asignatura,$periodo].forEach(e=>{
@@ -235,4 +288,3 @@
   });
 </script>
 {% endblock %}
-

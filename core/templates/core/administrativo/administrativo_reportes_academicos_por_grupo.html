@@ -1,4 +1,4 @@
-{% extends "core/base_dashboard_docente.html" %}
+{% extends "core/base_dashboard_administrativo.html" %}
 {% load static %}
 
 {% block title %}Reportes académicos — Por grupo{% endblock %}
@@ -14,9 +14,9 @@
 
   /* ===== Barra roja superior ===== */
   .page-title{
-    position:sticky; top:var(--navbar-height, 3.5rem); z-index:40;
-    background:var(--accent); color:#fff; font-weight:800; letter-spacing:.0125em;
-    text-align:center; padding:.625rem .75rem; box-shadow:0 .25rem .75rem rgba(0,0,0,.35);
+    position: sticky; top: var(--navbar-height, 3.5rem); z-index: 40;
+    background: var(--accent); color: #fff; font-weight: 800; letter-spacing: .02em;
+    text-align: center; padding: .625rem .75rem; box-shadow: 0 .25rem .75rem rgba(0,0,0,.35);
   }
 
   /* ===== Contenedor tarjeta ===== */
@@ -30,6 +30,7 @@
     border:1px solid rgba(255,255,255,.10); backdrop-filter: blur(.375rem) saturate(115%);
     box-shadow:0 1.375rem 2.75rem rgba(0,0,0,.50); z-index:0
   }
+
   .rg-inner{position:relative;z-index:1;padding:1.75rem 1.5rem 1.5rem}
 
   /* ===== Badge ===== */
@@ -38,6 +39,7 @@
     box-shadow:0 1rem 1.875rem rgba(0,0,0,.55), inset 0 -.5rem 1.375rem rgba(0,0,0,.22);
     display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.125rem 1rem .75rem
   }
+
   .rg-badge i{font-size:5.125rem;color:#fff;filter:drop-shadow(0 .625rem 1.875rem rgba(0,0,0,.6))}
   .rg-chip{margin-top:.75rem;background:var(--accent);color:#fff;padding:.5rem 1.125rem;border-radius:999rem;font-weight:800;letter-spacing:.02em}
 
@@ -109,7 +111,7 @@
   .tabla thead th:first-child{left:0; z-index:5}
   .tabla tbody td:first-child{
     position:sticky; left:0; z-index:3; background:#fff;
-    box-shadow: .0625rem 0 0 #e6ebf3;
+    box-shadow: 0.0625rem 0 0 #e6ebf3;
   }
 
   /* Avatar + nombre */
@@ -171,7 +173,7 @@
             <button id="btn-grupo-xls" class="btn btn--xls">
               <i class="fa-solid fa-file-excel"></i> Boletín del grupo (Excel)
             </button>
-            <a class="btn btn--ghost" href="{% url 'docente_reportes_academicos_filtro' %}">
+            <a class="btn btn--ghost" href="{% url 'administrativo_reportes_academicos_filtro' %}">
               <i class="fa-solid fa-arrow-left"></i> Volver a filtros
             </a>
           </div>
@@ -203,7 +205,7 @@
 {% block extra_js %}
 {{ block.super }}
 <script>
-  /* === Endpoints de exportación (no se toca lógica) === */
+  /* === Endpoints de exportación (mantengo tu lógica tal cual) === */
   const ENDPOINTS = {
     grupo_pdf:  "/reportes/boletin/grupo/pdf",
     grupo_xlsx: "/reportes/boletin/grupo/excel",
@@ -228,25 +230,25 @@
   };
 
   (async()=>{
-    // Resumen legible (DOCENTE)
-    const pj = await j("{% url 'api_docente_periodos_abiertos' %}");
+    // Resumen legible
+    const pj = await j("{% url 'api_admin_periodos_abiertos' %}");
     const per = (pj.periodos||[]).find(x=>String(x.id)===String(periodo_id));
     addTag("fa-solid fa-calendar-days","Periodo: " + (per?.nombre || periodo_id));
 
-    const sj = await j("{% url 'api_docente_sedes' %}");
+    const sj = await j("{% url 'api_admin_sedes' %}");
     const sede = (sj.sedes||[]).find(x=>String(x.id)===String(sede_id));
     addTag("fa-solid fa-building-columns","Sede: " + (sede?.nombre || sede_id));
 
-    const gj = await j("{% url 'api_docente_grados_por_sede' %}?sede_id="+encodeURIComponent(sede_id));
+    const gj = await j("{% url 'api_admin_grados_por_sede' %}?sede_id="+encodeURIComponent(sede_id));
     const grado = (gj.grados||[]).find(x=>String(x.id)===String(grado_id));
     addTag("fa-solid fa-sitemap","Grado: " + (grado?.nombre || grado_id));
 
-    const grj = await j("{% url 'api_docente_grupos_por_sede_grado' %}?sede_id="+encodeURIComponent(sede_id)+"&grado_id="+encodeURIComponent(grado_id));
+    const grj = await j("{% url 'api_admin_grupos_por_sede_grado' %}?sede_id="+encodeURIComponent(sede_id)+"&grado_id="+encodeURIComponent(grado_id));
     const grupo = (grj.grupos||[]).find(x=>String(x.id)===String(grupo_id));
     addTag("fa-solid fa-people-roof","Grupo: " + (grupo?.nombre || grupo_id));
 
     // Alumnos
-    const r = await j("{% url 'api_docente_estudiantes_por_grupo' %}?grupo_id="+encodeURIComponent(grupo_id));
+    const r = await j("{% url 'api_admin_estudiantes_por_grupo' %}?grupo_id="+encodeURIComponent(grupo_id));
     const alumnos = r.estudiantes || [];
     if (!alumnos.length){
       $tbody.innerHTML = '<tr><td colspan="3">No hay estudiantes en este grupo.</td></tr>';

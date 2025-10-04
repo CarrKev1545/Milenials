@@ -1,0 +1,71 @@
+/* login.patch.css — overrides en rem, no cambia tu lógica ni clases.
+   Cargar después de login.css
+*/
+
+/* ===== Escala base rem (fluida) ===== */
+:root{
+  font-size: 16px;                 /* 1rem = 16px base */
+}
+@media (max-width: 75em){ :root{ font-size: 15px; } } /* ~1200px */
+@media (max-width: 62em){ :root{ font-size: 14px; } } /* ~992px  */
+@media (max-width: 48em){ :root{ font-size: 13px; } } /* ~768px  */
+@media (max-width: 36em){ :root{ font-size: 12px; } } /* ~576px  */
+
+/* ===== Tipografías (px → rem seguros) ===== */
+.login-title{
+  /* antes: clamp(1.2rem, 1rem + 1vw, 1.8rem) ya era relativo, lo dejamos */
+  letter-spacing: .01em;
+}
+
+.field-label{ font-size: .875rem; }         /* 14px */
+.field-control{ font-size: 1rem; }          /* 16px */
+.btn-login{ font-size: 1rem; }              /* 16px */
+.forgot{ font-size: .75rem; }               /* 12px */
+
+/* ===== Alturas y paddings táctiles en rem ===== */
+.field-control{
+  min-height: 2.75rem;            /* 44px → 2.75rem */
+  padding: .625rem 2.25rem .625rem .125rem; /* 10px 36px 10px 2px → rem */
+  border-bottom-width: .125rem;   /* 2px → .125rem */
+}
+
+.btn-login{
+  min-height: 2.75rem;            /* 44px → 2.75rem */
+  padding-block: clamp(.625rem, 2.5vw, .875rem); /* 10–14px */
+  border-radius: 1.375rem;        /* 22px → 1.375rem */
+}
+
+/* Toggle de contraseña (solo medidas visuales, mantiene layout) */
+.toggle-pass{
+  width: 2.25rem;                 /* 36px */
+  height: 2.25rem;                /* 36px */
+  border-radius: .5rem;           /* 8px */
+}
+.toggle-pass .icon-eye{
+  width: 1.25rem;                 /* 20px */
+  height: 1.25rem;                /* 20px */
+}
+
+/* Tarjeta y avatar con espaciados fluidos (manteniendo proporciones) */
+.login-card{
+  width: min(100%, 28.75rem);     /* 460px → 28.75rem */
+  padding: clamp(4.5rem, 8vw, 5.75rem) clamp(1.125rem, 3vw, 2.125rem) 1.75rem;
+  border-radius: .75rem;          /* 12px */
+}
+.avatar{
+  top: -3.25rem;                  /* -52px */
+  width: 6.5rem; height: 6.5rem;  /* 104px */
+  border-width: .1875rem;         /* 3px */
+}
+
+/* Ajuste móvil fino conservando tus reglas */
+@media (max-width: 26.25em){      /* 420px */
+  .login-card{ padding: 4.5rem 1.125rem 1.5rem; }  /* 72 18 24 px → rem */
+  .login-title{ font-size: 1.25rem; }
+}
+
+/* Accesibilidad: foco consistente */
+:where(.field-control, .btn-login, .forgot):focus-visible{
+  outline: .125rem solid var(--accent);
+  outline-offset: .1875rem;
+}

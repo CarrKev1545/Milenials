@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 
 # HTTP y respuestas
 from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseBadRequest
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.views.decorators.http import require_GET, require_POST
 from django.views.decorators.csrf import csrf_exempt
 
@@ -38,6 +38,8 @@ import re
 
 from django.views.decorators.cache import never_cache  # <-- importa esto
 
+from .models import Grupo, Estudiante
+
 # =========================================================
 # Login / Logout
 # =========================================================
@@ -64,20 +66,17 @@ def login_view(request: HttpRequest) -> HttpResponse:
 
     return render(request, "core/login.html", {"error": error, "next": next_url})
 
-
 def logout_view(request: HttpRequest) -> HttpResponse:
     logout(request)
     return redirect("login")
 
-
-def _redir_por_rol(user: User) -> HttpResponse:
+def _redir_por_rol(user) -> HttpResponse:
     rol = (getattr(user, "rol", "") or "").upper()
     if rol == "RECTOR":
         return redirect("dashboard_rector")
     if rol == "DOCENTE":
         return redirect("dashboard_docente")
     return redirect("dashboard_admin")
-
 
 # =========================================================
 # Dashboards
@@ -94,8 +93,37 @@ def dashboard_docente(request: HttpRequest) -> HttpResponse:
 
 @login_required(login_url="login")
 def dashboard_admin(request: HttpRequest) -> HttpResponse:
+    # Ya existía, lo dejamos igual
     return render(request, "core/dashboard_admin.html")
 
+@login_required(login_url="login")
+def administrativo_reportes_academicos_filtro(request: HttpRequest) -> HttpResponse:
+    if (resp := _guard_admin(request)) is not None:
+        return resp
+    # Plantilla que acordamos:
+    return render(request, "core/administrativo/administrativo_reportes_academicos_filtro.html")
+
+# Resultado POR GRUPO (página que lee los parámetros por querystring y consume APIs)
+@login_required(login_url="login")
+def administrativo_reportes_academicos_por_grupo(request: HttpRequest) -> HttpResponse:
+    if (resp := _guard_admin(request)) is not None:
+        return resp
+    # Esta es la página “por grupo” (UI con exportar/tabla)
+    return render(request, "core/administrativo/administrativo_reportes_academicos_por_grupo.html")
+
+# (Opcional) Variante POR ESTUDIANTE (de momento conserva flujo por grupo)
+@login_required(login_url="login")
+def administrativo_reportes_academicos_por_estudiante(request: HttpRequest) -> HttpResponse:
+    if (resp := _guard_admin(request)) is not None:
+        return resp
+    return render(request, "core/administrativo/reportes_academicos_estudiante_admin.html")
+
+# (Opcional) Tabla simple — si la usas como pantalla separada
+@login_required(login_url="login")
+def administrativo_reportes_academicos_tabla(request: HttpRequest) -> HttpResponse:
+    if (resp := _guard_admin(request)) is not None:
+        return resp
+    return render(request, "core/administrativo/reportes_academicos_tabla_admin.html")
 
 def estilizar_boletin_ws(ws, ancho_columna_1=48, ancho_otras=18):
     """
@@ -183,7 +211,6 @@ def _guard_docente(request: HttpRequest) -> HttpResponse | None:
 
 def _docente_puede_ver_grupo(usuario_id: int, grupo_id: int) -> bool:
     """Valida si el usuario (docente) está vinculado al grupo (docente_grupo)."""
-    from django.db import connection
     with connection.cursor() as cur:
         cur.execute("""
             SELECT 1
@@ -210,17 +237,12 @@ def _docente_puede_editar_asignatura(usuario_id: int, grupo_id: int, asignatura_
         """, [usuario_id, grupo_id, asignatura_id])
         return cur.fetchone() is not None
 
-# ========= APIs públicas para FILTROS del DOCENTE =========
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-from django.db import connection
-import re
-
 _ID = re.compile(r"^\d{1,10}$")
 def _ok(x: str) -> bool: return bool(_ID.fullmatch((x or "").strip()))
 
 @login_required(login_url="login")
-def api_docente_sedes(request):
+@require_GET
+def api_docente_sedes(request: HttpRequest) -> JsonResponse:
     if (resp := _guard_docente(request)) is not None:
         return JsonResponse({"sedes": []})
     uid = request.user.id
@@ -230,12 +252,17 @@ def api_docente_sedes(request):
               FROM public.docentes d
               JOIN public.docente_grupo dg ON dg.docente_id = d.id
               JOIN public.grupos g ON g.id = dg.grupo_id
-              JOIN public.sedes s  ON s.id = g.sede_id
+              JOIN public.sedes s ON s.id = g.sede_id
              WHERE d.usuario_id = %s
              ORDER BY s.nombre;
         """, [uid])
         sedes = [{"id": r[0], "nombre": r[1]} for r in cur.fetchall()]
     return JsonResponse({"sedes": sedes})
+
+@login_required(login_url="login")
+def exportar_boletines(request, grupo_id):
+    # Similar a lo de rector
+    pass
 
 @login_required(login_url="login")
 def api_docente_grados_por_sede(request):
@@ -342,15 +369,11 @@ def api_docente_periodos_abiertos(request):
         periodos = [{"id": r[0], "nombre": r[1]} for r in cur.fetchall()]
     return JsonResponse({"periodos": periodos})
 
-
-_ID = re.compile(r"^\d{1,10}$")
-def _ok(x: str) -> bool: return bool(_ID.fullmatch((x or "").strip()))
-
 @login_required(login_url="login")
-def api_docente_estudiantes_por_grupo(request):
-    """Estudiantes del grupo SI y solo si el docente tiene acceso a ese grupo (docente_grupo)."""
+@require_GET
+def api_docente_estudiantes_por_grupo(request: HttpRequest) -> JsonResponse:
     if (resp := _guard_docente(request)) is not None:
-        return JsonResponse({"estudiantes": []})
+        return resp
     uid = request.user.id
     grupo_id = (request.GET.get("grupo_id") or "").strip()
     if not _ok(grupo_id):
@@ -360,10 +383,10 @@ def api_docente_estudiantes_por_grupo(request):
         # Validar permiso al grupo
         cur.execute("""
             SELECT 1
-              FROM public.docentes d
-              JOIN public.docente_grupo dg ON dg.docente_id = d.id
-             WHERE d.usuario_id = %s AND dg.grupo_id = %s
-             LIMIT 1;
+            FROM public.docentes d
+            JOIN public.docente_grupo dg ON dg.docente_id = d.id
+            WHERE d.usuario_id = %s AND dg.grupo_id = %s
+            LIMIT 1;
         """, [uid, grupo_id])
         if cur.fetchone() is None:
             return JsonResponse({"estudiantes": []})
@@ -371,11 +394,11 @@ def api_docente_estudiantes_por_grupo(request):
         # Estudiantes activos en el grupo (fecha_fin IS NULL)
         cur.execute("""
             SELECT e.id, e.documento, e.nombre, e.apellidos
-              FROM public.estudiantes e
-              JOIN public.estudiante_grupo eg ON eg.estudiante_id = e.id
-             WHERE eg.grupo_id = %s
-               AND (eg.fecha_fin IS NULL)
-             ORDER BY e.apellidos, e.nombre;
+            FROM public.estudiantes e
+            JOIN public.estudiante_grupo eg ON eg.estudiante_id = e.id
+            WHERE eg.grupo_id = %s
+            AND (eg.fecha_fin IS NULL)
+            ORDER BY e.apellidos, e.nombre;
         """, [grupo_id])
         rows = cur.fetchall()
 
@@ -383,13 +406,10 @@ def api_docente_estudiantes_por_grupo(request):
     return JsonResponse({"estudiantes": estudiantes})
 
 @login_required(login_url="login")
+@require_GET
 def api_docente_notas_por_grupo_asignatura_periodo(request):
-    """
-    Notas existentes para estudiantes del grupo, asignatura y periodo,
-    SI y solo si el docente está asignado a esa (grupo, asignatura) en docente_asignacion.
-    """
     if (resp := _guard_docente(request)) is not None:
-        return JsonResponse({"notas": []})
+        return resp
     uid = request.user.id
 
     grupo_id      = (request.GET.get("grupo_id") or "").strip()
@@ -2842,8 +2862,6 @@ def _estudiantes_para_exportar(*, grupo_id: str | None, sede_id: str | None, gra
 
     return res
 
-# --- ALIAS SEGUROS PARA DOCENTE → REDIRIGEN A /reportes/export/ CON LOS PARÁMETROS CORRECTOS
-from django.shortcuts import redirect
 from django.urls import reverse
 
 def docente_boletin_grupo_pdf_alias(request):
@@ -2973,3 +2991,101 @@ def build_boletines(
         })
 
     return boletines
+
+# ========= Helpers de rol ADMINISTRATIVO =========
+def _solo_admin(request) -> bool:
+    """True si NO es rector ni docente (es decir, rol administrativo u otro que redirige a dashboard_admin)."""
+    rol = (getattr(request.user, "rol", "") or "").upper()
+    return rol not in ("RECTOR", "DOCENTE")
+
+def _guard_admin(request: HttpRequest) -> HttpResponse | None:
+    """Devuelve redirección si NO es administrativo; si es admin devuelve None."""
+    if not _solo_admin(request):
+        return _redir_por_rol(request.user)
+    return None
+
+# =========================================================
+# APIs para filtros del rol ADMINISTRATIVO
+# =========================================================
+@login_required(login_url="login")
+@require_GET
+def api_admin_sedes(request: HttpRequest) -> JsonResponse:
+    if (resp := _guard_admin(request)) is not None:
+        return JsonResponse({"sedes": []})
+    with connection.cursor() as cur:
+        cur.execute("SELECT id, nombre FROM public.sedes ORDER BY nombre;")
+        sedes = [{"id": r[0], "nombre": r[1]} for r in cur.fetchall()]
+    return JsonResponse({"sedes": sedes})
+
+@login_required(login_url="login")
+@require_GET
+def api_admin_grados_por_sede(request: HttpRequest) -> JsonResponse:
+    if (resp := _guard_admin(request)) is not None:
+        return JsonResponse({"grados": []})
+    sede_id = (request.GET.get("sede_id") or "").strip()
+    if not re.fullmatch(r"\d{1,10}", sede_id or ""):
+        return JsonResponse({"grados": []})
+    with connection.cursor() as cur:
+        cur.execute("""
+            SELECT DISTINCT gr.id, gr.nombre
+              FROM public.grupos g
+              JOIN public.grados gr ON gr.id = g.grado_id
+             WHERE g.sede_id = %s
+             ORDER BY gr.id;
+        """, [sede_id])
+        grados = [{"id": r[0], "nombre": r[1]} for r in cur.fetchall()]
+    return JsonResponse({"grados": grados})
+
+@login_required(login_url="login")
+@require_GET
+def api_admin_grupos_por_sede_grado(request: HttpRequest) -> JsonResponse:
+    if (resp := _guard_admin(request)) is not None:
+        return JsonResponse({"grupos": []})
+    sede_id  = (request.GET.get("sede_id")  or "").strip()
+    grado_id = (request.GET.get("grado_id") or "").strip()
+    ok = all(re.fullmatch(r"\d{1,10}", v or "") for v in (sede_id, grado_id))
+    if not ok:
+        return JsonResponse({"grupos": []})
+    with connection.cursor() as cur:
+        cur.execute("""
+            SELECT id, nombre
+              FROM public.grupos
+             WHERE sede_id=%s AND grado_id=%s
+             ORDER BY nombre;
+        """, [sede_id, grado_id])
+        grupos = [{"id": r[0], "nombre": r[1]} for r in cur.fetchall()]
+    return JsonResponse({"grupos": grupos})
+
+@login_required(login_url="login")
+@require_GET
+def api_admin_periodos_abiertos(request: HttpRequest) -> JsonResponse:
+    if (resp := _guard_admin(request)) is not None:
+        return JsonResponse({"periodos": []})
+    with connection.cursor() as cur:
+        cur.execute("""
+            SELECT id, nombre
+              FROM public.periodos
+             WHERE abierto = TRUE
+             ORDER BY fecha_inicio;
+        """)
+        periodos = [{"id": r[0], "nombre": r[1]} for r in cur.fetchall()]
+    return JsonResponse({"periodos": periodos})
+
+@login_required(login_url="login")
+@require_GET
+def api_admin_estudiantes_por_grupo(request: HttpRequest) -> JsonResponse:
+    if (resp := _guard_admin(request)) is not None:
+        return JsonResponse({"estudiantes": []})
+    grupo_id = (request.GET.get("grupo_id") or "").strip()
+    if not re.fullmatch(r"\d{1,10}", grupo_id or ""):
+        return JsonResponse({"estudiantes": []})
+    with connection.cursor() as cur:
+        cur.execute("""
+            SELECT e.id, e.nombre, e.apellidos, e.documento
+              FROM public.estudiante_grupo eg
+              JOIN public.estudiantes e ON e.id = eg.estudiante_id
+             WHERE eg.grupo_id=%s AND eg.fecha_fin IS NULL
+             ORDER BY e.apellidos, e.nombre;
+        """, [grupo_id])
+        estudiantes = [{"id": r[0], "nombre": r[1], "apellidos": r[2], "documento": r[3]} for r in cur.fetchall()]
+    return JsonResponse({"estudiantes": estudiantes})

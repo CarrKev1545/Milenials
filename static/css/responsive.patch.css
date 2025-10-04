@@ -1,0 +1,54 @@
+/* responsive.patch.css — afinaciones suaves para convivir con dashboard/login patches */
+/* Cargar después de responsive.css */
+
+/* 1) Base: root scale por breakpoints (solo si quieres que TODO en rem se contraiga un poco en pantallas chicas) */
+:root { font-size: 16px; }
+@media (max-width: 75em){ :root { font-size: 15px; } } /* ~1200px */
+@media (max-width: 62em){ :root { font-size: 14px; } } /* ~992px  */
+@media (max-width: 48em){ :root { font-size: 13px; } } /* ~768px  */
+@media (max-width: 36em){ :root { font-size: 12px; } } /* ~576px  */
+
+/* 2) Vars: alinear acento con --brand si otros módulos usan --accent */
+:root{
+  --accent: var(--brand, #9c0f10);
+  --navbar-height: 76px; /* usada por pegajosos en plantillas */
+}
+
+/* 3) Navbar/menús por encima de overlays (por si hay toasts/modals custom) */
+.navbar{ z-index: 1000; }
+.nav-menu{ z-index: 1001; }
+
+/* 4) Encabezados/acciones pegajosos: respetar altura navbar declarada */
+.header-actions{
+  top: var(--navbar-height);
+}
+
+/* 5) Tablas: compatibilidad con wrappers locales .r-table-scroll */
+.r-table-scroll{ overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@media (max-width: 767.98px){
+  .r-table-scroll table{ min-width: 640px; } /* evita quebrar celdas estrechas */
+}
+
+/* 6) Botoneras: que en móvil llenen ancho sin romper desktop */
+@media (max-width: 767.98px){
+  .btn-group > * { flex: 1 1 140px; }
+}
+
+/* 7) Accesibilidad/foco consistente con patches previos */
+:where(a, button, .btn, input, select, textarea):focus-visible{
+  outline: .125rem solid var(--accent);
+  outline-offset: .1875rem;
+  border-radius: .375rem;
+}
+
+/* 8) Modo claro: alinear con sombras más suaves */
+@media (prefers-color-scheme: light){
+  :root{ --shadow: 0 8px 24px rgba(2,6,23,.08); }
+  .table thead th{ background: #fafafa; }
+}
+
+/* 9) Print: asegurar limpieza si hay componentes marcados como no imprimibles */
+@media print{
+  .no-print, .navbar, .sidebar, .btn { display: none !important; }
+  body{ background:#fff; color:#000; }
+}
