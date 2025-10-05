@@ -29,7 +29,7 @@ from datetime import datetime, date
 from collections import defaultdict
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
-from django.db.models import Q
+from django.db.models import Count, Q
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
@@ -38,7 +38,9 @@ import re
 
 from django.views.decorators.cache import never_cache  # <-- importa esto
 
-from .models import Grupo, Estudiante
+# imports de modelos (deben estar juntos)
+from .models import Sede, Grupo, Estudiante, EstudianteGrupo
+
 
 # =========================================================
 # Login / Logout
@@ -3089,3 +3091,210 @@ def api_admin_estudiantes_por_grupo(request: HttpRequest) -> JsonResponse:
         """, [grupo_id])
         estudiantes = [{"id": r[0], "nombre": r[1], "apellidos": r[2], "documento": r[3]} for r in cur.fetchall()]
     return JsonResponse({"estudiantes": estudiantes})
+
+# Vistas HTML
+@login_required
+def rector_graficas_reportes(request):
+    return render(request, "core/rector/graficas_reportes.html")
+
+@login_required
+def administrativo_graficas_reportes(request):
+    return render(request, "core/administrativo/graficas_reportes.html")
+
+# Helper seguro para leer ints
+def _get_int(request, key):
+    v = request.GET.get(key)
+    try:
+        return int(v) if v not in (None, "", "null") else None
+    except ValueError:
+        return None
+    
+# API: Estudiantes activos por sede (con filtros opcionales)
+@login_required
+def api_metrics_activos(request):
+    """
+    Activos por sede: cuenta estudiantes con matrícula activa (fecha_fin IS NULL)
+    agrupando por sede_id del grupo. Filtros: sede (texto), grupo_id (int).
+    """
+    sede_nombre = request.GET.get("sede")
+    grupo_id    = _get_int(request, "grupo_id")
+
+    qs = EstudianteGrupo.objects.filter(fecha_fin__isnull=True)
+
+    if sede_nombre:
+        sede_ids = list(Sede.objects.filter(nombre=sede_nombre)
+                                  .values_list("id", flat=True))
+        if not sede_ids:
+            return JsonResponse({"series": []})
+        qs = qs.filter(grupo__sede_id__in=sede_ids)
+
+    if grupo_id:
+        qs = qs.filter(grupo_id=grupo_id)
+
+    agregados = (
+        qs.values("grupo__sede_id")
+          .annotate(activos=Count("estudiante", distinct=True))
+    )
+
+    nombres_sede = {s.id: s.nombre for s in Sede.objects.all()}
+    data = [{"name": nombres_sede.get(r["grupo__sede_id"], f"Sede {r['grupo__sede_id']}"),
+             "value": r["activos"] or 0}
+            for r in agregados]
+    data.sort(key=lambda x: x["name"])
+
+    return JsonResponse({"series": data})
+
+def _to_int_or_none(v):
+    try:
+        return int(v) if v not in (None, "", "null") else None
+    except (TypeError, ValueError):
+        return None
+
+@login_required
+def api_metrics_reprobados(request):
+    """
+    Devuelve conteos de REPROBADOS (< umbral) por ASIGNATURA dentro de un grupo.
+    Filtros soportados (todos opcionales):
+      - sede (nombre de la sede)
+      - grado_id
+      - grupo_id
+      - periodo_id
+      - threshold (float, default 3.0)
+    Respuesta: { "series": [ {"name": "Matemáticas", "value": 12}, ... ] }
+    """
+    sede_nombre = request.GET.get("sede")              # string
+    grado_id    = _to_int_or_none(request.GET.get("grado_id"))
+    grupo_id    = _to_int_or_none(request.GET.get("grupo_id"))
+    periodo_id  = _to_int_or_none(request.GET.get("periodo_id"))
+
+    # Umbral de aprobación (por defecto 3.0). Acepta coma o punto.
+    th_raw = request.GET.get("threshold")
+    try:
+        threshold = float((th_raw or "3.0").replace(",", "."))
+    except ValueError:
+        threshold = 3.0
+
+    where = ["eg.fecha_fin IS NULL"]  # solo alumnos activos en su grupo
+    params = []
+
+    if sede_nombre:
+        where.append("s.nombre = %s")
+        params.append(sede_nombre)
+
+    if grado_id:
+        where.append("g.grado_id = %s")
+        params.append(grado_id)
+
+    if grupo_id:
+        where.append("g.id = %s")
+        params.append(grupo_id)
+
+    if periodo_id:
+        where.append("n.periodo_id = %s")
+        params.append(periodo_id)
+
+    # Reprobados por asignatura
+    where.append("n.nota < %s")
+    params.append(threshold)
+
+    where_sql = ("WHERE " + " AND ".join(where)) if where else ""
+
+    sql = f"""
+        SELECT a.id, a.nombre AS asignatura, COUNT(*) AS reprobados
+        FROM notas n
+        JOIN estudiante_grupo eg ON eg.estudiante_id = n.estudiante_id
+        JOIN grupos g           ON g.id = eg.grupo_id
+        LEFT JOIN sedes s       ON s.id = g.sede_id
+        JOIN asignaturas a      ON a.id = n.asignatura_id
+        {where_sql}
+        GROUP BY a.id, a.nombre
+        ORDER BY a.nombre;
+    """
+
+    with connection.cursor() as cur:
+        cur.execute(sql, params)
+        rows = cur.fetchall()
+
+    data = [{"name": r[1], "value": int(r[2] or 0)} for r in rows]
+    return JsonResponse({"series": data, "threshold": threshold})
+
+# ==========================
+# MÉTRICA: HISTOGRAMA DE NOTAS
+# ==========================
+@login_required
+@require_GET
+def api_metrics_histograma(request):
+    """
+    Devuelve un histograma de notas en “bins” de 0.5:
+    1.0, 1.5, 2.0, ..., 5.0
+
+    Filtros (opcionales):
+      - sede       (por NOMBRE de la sede, como viene del frontend)
+      - grupo_id   (id del grupo)
+      - periodo_id (id del periodo)
+    """
+    sede_nombre = (request.GET.get("sede") or "").strip()
+    grupo_id    = (request.GET.get("grupo_id") or "").strip()
+    periodo_id  = (request.GET.get("periodo_id") or "").strip()
+
+    # Construir WHERE dinámico
+    wheres = []
+    params = []
+
+    # Solo notas vigentes del estudiante en el grupo (eg.fecha_fin IS NULL)
+    base_sql = """
+        SELECT
+            ROUND(n.nota * 2) / 2.0 AS bucket,  -- bins de 0.5
+            COUNT(*) AS cnt
+        FROM public.notas n
+        JOIN public.estudiante_grupo eg
+              ON eg.estudiante_id = n.estudiante_id
+             AND eg.fecha_fin IS NULL
+        JOIN public.grupos g
+              ON g.id = eg.grupo_id
+        LEFT JOIN public.sedes s
+              ON s.id = g.sede_id
+    """
+
+    if periodo_id:
+        wheres.append("n.periodo_id = %s")
+        params.append(periodo_id)
+
+    if grupo_id:
+        wheres.append("g.id = %s")
+        params.append(grupo_id)
+
+    if sede_nombre:
+        # Filtra por NOMBRE de sede (coincide con lo que envía el front)
+        wheres.append("s.nombre = %s")
+        params.append(sede_nombre)
+
+    if wheres:
+        base_sql += " WHERE " + " AND ".join(wheres)
+
+    base_sql += """
+        GROUP BY bucket
+        ORDER BY bucket
+    """
+
+    # Ejecutar y mapear resultados
+    with connection.cursor() as cur:
+        cur.execute(base_sql, params)
+        rows = cur.fetchall()  # [(bucket, cnt), ...]
+
+    # Queremos bins fijos desde 1.0 hasta 5.0 (0.5 en 0.5)
+    # Si tu escala arranca en 0.0, ajusta el rango.
+    all_bins = [x / 2.0 for x in range(2, 11)]  # 1.0..5.0 (2->10)/2
+    counts = {float(b): 0 for b in all_bins}
+    for b, c in rows:
+        # b llega como Decimal/float; normalizamos a float con 1 decimal
+        try:
+            bkey = float(b)
+        except:
+            continue
+        if bkey in counts:
+            counts[bkey] = int(c)
+
+    series = [{"name": f"{b:.1f}", "value": counts[b]} for b in all_bins]
+
+    return JsonResponse({"series": series})

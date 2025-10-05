@@ -61,12 +61,13 @@ class Usuario(AbstractBaseUser):
 
 class Grupo(models.Model):
     class Meta:
-        db_table = "grupos"   # Nombre real de la tabla en BD
-        managed = False       # Evita migraciones sobre esta tabla
+        db_table = "grupos"
+        managed = False
 
-    nombre = models.CharField(max_length=100)
-    # Nota: en tu BD probablemente exista sede_id (FK). Mantengo tu campo actual para no romper lógica.
-    sede = models.CharField(max_length=100)
+    id = models.BigAutoField(primary_key=True)
+    sede_id = models.BigIntegerField()
+    grado_id = models.BigIntegerField()
+    nombre = models.CharField(max_length=10)
 
     def __str__(self):
         return self.nombre
@@ -105,3 +106,50 @@ class ReporteAcademico(models.Model):
 
     def __str__(self):
         return f"Reporte de {self.estudiante} - {self.grupo.nombre} - {self.periodo}"
+    
+class EstudianteGrupo(models.Model):
+    class Meta:
+        db_table = "estudiante_grupo"
+        managed = False
+
+    id = models.BigAutoField(primary_key=True)
+    estudiante = models.ForeignKey(
+        Estudiante, db_column="estudiante_id",
+        on_delete=models.DO_NOTHING, related_name="matriculas"
+    )
+    grupo = models.ForeignKey(
+        Grupo, db_column="grupo_id",
+        on_delete=models.DO_NOTHING, related_name="matriculas"
+    )
+    fecha_inicio = models.DateField()
+    fecha_fin = models.DateField(null=True, blank=True)
+    
+# --- NUEVO: Sede ---
+class Sede(models.Model):
+    class Meta:
+        db_table = "sedes"
+        managed = False
+
+    id = models.BigAutoField(primary_key=True)
+    nombre = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.nombre
+    
+# =========================
+# Modelo para tabla 'notas'
+# =========================
+class Nota(models.Model):
+    class Meta:
+        db_table = "notas"
+        managed = False  # la tabla ya existe en tu BD
+
+    id = models.BigAutoField(primary_key=True)
+    estudiante_id = models.BigIntegerField()
+    asignatura_id = models.BigIntegerField()
+    periodo_id = models.BigIntegerField()
+    nota = models.DecimalField(max_digits=4, decimal_places=2)
+    fallas = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"Nota {self.nota} (estudiante_id={self.estudiante_id}, periodo_id={self.periodo_id})"

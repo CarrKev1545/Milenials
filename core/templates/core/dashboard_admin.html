@@ -19,6 +19,22 @@
         Reportes Académicos
       </a>
     </article>
+
+    <!-- Gráficas y Reportes -->
+    <article class="card home-card"
+            role="button" tabindex="0"
+            aria-labelledby="label-graficas-reportes"
+            data-link="{% url 'administrativo_graficas_reportes' %}">
+      <div class="card-box icon" aria-hidden="true">
+        <i class="fa-solid fa-chart-pie"></i>
+      </div>
+      <a id="label-graficas-reportes"
+        class="label btn btn--danger"
+        href="{% url 'administrativo_graficas_reportes' %}">
+        Gráficas y Reportes
+      </a>
+    </article>
+
   </div>
 </main>
 {% endblock %}

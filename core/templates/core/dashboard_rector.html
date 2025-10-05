@@ -54,6 +54,22 @@
        Reportes académicos
     </a>
   </article>
+
+  <!-- Gráficas y Reportes -->
+  <article class="card home-card"
+          role="button" tabindex="0"
+          aria-labelledby="label-graficas-reportes"
+          data-link="{% url 'rector_graficas_reportes' %}">
+    <div class="card-box icon" aria-hidden="true">
+      <i class="fa-solid fa-chart-line"></i>
+    </div>
+    <a id="label-graficas-reportes"
+      class="label btn btn--danger"
+      href="{% url 'rector_graficas_reportes' %}">
+      Gráficas
+    </a>
+  </article>
+
 </div>
 {% endblock %}
 

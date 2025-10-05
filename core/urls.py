@@ -242,4 +242,14 @@ urlpatterns = [
     path("api/admin/grupos-por-sede-grado/", views.api_admin_grupos_por_sede_grado, name="api_admin_grupos_por_sede_grado"),
     path("api/admin/periodos-abiertos/", views.api_admin_periodos_abiertos, name="api_admin_periodos_abiertos"),
     path("api/admin/estudiantes-por-grupo/", views.api_admin_estudiantes_por_grupo, name="api_admin_estudiantes_por_grupo"),
+
+    # Vistas HTML
+    path("rector/graficas-reportes/", views.rector_graficas_reportes, name="rector_graficas_reportes"),
+    path("administrativo/graficas-reportes/", views.administrativo_graficas_reportes, name="administrativo_graficas_reportes"),
+
+    # API (métricas)
+    path("api/metrics/activos", views.api_metrics_activos, name="api_metrics_activos"),  # ?sede_id=&grado_id=&grupo_id=
+    # Métricas / Gráficas
+    path("api/metrics/reprobados", views.api_metrics_reprobados, name="api_metrics_reprobados"),
+    path("api/metrics/histograma", views.api_metrics_histograma, name="api_metrics_histograma"),
 ]
