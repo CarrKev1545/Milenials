@@ -1,185 +1,217 @@
+{% extends "core/base_dashboard.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Reportes académicos — Por grupo</title>
 
-  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% block title %}Reportes académicos — Por grupo{% endblock %}
 
-  <style>
-    .page-title{position:sticky;top:var(--navbar-height);z-index:40;background:var(--accent);color:#fff;font-weight:800;letter-spacing:.2px;text-align:center;padding:10px 12px;box-shadow:0 4px 12px rgba(0,0,0,.35)}
-    .rg { width:100%; max-width:1280px; margin:0 auto; padding:0 20px; }
-    .rg-wrap{ position:relative; margin-top:14px; }
-    .rg-wrap::before{
-      content:""; position:absolute; inset:-18px -22px; border-radius:18px;
-      background: radial-gradient(140% 160% at 10% 0%,rgba(255,255,255,.06) 0%,rgba(255,255,255,0) 45%),
-                  linear-gradient(135deg, rgba(22,22,24,.88) 0%, rgba(16,16,18,.86) 100%);
-      border:1px solid rgba(255,255,255,.10); backdrop-filter: blur(6px) saturate(115%);
-      box-shadow:0 22px 44px rgba(0,0,0,.50); z-index:0;
-    }
-    .rg-inner{ position:relative; z-index:1; padding:28px 24px 24px; }
-    .rg-badge{
-      width:370px; max-width:90vw; margin:0 auto; margin-top:-22px; background:#0c0c0c; border-radius:16px;
-      box-shadow:0 16px 30px rgba(0,0,0,.55), inset 0 -8px 22px rgba(0,0,0,.22);
-      display:flex; flex-direction:column; align-items:center; justify-content:center; padding:18px 16px 12px;
-    }
-    .rg-badge i{ font-size:82px; color:#fff; line-height:1; filter:drop-shadow(0 10px 30px rgba(0,0,0,.6)); }
-    .rg-chip{ margin-top:12px; background:var(--accent); color:#fff; padding:8px 18px; border-radius:999px; font-weight:800; letter-spacing:.2px; box-shadow:0 12px 24px rgba(0,0,0,.45); }
-    .rg-grid{ margin-top:18px; display:grid; grid-template-columns:1fr 1fr; gap:14px 20px; align-items:center; }
-    .rg-field{
-      position:relative; display:flex; align-items:center; gap:10px; height:48px; padding:0 14px 0 50px;
-      background:#fff; border-radius:14px; border:1px solid rgba(0,0,0,.06); box-shadow:0 10px 20px rgba(0,0,0,.22); width:100%;
-    }
-    .rg-field select{ appearance:none; width:100%; border:none; outline:none; background:transparent; color:#111; font-weight:600; }
-    .rg-ico{ position:absolute; left:14px; top:50%; transform:translateY(-50%); width:26px; display:grid; place-items:center; color:#111; opacity:.95; }
-    .rg-caret{ position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#111; opacity:.85; }
-    .rg-actions{ margin-top:18px; display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
-    .rg-btn{ height:48px; min-width:180px; border-radius:12px; border:none; cursor:pointer; font-weight:800; color:#fff; background:var(--accent); box-shadow:0 12px 22px rgba(156,15,16,.38); transition:.12s transform ease,.12s box-shadow ease,.12s background ease; }
-    .rg-btn:hover{ transform:translateY(-2px); box-shadow:0 18px 28px rgba(156,15,16,.48); }
-    .rg-btn:active{ transform: translateY(0) scale(.985); }
-    .rg-btn--ghost{ background:#b51415; }
-    .rg-note{font-size:.9rem;color:#dde7ef;text-align:center;margin-top:4px}
-    @media (max-width:1020px){ .rg-grid{ grid-template-columns:1fr; } }
-  </style>
-</head>
-<body>
-  <header class="navbar" role="navigation" aria-label="Barra principal">
-    <div class="nav-left">
-      <img src="{% static 'img/logo2.jpeg' %}" alt="Logo colegio" class="logo">
-      <div class="nav-title">
-        <h3>RECTOR / <span class="nowrap">COORDINADOR</span></h3>
-        <span class="user-name">{{ request.user.usuario }}</span>
-      </div>
-    </div>
-    <nav class="nav-menu" aria-label="Menú principal">
-      <a href="{% url 'dashboard_rector' %}">Inicio</a>
-      <a href="{% url 'rector_estudiantes_a_grupos' %}">Estudiante a grupos</a>
-      <a href="{% url 'rector_asignacion_docentes_grupos' %}">Asignación de Docentes a grupos</a>
-    </nav>
-    <div class="nav-right">
-      <a href="{% url 'logout' %}" class="btn-logout">Cerrar Sesión</a>
-    </div>
-  </header>
+{% block extra_css %}
+<style>
+  /* ===== Barra roja ===== */
+  .page-title{
+    position:sticky; top:var(--navbar-height); z-index:40;
+    background:var(--accent); color:#fff; font-weight:800; letter-spacing:.2px;
+    text-align:center; padding:10px 12px; box-shadow:0 4px 12px rgba(0,0,0,.35);
+  }
 
+  /* ===== Panel glass ===== */
+  .rg{ width:100%; max-width:1280px; margin:0 auto; padding-inline:clamp(12px,3vw,20px); }
+  .rg-wrap{ position:relative; margin-top:14px; display:block; }
+  .rg-wrap::before{
+    content:""; position:absolute; inset:-18px -22px; border-radius:18px;
+    background:
+      radial-gradient(140% 160% at 10% 0%, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 45%),
+      linear-gradient(135deg, rgba(22,22,24,.88) 0%, rgba(16,16,18,.86) 100%);
+    border:1px solid rgba(255,255,255,.10);
+    backdrop-filter: blur(6px) saturate(115%);
+    box-shadow:0 22px 44px rgba(0,0,0,.50);
+    z-index:0; pointer-events:none;
+  }
+  .rg-inner{
+    position:relative; z-index:1;
+    padding:28px 24px max(96px, env(safe-area-inset-bottom, 24px)); /* acciones sticky */
+  }
+
+  /* ===== Badge centrado (móvil + desktop) ===== */
+  .rg-badge{
+    width:clamp(220px, 64vw, 340px);
+    margin:-22px auto 0;                 /* <-- centra en ambos ejes horizontales */
+    background:#0c0c0c; border-radius:16px;
+    box-shadow:0 16px 30px rgba(0,0,0,.55), inset 0 -8px 22px rgba(0,0,0,.22);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:18px 16px 12px; position:relative;
+  }
+  /* Garantía extra para desktop: anula cualquier desplazamiento heredado */
+  @media (min-width: 900px){
+    .rg-badge{ left:auto; right:auto; transform:none; margin-left:auto !important; margin-right:auto !important; }
+  }
+  .rg-badge i{ font-size:82px; color:#fff; line-height:1; filter:drop-shadow(0 10px 30px rgba(0,0,0,.6)); }
+  .rg-chip{
+    margin-top:12px; background:var(--accent); color:#fff; padding:8px 18px;
+    border-radius:999px; font-weight:800; letter-spacing:.2px; box-shadow:0 12px 24px rgba(0,0,0,.45);
+  }
+
+  /* ===== Grid ===== */
+  .rg-grid{ margin-top:18px; display:grid; grid-template-columns:1fr 1fr; gap:14px 20px; align-items:center; }
+  @media (max-width:1020px){ .rg-grid{ grid-template-columns:1fr; } }
+
+  /* ===== Campos ===== */
+  .rg-field{
+    position:relative; display:flex; align-items:center; gap:10px; height:48px; padding:0 14px 0 50px;
+    background:#fff; border-radius:14px; border:1px solid rgba(0,0,0,.06); box-shadow:0 10px 20px rgba(0,0,0,.22); width:100%;
+  }
+  .rg-field select{ appearance:none; width:100%; border:none; outline:none; background:transparent; color:#111; font-weight:600; }
+  .rg-ico{ position:absolute; left:14px; top:50%; transform:translateY(-50%); width:26px; display:grid; place-items:center; color:#111; opacity:.95; }
+  .rg-caret{ position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#111; opacity:.85; }
+
+  /* ===== Acciones (sticky) ===== */
+  .rg-actions{
+    position:sticky; bottom:calc(12px + env(safe-area-inset-bottom, 0px)); z-index:2;
+    background:linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.12) 45%, rgba(0,0,0,.22));
+    padding-top:8px; display:grid; gap:12px; grid-template-columns:1fr;
+  }
+  @media (min-width:560px){ .rg-actions{ grid-template-columns:1fr auto 1fr; } }
+
+  .rg-btn{
+    height:48px; border-radius:12px; border:none; cursor:pointer; font-weight:800; color:#fff;
+    background:var(--accent); box-shadow:0 12px 22px rgba(156,15,16,.38);
+    transition:.12s transform ease,.12s box-shadow ease,.12s background ease;
+  }
+  .rg-btn:hover{ transform:translateY(-2px); box-shadow:0 18px 28px rgba(156,15,16,.48); }
+  .rg-btn:active{ transform:translateY(0) scale(.985); }
+  .rg-btn--ghost{ background:#b51415; }
+
+  /* Selector de formato oscuro (PDF/Excel) */
+  #formato{
+    height:48px; border-radius:12px; padding:0 12px;
+    background:#1a1a1a; color:#fff; border:1px solid rgba(255,255,255,.15);
+    box-shadow:0 8px 18px rgba(0,0,0,.35); outline:none;
+  }
+
+  /* Nota */
+  .rg-note{font-size:.9rem;color:#dde7ef;text-align:center;margin-top:4px}
+
+  /* Micro-ajuste pantallas muy angostas */
+  @media (max-width:360px){
+    .rg-badge i{ font-size:68px; }
+    .rg-chip{ padding:6px 14px; }
+  }
+
+  /* --- Campos clicables en toda el área --- */
+  .rg-field{
+    position: relative;
+    display: flex; align-items: center;
+    height: 48px;
+    padding: 0;
+    background:#fff; border-radius:14px; border:1px solid rgba(0,0,0,.06);
+    box-shadow:0 10px 20px rgba(0,0,0,.22);
+    width:100%;
+    cursor: pointer;
+  }
+  /* El select ocupa el 100% del cuadro: cualquier clic abre el desplegable */
+  .rg-field select{
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    appearance: none; border: 0; outline: none; background: transparent;
+    color:#111; font-weight:600; cursor: pointer;
+    padding-left: 16px; padding-right: 36px; /* deja espacio a la caret */
+  }
+  /* Ocultamos los iconos de la izquierda (siguen en el DOM) */
+  .rg-ico{ display:none !important; }
+  /* La caret es decorativa y no bloquea el clic: */
+  .rg-caret{
+    position:absolute; right:10px; top:50%; transform:translateY(-50%);
+    color:#111; opacity:.85; pointer-events: none; z-index: 1;
+  }
+</style>
+{% endblock %}
+
+{% block page_banner %}
   <div class="page-title">Reportes académicos</div>
+{% endblock %}
 
-  <main class="main" role="main">
-    <section class="rg" aria-label="Reportes por grupo">
-      <div class="rg-wrap">
-        <div class="rg-inner">
-          <div class="rg-badge" aria-hidden="true">
-            <i class="fa-solid fa-people-group"></i>
-            <div class="rg-chip">POR GRUPO</div>
+{% block content %}
+<main class="main" role="main">
+  <section class="rg" aria-label="Reportes por grupo">
+    <div class="rg-wrap">
+      <div class="rg-inner">
+        <div class="rg-badge" aria-hidden="true">
+          <i class="fa-solid fa-people-group"></i>
+          <div class="rg-chip">POR GRUPO</div>
+        </div>
+
+        <form id="formReporte" class="rg-grid" method="get" action="{% url 'rector_reportes_academicos_tabla' %}">
+          <!-- Sede -->
+          <label class="rg-field">
+            <span class="rg-ico"><i class="fa-solid fa-building-columns"></i></span>
+            <select id="sede_id" name="sede_id" aria-label="Seleccione la sede">
+              <option value="">Seleccione la sede</option>
+            </select>
+            <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
+          </label>
+
+          <!-- Periodo -->
+          <label class="rg-field">
+            <span class="rg-ico"><i class="fa-solid fa-calendar-alt"></i></span>
+            <select id="periodo_id" name="periodo_id" aria-label="Seleccione periodo" disabled>
+              <option value="">Periodo</option>
+            </select>
+            <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
+          </label>
+
+          <!-- Grado -->
+          <label class="rg-field">
+            <span class="rg-ico"><i class="fa-solid fa-sitemap"></i></span>
+            <select id="grado_id" name="grado_id" aria-label="Seleccione el grado" disabled>
+              <option value="">Grado</option>
+            </select>
+            <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
+          </label>
+
+          <!-- Grupo -->
+          <label class="rg-field">
+            <span class="rg-ico"><i class="fa-solid fa-people-roof"></i></span>
+            <select id="grupo_id" name="grupo_id" aria-label="Seleccione el grupo" disabled>
+              <option value="">Grupo</option>
+            </select>
+            <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
+          </label>
+
+          <!-- Acciones -->
+          <div class="rg-actions" style="grid-column:1/-1;">
+            <button type="button" class="rg-btn" id="btn-descargar" disabled>Descargar</button>
+            <select id="formato">
+              <option value="pdf">PDF</option>
+              <option value="excel">Excel</option>
+            </select>
+            <button type="reset" class="rg-btn rg-btn--ghost">Limpiar</button>
           </div>
 
-          <!-- Solo Sede, Periodo, Grado y Grupo -->
-          <form id="formReporte" class="rg-grid" method="get" action="{% url 'rector_reportes_academicos_tabla' %}">
-            <!-- Sede -->
-            <label class="rg-field">
-              <span class="rg-ico"><i class="fa-solid fa-building-columns"></i></span>
-              <select id="sede_id" name="sede_id" aria-label="Seleccione la sede">
-                <option value="">Seleccione la sede</option>
-              </select>
-              <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
-            </label>
+          <div class="rg-note" style="grid-column:1/-1;">
+            Consejo: si deja <b>Grupo</b> vacío pero elige <b>Sede + Grado + Periodo</b>, el botón <b>Descargar</b> exporta todos los boletines del <b>grado</b>.
+          </div>
 
-            <!-- Periodo -->
-            <label class="rg-field">
-              <span class="rg-ico"><i class="fa-solid fa-calendar-alt"></i></span>
-              <select id="periodo_id" name="periodo_id" aria-label="Seleccione periodo" disabled>
-                <option value="">Periodo</option>
-              </select>
-              <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
-            </label>
-
-            <!-- Grado -->
-            <label class="rg-field">
-              <span class="rg-ico"><i class="fa-solid fa-sitemap"></i></span>
-              <select id="grado_id" name="grado_id" aria-label="Seleccione el grado" disabled>
-                <option value="">Grado</option>
-              </select>
-              <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
-            </label>
-
-            <!-- Grupo -->
-            <label class="rg-field">
-              <span class="rg-ico"><i class="fa-solid fa-people-roof"></i></span>
-              <select id="grupo_id" name="grupo_id" aria-label="Seleccione el grupo" disabled>
-                <option value="">Grupo</option>
-              </select>
-              <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
-            </label>
-
-            <!-- Botones -->
-            <div class="rg-actions" style="grid-column:1/-1;">
-              <button id="btnBuscar" type="submit" class="rg-btn" disabled>Buscar</button>
-
-              <!-- Botón Descargar (usa IDs reales del front) -->
-              <button type="button" class="rg-btn" id="btn-descargar" disabled>Descargar</button>
-              <select id="formato" class="rg-input" style="height:48px;border-radius:12px;padding:0 12px;">
-                <option value="pdf">PDF</option>
-                <option value="excel">Excel</option>
-              </select>
-
-              <button type="reset" class="rg-btn rg-btn--ghost">Limpiar</button>
-            </div>
-
-            <div class="rg-note" style="grid-column:1/-1;">
-              Consejo: si deja <b>Grupo</b> vacío pero elige <b>Sede + Grado + Periodo</b>, el botón <b>Descargar</b> exporta todos los boletines del <b>grado</b>.
-            </div>
-
-            <!-- TEXTOS legibles para el chip {{ filtros }} en la tabla -->
-            <input type="hidden" name="sede">
-            <input type="hidden" name="grado">
-            <input type="hidden" name="grupo">
-            <input type="hidden" name="periodo">
-          </form>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="site-footer" role="contentinfo" aria-label="Pie del sitio">
-    <div class="footer-inner">
-      <div class="footer-left">
-        <img src="{% static 'img/logo2.jpeg' %}" alt="Logo colegio" class="footer-logo">
-        <div class="footer-school">
-          <div class="school-name">Nombre del Colegio</div>
-          <div class="footer-sub">Sede / Ciudad</div>
-        </div>
-      </div>
-      <div class="footer-center">
-        <div>Dirección: Calle Falsa 123</div>
-        <div>Tel: (+57) 300 000 0000 · Email: info@colegio.edu.co</div>
-      </div>
-      <div class="footer-right">
-        <nav class="footer-links">
-          <a href="#">Privacidad</a>
-          <a href="#">Términos</a>
-          <a href="#">Contacto</a>
-        </nav>
-        <div class="copyright">© {% now "Y" %} Nombre del Colegio</div>
+          <!-- TEXTOS legibles para el chip en la tabla -->
+          <input type="hidden" name="sede">
+          <input type="hidden" name="grado">
+          <input type="hidden" name="grupo">
+          <input type="hidden" name="periodo">
+        </form>
       </div>
     </div>
-  </footer>
+  </section>
+</main>
+{% endblock %}
 
-  <!-- ===== FORMULARIO LIMPIO PARA LA DESCARGA MASIVA ===== -->
-  <form id="exportForm" action="{% url 'rector_reportes_academicos_export' %}" method="GET" target="_blank" style="display:none">
-    <input type="hidden" name="grupo_id">
-    <input type="hidden" name="grado_id">
-    <input type="hidden" name="sede_id">
-    <input type="hidden" name="periodo_id" required>
-    <input type="hidden" name="formato" value="pdf">
-    <!-- banderitas inofensivas; si la vista no las usa, se ignoran -->
-    <input type="hidden" name="bulk" value="1">
-    <input type="hidden" name="scope" value="">
-  </form>
+{% block extra_js %}
+<form id="exportForm" action="{% url 'rector_reportes_academicos_export' %}" method="GET" target="_blank" style="display:none">
+  <input type="hidden" name="grupo_id">
+  <input type="hidden" name="grado_id">
+  <input type="hidden" name="sede_id">
+  <input type="hidden" name="periodo_id" required>
+  <input type="hidden" name="formato" value="pdf">
+  <input type="hidden" name="bulk" value="1">
+  <input type="hidden" name="scope" value="">
+</form>
 
-  <script>
-  // ===== Helpers
+<script>
   const $ = s => document.querySelector(s);
   const setSelect = (el, items, placeholder="Seleccione") => {
     el.innerHTML = `<option value="">${placeholder}</option>`;
@@ -187,55 +219,41 @@
   };
   const enable = (el, on=true) => el.disabled = !on;
 
-  // ===== Elementos
   const sedeSel    = $('#sede_id');
   const gradoSel   = $('#grado_id');
   const grupoSel   = $('#grupo_id');
   const periodoSel = $('#periodo_id');
-  const btnBuscar  = $('#btnBuscar');
+  const btnBuscar  = $('#btnBuscar');   // por si no existe
   const btnDesc    = $('#btn-descargar');
-  const formatoSel = $('#formato');
-  const form       = $('#formReporte');
 
-  // Hidden (textos legibles para {{ filtros }})
   const hSede    = document.querySelector('input[name="sede"]');
   const hGrado   = document.querySelector('input[name="grado"]');
   const hGrupo   = document.querySelector('input[name="grupo"]');
   const hPeriodo = document.querySelector('input[name="periodo"]');
 
-  // ===== Estado
   const st = { sede_id:"", grado_id:"", grupo_id:"", periodo_id:"" };
 
-  // ===== Carga inicial: sedes + periodos abiertos
   (async function init(){
     try{
       const sedes = await fetch("{% url 'api_sedes' %}").then(r=>r.json());
-      setSelect(sedeSel, sedes.sedes, "Seleccione la sede");
-      enable(sedeSel, true);
+      setSelect(sedeSel, sedes.sedes, "Seleccione la sede"); enable(sedeSel, true);
 
       const pers = await fetch("{% url 'api_periodos_abiertos' %}").then(r=>r.json());
-      setSelect(periodoSel, pers.periodos, "Periodo");
-      enable(periodoSel, true);
+      setSelect(periodoSel, pers.periodos, "Periodo"); enable(periodoSel, true);
     }catch(e){ console.error(e); }
     validate();
   })();
 
-  // ===== Encadenados
   sedeSel.addEventListener('change', async e=>{
     st.sede_id = e.target.value || "";
     hSede.value = sedeSel.options[sedeSel.selectedIndex]?.text || "";
-
-    // Reset dependientes
     setSelect(gradoSel, [], "Grado"); enable(gradoSel, false);
     setSelect(grupoSel, [], "Grupo"); enable(grupoSel, false);
     st.grado_id = st.grupo_id = "";
-
     if(!st.sede_id){ validate(); return; }
-
     try{
       const g = await fetch("{% url 'api_grados_por_sede' %}?sede_id="+st.sede_id).then(r=>r.json());
-      setSelect(gradoSel, g.grados, "Grado");
-      enable(gradoSel, true);
+      setSelect(gradoSel, g.grados, "Grado"); enable(gradoSel, true);
     }catch(e){ console.error(e); }
     validate();
   });
@@ -245,14 +263,11 @@
     hGrado.value = gradoSel.options[gradoSel.selectedIndex]?.text || "";
     setSelect(grupoSel, [], "Grupo"); enable(grupoSel, false);
     st.grupo_id = "";
-
     if(!st.grado_id || !st.sede_id){ validate(); return; }
-
     try{
       const url = "{% url 'api_grupos_por_sede_grado' %}?sede_id="+st.sede_id+"&grado_id="+st.grado_id;
       const g = await fetch(url).then(r=>r.json());
-      setSelect(grupoSel, g.grupos, "Grupo");
-      enable(grupoSel, true);
+      setSelect(grupoSel, g.grupos, "Grupo"); enable(grupoSel, true);
     }catch(e){ console.error(e); }
     validate();
   });
@@ -269,51 +284,28 @@
     validate();
   });
 
-  // ===== Habilitar/Deshabilitar Buscar y Descargar
   function validate(){
     const okBuscar = !!(st.sede_id && st.grado_id && st.grupo_id && st.periodo_id);
-    btnBuscar.disabled = !okBuscar;
-
-    // Descargar requiere: (grupo y periodo) o (grado y periodo con sede)
+    if (btnBuscar) btnBuscar.disabled = !okBuscar;
     const okDesc = (!!st.periodo_id && ( !!st.grupo_id || (!!st.grado_id && !!st.sede_id) ));
     btnDesc.disabled = !okDesc;
   }
 
-  // ===== Envío Buscar (aseguramos hiddens rellenos)
-  form.addEventListener('submit', (e)=>{
-    if(btnBuscar.disabled){ e.preventDefault(); }
-  });
-
-  /* =========
-     DESCARGA MASIVA (grupo o grado) con FORM LIMPIO
-     ========= */
-    document.getElementById('btn-descargar').addEventListener('click', ()=>{
+  document.getElementById('btn-descargar').addEventListener('click', ()=>{
     const grupo   = document.getElementById('grupo_id').value;
     const grado   = document.getElementById('grado_id').value;
     const sede    = document.getElementById('sede_id').value;
     const periodo = document.getElementById('periodo_id').value;
     const formato = document.getElementById('formato').value || 'pdf';
 
-    if (!periodo) {
-      alert('Seleccione periodo'); return;
-    }
+    if (!periodo) { alert('Seleccione periodo'); return; }
 
-    // Preferencia: si hay grupo => exporta GRUPO. Si no, Sede+Grado => exporta GRADO.
     const q = new URLSearchParams({ periodo_id: periodo, formato });
-    if (grupo) {
-      q.set('grupo_id', grupo);
-    } else if (sede && grado) {
-      q.set('sede_id', sede);
-      q.set('grado_id', grado);
-    } else {
-      alert('Seleccione Grupo, o Sede + Grado.'); return;
-    }
+    if (grupo) { q.set('grupo_id', grupo); }
+    else if (sede && grado) { q.set('sede_id', sede); q.set('grado_id', grado); }
+    else { alert('Seleccione Grupo, o Sede + Grado.'); return; }
 
-    // NO enviamos estudiante_id aquí para evitar limitar a uno solo
     window.location.href = "{% url 'rector_reportes_academicos_export' %}?" + q.toString();
   });
-
-  </script>
-</body>
-</html>
-
+</script>
+{% endblock %}

@@ -5,16 +5,61 @@
 
 {% block extra_css %}
 <style>
-  .page-title{position:sticky;top:var(--navbar-height);z-index:40;background:var(--accent);color:#fff;font-weight:800;letter-spacing:.2px;text-align:center;padding:10px 12px;box-shadow:0 4px 12px rgba(0,0,0,.35)}
-  .rg{width:100%;max-width:1180px;margin:0 auto;padding:0 20px}
-  .table-card{background:#fff;border-radius:16px;box-shadow:0 12px 30px rgba(0,0,0,.18);border:1px solid #e5e9f2;overflow:hidden;margin-top:16px}
-  .table-responsive{width:100%;overflow-x:auto}
-  table.tabla{width:100%;border-collapse:separate;border-spacing:0}
-  .tabla thead th{background:#0f172a;color:#fff;font-weight:900;text-align:left;padding:12px 14px;letter-spacing:.2px}
-  .tabla tbody td{padding:12px 14px;border-top:1px solid #eef2f6;background:#fff}
-  .tabla tbody tr:nth-child(odd) td{background:#fbfdff}
-  .alum{font-weight:800;letter-spacing:.2px}
-  .doc{opacity:.85}
+  /* ===== Escala base rem + ajustes fluidos ===== */
+  :root { font-size: 16px; } /* 1rem = 16px */
+  @media (max-width: 75em) { :root { font-size: 15px; } } /* ~1200px */
+  @media (max-width: 62em) { :root { font-size: 14px; } } /* ~992px  */
+  @media (max-width: 48em) { :root { font-size: 13px; } } /* ~768px  */
+  @media (max-width: 36em) { :root { font-size: 12px; } } /* ~576px  */
+
+  .page-title{
+    position:sticky; top:var(--navbar-height); z-index:40;
+    background:var(--accent); color:#fff; font-weight:800; letter-spacing:.0125em;
+    text-align:center; padding:.625rem .75rem; box-shadow:0 .25rem .75rem rgba(0,0,0,.35);
+  }
+
+  .rg{width:100%; max-width:73.75rem; margin:0 auto; padding:0 1.25rem;} /* 1180px, 20px */
+  .toolbar{
+    display:flex; gap:.5rem; align-items:center; justify-content:space-between; margin-top:.875rem;
+  }
+
+  .btn{
+    display:inline-flex; align-items:center; gap:.5rem;
+    padding:.625rem .875rem; border-radius:.75rem; border:1px solid #e5e9f2;
+    background:#fff; box-shadow:0 .25rem .625rem rgba(0,0,0,.06);
+    font-weight:700; letter-spacing:.0125em; cursor:pointer; text-decoration:none; color:#0f172a;
+    transition: transform .12s ease;
+  }
+  .btn:hover{ transform: translateY(-.0625rem); }
+
+  .table-card{
+    background:#fff; border-radius:1rem; box-shadow:0 .75rem 1.875rem rgba(0,0,0,.18);
+    border:1px solid #e5e9f2; overflow:hidden; margin-top:.75rem;
+  }
+
+  .table-responsive{ width:100%; overflow-x:auto; }
+  table.tabla{ width:100%; border-collapse:separate; border-spacing:0; }
+
+  .tabla thead th{
+    background:#0f172a; color:#fff; font-weight:900; text-align:left;
+    padding:.75rem .875rem; letter-spacing:.0125em; white-space:nowrap;
+    position:sticky; top:0; z-index:2;
+  }
+
+  .tabla tbody td{
+    padding:.75rem .875rem; border-top:1px solid #eef2f6; background:#fff;
+  }
+  .tabla tbody tr:nth-child(odd) td{ background:#fbfdff; }
+
+  .alum{ font-weight:800; letter-spacing:.0125em; }
+  .doc{ opacity:.85; font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  .empty{ padding:1.125rem; color:#334155; }
+
+  /* Responsive */
+  @media (max-width: 45em){ /* ~720px */
+    .btn{ padding:.5rem .75rem; }
+    .alum{ display:block; }
+  }
 </style>
 {% endblock %}
 
@@ -23,14 +68,24 @@
 
   <main class="main" role="main">
     <section class="rg">
-      <div class="table-card">
+      <div class="toolbar">
+        <a class="btn" href="{% url 'docente_reportes_academicos_filtro' %}">
+          ← Volver al filtro
+        </a>
+        <div></div>
+      </div>
+
+      <div class="table-card" aria-live="polite">
         <div class="table-responsive">
           <table class="tabla">
             <thead>
-              <tr><th>Estudiante</th><th>Documento</th></tr>
+              <tr>
+                <th>Estudiante</th>
+                <th>Documento</th>
+              </tr>
             </thead>
             <tbody id="tbody">
-              <tr><td colspan="2">Cargando…</td></tr>
+              <tr><td class="empty" colspan="2">Cargando…</td></tr>
             </tbody>
           </table>
         </div>
@@ -45,19 +100,40 @@
   const qs = new URLSearchParams(location.search);
   const grupo_id = qs.get("grupo_id");
 
-  async function j(url){ try{ const r=await fetch(url,{headers:{'Accept':'application/json'}}); return await r.json(); }catch{return{}} }
+  async function getJSON(url){
+    try{
+      const r = await fetch(url, { headers: { 'Accept':'application/json' }});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return await r.json();
+    }catch(_e){ return {}; }
+  }
+
   const $tbody = document.getElementById('tbody');
 
-  (async()=>{
-    const r = await j("{% url 'api_docente_estudiantes_por_grupo' %}?grupo_id="+encodeURIComponent(grupo_id));
-    const alumnos = r.estudiantes || [];
-    if (!alumnos.length){ $tbody.innerHTML = '<tr><td colspan="2">No hay estudiantes.</td></tr>'; return; }
-    $tbody.innerHTML = '';
+  (async ()=>{
+    if(!grupo_id){
+      $tbody.innerHTML = '<tr><td class="empty" colspan="2">Falta el parámetro <strong>grupo_id</strong>.</td></tr>';
+      return;
+    }
+    const data = await getJSON("{% url 'api_docente_estudiantes_por_grupo' %}?grupo_id="+encodeURIComponent(grupo_id));
+    const alumnos = data.estudiantes || [];
+    if (!alumnos.length){
+      $tbody.innerHTML = '<tr><td class="empty" colspan="2">No hay estudiantes en este grupo.</td></tr>';
+      return;
+    }
+    // Pinta filas
+    const frag = document.createDocumentFragment();
     alumnos.forEach(a=>{
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td class="alum">${(a.apellidos||"").toUpperCase()}${a.apellidos?', ':''}${(a.nombre||"").toUpperCase()}</td><td class="doc">${a.documento||''}</td>`;
-      $tbody.appendChild(tr);
+      const nombre = `${(a.apellidos||'').toUpperCase()}${a.apellidos?', ':''}${(a.nombre||'').toUpperCase()}`;
+      tr.innerHTML = `
+        <td class="alum">${nombre}</td>
+        <td class="doc">${a.documento || ''}</td>
+      `;
+      frag.appendChild(tr);
     });
+    $tbody.innerHTML = '';
+    $tbody.appendChild(frag);
   })();
 </script>
 {% endblock %}

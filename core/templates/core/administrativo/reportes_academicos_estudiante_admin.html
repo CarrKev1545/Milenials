@@ -1,0 +1,214 @@
+{% extends "core/base_dashboard_administrativo.html" %}
+{% load static %}
+
+{% block title %}Reportes académicos — Por estudiante{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ===== Escala base rem + ajustes fluidos ===== */
+  :root { font-size: 16px; } /* 1rem = 16px */
+  @media (max-width: 75em) { :root { font-size: 15px; } } /* ~1200px */
+  @media (max-width: 62em) { :root { font-size: 14px; } } /* ~992px  */
+  @media (max-width: 48em) { :root { font-size: 13px; } } /* ~768px  */
+  @media (max-width: 36em) { :root { font-size: 12px; } } /* ~576px  */
+
+  .page-title{
+    position: sticky; top: var(--navbar-height, 3.5rem); z-index: 40;
+    background: var(--accent); color: #fff; font-weight: 800; letter-spacing: .02em;
+    text-align: center; padding: .625rem .75rem;
+    box-shadow: 0 .25rem .75rem rgba(0,0,0,.35);
+  }
+
+  .rg{width:100%;max-width:73.75rem;margin:0 auto;padding:0 1.25rem}  /* 1180px, 20px */
+  .rg-wrap{position:relative;margin-top:.875rem}
+  .rg-wrap::before{
+    content:"";position:absolute;inset:-1.125rem -1.375rem;border-radius:1.125rem;
+    background:
+      radial-gradient(140% 160% at 10% 0%, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 45%),
+      linear-gradient(135deg, rgba(22,22,24,.88) 0%, rgba(16,16,18,.86) 100%);
+    border:1px solid rgba(255,255,255,.10); backdrop-filter: blur(.375rem) saturate(115%);
+    box-shadow:0 1.375rem 2.75rem rgba(0,0,0,.50); z-index:0
+  }
+
+  .rg-inner{position:relative;z-index:1;padding:1.75rem 1.5rem 1.5rem}
+
+  .rg-badge{
+    width:23.125rem; max-width:90vw; margin:0 auto; margin-top:-1.375rem; background:#0c0c0c; border-radius:1rem;
+    box-shadow:0 1rem 1.875rem rgba(0,0,0,.55), inset 0 -.5rem 1.375rem rgba(0,0,0,.22);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; padding:1.125rem 1rem .75rem;
+  }
+  .rg-badge i{font-size:5.125rem;color:#fff;filter:drop-shadow(0 .625rem 1.875rem rgba(0,0,0,.6))}
+  .rg-chip{margin-top:.75rem;background:var(--accent);color:#fff;padding:.375rem 1.125rem;border-radius:999rem;font-weight:800;letter-spacing:.02em}
+
+  .rg-grid{margin-top:1.125rem;display:grid;grid-template-columns:1fr 1fr;gap:.875rem 1.25rem;align-items:center}
+  .rg-field{
+    position:relative;display:flex;align-items:center;gap:.875rem;
+    padding:.75rem .875rem .75rem 3rem;border-radius:.75rem;background:#f3f3f3;
+    border:1px solid rgba(0,0,0,.06);box-shadow:0 .625rem 1.25rem rgba(0,0,0,.22);width:100%
+  }
+  .rg-field select{appearance:none;width:100%;border:none;outline:none;background:transparent;color:#111;font-weight:600}
+  .rg-ico{position:absolute;left:.875rem;top:50%;transform:translateY(-50%);width:1.625rem;display:grid;place-items:center;color:#111;opacity:.95}
+  .rg-caret{position:absolute;right:.625rem;top:50%;transform:translateY(-50%);color:#111;opacity:.85}
+
+  .rg-actions{margin-top:1.125rem;display:flex;gap:.875rem;justify-content:center;flex-wrap:wrap}
+  .rg-btn{
+    height:3rem;min-width:11.25rem;border-radius:.75rem;border:none;padding:0 1.125rem;
+    color:#fff;font-weight:800;letter-spacing:.03em;cursor:pointer;
+    transition:transform .15s ease, filter .15s ease;
+  }
+  .rg-btn:hover{transform:translateY(-.0625rem);filter:saturate(110%)}
+  .rg-btn--primary{background:var(--accent);box-shadow:0 .75rem 1.375rem rgba(156,15,16,.38)}
+  .rg-btn--ghost{background:#b51415}
+  .disabled{opacity:.55;pointer-events:none}
+
+  @media (max-width: 63.75em){ /* ~1020px */
+    .rg-grid{ grid-template-columns:1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="page-title">Reportes académicos</div>
+
+  <main class="main" role="main">
+    <section class="rg" aria-label="Filtros por estudiante (flujo por grupo)">
+      <div class="rg-wrap">
+        <div class="rg-inner">
+          <div class="rg-badge" aria-hidden="true">
+            <i class="fa-solid fa-user-graduate"></i>
+            <div class="rg-chip">POR ESTUDIANTE</div>
+          </div>
+
+          <!-- Nota: La lógica actual sigue siendo por GRUPO; solo endpoints admin y redirect correcto -->
+          <form id="form-reporte" class="rg-grid" onsubmit="return false" aria-describedby="ayuda-filtros">
+            <p id="ayuda-filtros" class="sr-only">Seleccione sede, grado, grupo y periodo.</p>
+
+            <label class="rg-field">
+              <span class="rg-ico"><i class="fa-solid fa-school"></i></span>
+              <select id="sede" name="sede_id" required aria-label="Sede">
+                <option value="">Seleccione la sede</option>
+              </select>
+              <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
+            </label>
+
+            <label class="rg-field">
+              <span class="rg-ico"><i class="fa-solid fa-sitemap"></i></span>
+              <select id="grado" name="grado_id" required disabled aria-label="Grado">
+                <option value="">Seleccione el grado</option>
+              </select>
+              <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
+            </label>
+
+            <label class="rg-field">
+              <span class="rg-ico"><i class="fa-solid fa-people-roof"></i></span>
+              <select id="grupo" name="grupo_id" required disabled aria-label="Grupo">
+                <option value="">Seleccione el grupo</option>
+              </select>
+              <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
+            </label>
+
+            <label class="rg-field">
+              <span class="rg-ico"><i class="fa-solid fa-calendar-days"></i></span>
+              <select id="periodo" name="periodo_id" required disabled aria-label="Periodo">
+                <option value="">Seleccione periodo</option>
+              </select>
+              <span class="rg-caret"><i class="fa-solid fa-chevron-down"></i></span>
+            </label>
+          </form>
+
+          <div class="rg-actions">
+            <button id="btn-buscar" class="rg-btn rg-btn--primary disabled" type="button" aria-disabled="true">
+              <i class="fa-solid fa-magnifying-glass"></i> Buscar
+            </button>
+            <a href="{% url 'administrativo_reportes_academicos_filtro' %}" class="rg-btn rg-btn--ghost" role="button">
+              <i class="fa-solid fa-arrow-left"></i> Volver
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Helpers
+  const $ = s=>document.querySelector(s);
+  const $sede = $('#sede');
+  const $grado = $('#grado');
+  const $grupo = $('#grupo');
+  const $periodo = $('#periodo');
+  const $buscar = $('#btn-buscar');
+  const disable = ($el, yes=true)=>{ $el.disabled = yes; if (yes) $el.value = ''; };
+  const enableBuscarIfReady = ()=>{
+    const ok = $sede.value && $grado.value && $grupo.value && $periodo.value;
+    $buscar.classList.toggle('disabled', !ok);
+    $buscar.setAttribute('aria-disabled', String(!ok));
+  };
+
+  // sedes (ADMIN)
+  fetch("{% url 'api_admin_sedes' %}")
+    .then(r=>r.json())
+    .then(({sedes=[]})=>{
+      sedes.forEach(s=>{
+        const o=document.createElement('option');
+        o.value=s.id; o.textContent=s.nombre;
+        $sede.appendChild(o);
+      });
+    });
+
+  // sede -> grados + periodos (ADMIN)
+  $sede.addEventListener('change', async ()=>{
+    disable($grado); disable($grupo); disable($periodo);
+    $grado.innerHTML = '<option value="">Seleccione el grado</option>';
+    $grupo.innerHTML = '<option value="">Seleccione el grupo</option>';
+    $periodo.innerHTML = '<option value="">Seleccione periodo</option>';
+
+    if(!$sede.value){ enableBuscarIfReady(); return; }
+
+    const g = await fetch("{% url 'api_admin_grados_por_sede' %}?sede_id="+encodeURIComponent($sede.value)).then(r=>r.json());
+    (g.grados||[]).forEach(it=>{
+      const o=document.createElement('option');
+      o.value=it.id; o.textContent=it.nombre;
+      $grado.appendChild(o);
+    });
+    disable($grado,false);
+
+    const p = await fetch("{% url 'api_admin_periodos_abiertos' %}").then(r=>r.json());
+    (p.periodos||[]).forEach(it=>{
+      const o=document.createElement('option');
+      o.value=it.id; o.textContent=it.nombre;
+      $periodo.appendChild(o);
+    });
+    disable($periodo,false);
+    enableBuscarIfReady();
+  });
+
+  // grado -> grupos (ADMIN)
+  $grado.addEventListener('change', async ()=>{
+    disable($grupo);
+    $grupo.innerHTML = '<option value="">Seleccione el grupo</option>';
+    if(!$grado.value || !$sede.value){ enableBuscarIfReady(); return; }
+
+    const url = "{% url 'api_admin_grupos_por_sede_grado' %}?sede_id="+encodeURIComponent($sede.value)+"&grado_id="+encodeURIComponent($grado.value);
+    const r = await fetch(url).then(r=>r.json());
+    (r.grupos||[]).forEach(it=>{
+      const o=document.createElement('option');
+      o.value=it.id; o.textContent=it.nombre;
+      $grupo.appendChild(o);
+    });
+    disable($grupo,false);
+    enableBuscarIfReady();
+  });
+
+  $periodo.addEventListener('change', enableBuscarIfReady);
+  $grupo.addEventListener('change', enableBuscarIfReady);
+
+  // Buscar -> por_grupo (ADMIN)  **(lógica actual conservada)**
+  document.getElementById('btn-buscar').addEventListener('click', ()=>{
+    if ($buscar.classList.contains('disabled')) return;
+    const params = new URLSearchParams(new FormData(document.getElementById('form-reporte')));
+    window.location.href = "{% url 'administrativo_reportes_academicos_por_grupo' %}?" + params.toString();
+  });
+</script>
+{% endblock %}

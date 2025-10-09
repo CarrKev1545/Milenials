@@ -3,6 +3,126 @@
 
 {% block title %}Registro de Notas{% endblock %}
 
+{% block extra_css %}
+<style>
+  /* ===== Escala base rem + ajustes fluidos ===== */
+  :root { font-size: 16px; } /* 1rem = 16px */
+  @media (max-width: 75em) { :root { font-size: 15px; } } /* ~1200px */
+  @media (max-width: 62em) { :root { font-size: 14px; } } /* ~992px  */
+  @media (max-width: 48em) { :root { font-size: 13px; } } /* ~768px  */
+  @media (max-width: 36em) { :root { font-size: 12px; } } /* ~576px  */
+
+  /* ===== Layout general ===== */
+  .rd{ width:100%; max-width: 75rem; margin: 0 auto; padding: 1.25rem; }
+  .rd-title{ font-size: 1.5rem; font-weight: 800; letter-spacing: .0125em; margin-bottom: 1rem; text-align:center; }
+
+  .rd-wrap{
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 1rem;
+  }
+  @media (max-width: 56.25em){ /* ~900px */
+    .rd-wrap{ grid-template-columns: 1fr; }
+  }
+
+  /* ===== Panel izquierdo (búsqueda) ===== */
+  .rd-left{
+    background: #0c0c0c; color: #fff;
+    border-radius: 1rem; padding: 1.25rem;
+    box-shadow: 0 .75rem 1.75rem rgba(0,0,0,.35);
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  .rd-avatar{
+    width: 5.5rem; height: 5.5rem; border-radius: 999rem;
+    display: grid; place-items: center;
+    margin: 0 auto .75rem;
+    background: conic-gradient(from 200deg, #1a1a1a, #0f172a);
+    box-shadow: 0 .75rem 1.5rem rgba(0,0,0,.35), inset 0 -.5rem 1.25rem rgba(0,0,0,.2);
+  }
+  .rd-avatar i{ font-size: 2.75rem; color:#fff; filter: drop-shadow(0 .5rem 1.25rem rgba(0,0,0,.45)); }
+
+  .rd-left-row{ margin-top: .75rem; }
+  .rd-left-label{ display:block; font-weight: 700; margin-bottom: .25rem; }
+  .rd-left-input input{
+    width:100%; height: 2.75rem; border-radius: .75rem;
+    border: 1px solid #353535; background: #121212; color:#fff;
+    padding: 0 .875rem; font-weight: 700;
+    transition: border-color .12s ease, box-shadow .12s ease, background .12s ease;
+  }
+  .rd-left-input input:focus{
+    outline: none; border-color: #e11d48;
+    box-shadow: 0 0 0 .1875rem rgba(225,29,72,.2);
+    background: #0f0f0f;
+  }
+
+  /* Avisos */
+  #rd-est-info{ color:#d1fae5; }
+  #rd-est-adv{ color:#fecaca; }
+
+  /* ===== Panel derecho (formulario) ===== */
+  .rd-right{
+    background: #0b1220; color:#e5ecf6;
+    border-radius: 1rem; padding: 1.25rem;
+    box-shadow: 0 .75rem 1.75rem rgba(0,0,0,.35);
+    border: 1px solid rgba(255,255,255,.08);
+  }
+
+  .rd-form{ display: grid; grid-template-columns: 1fr 1fr; gap: .875rem 1rem; }
+  @media (max-width: 48em){ .rd-form{ grid-template-columns: 1fr; } }
+
+  .rd-field{
+    position: relative; display:flex; align-items:center; gap:.625rem;
+    height: 3rem; border-radius: .875rem; background:#fff; color:#111;
+    border: 1px solid rgba(0,0,0,.06);
+    box-shadow: 0 .625rem 1.25rem rgba(0,0,0,.22);
+    padding: 0 .875rem 0 3.125rem; /* deja espacio al icono */
+  }
+  .rd-ico{
+    position:absolute; left:.875rem; top:50%; transform: translateY(-50%);
+    width: 1.625rem; display:grid; place-items:center; color:#111; opacity:.95;
+  }
+  .rd-caret{
+    position:absolute; right:.625rem; top:50%; transform: translateY(-50%);
+    color:#111; opacity:.85;
+  }
+
+  .rd-field select,
+  .rd-field input{
+    appearance:none; width:100%; border:none; outline:none;
+    background:transparent; color:#111; font-weight:700; padding-right: 1.5rem;
+  }
+  .rd-field input[type="number"]{
+    text-align:left; font-variant-numeric: tabular-nums;
+  }
+
+  /* ===== Acciones ===== */
+  .rd-actions{
+    display:flex; gap: .75rem; flex-wrap: wrap; justify-content: center;
+    margin-top: 1rem;
+  }
+  .btn-rect{
+    height: 2.875rem; min-width: 11.25rem;
+    padding: 0 1.125rem; border-radius: .75rem; border: none; cursor: pointer;
+    background: var(--accent, #c81e1e); color:#fff; font-weight:900; letter-spacing:.02em;
+    box-shadow: 0 .875rem 1.5rem rgba(200,30,30,.3);
+    transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+  }
+  .btn-rect:hover{ transform: translateY(-.0625rem); box-shadow: 0 1.125rem 1.75rem rgba(200,30,30,.4); }
+  .btn-rect--ghost{ background:#b51415; }
+
+  /* Inputs numéricos en móvil (evita botones de spin) */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button{ -webkit-appearance: none; margin: 0; }
+  input[type=number]{ -moz-appearance:textfield; }
+
+  /* Accesibilidad / enfoque */
+  .btn-rect:focus-visible{
+    outline: .1875rem solid rgba(255,255,255,.35);
+    outline-offset: .125rem;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
   <section class="rd" aria-label="Registro de Notas">
     <h2 class="rd-title">Registro de Notas</h2>

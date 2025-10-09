@@ -3,36 +3,76 @@
 
 {% block title %}Panel del Rector{% endblock %}
 
+{% block extra_css %}
+  {# Hoja de estilos sólo para este dashboard #}
+  <link rel="stylesheet" href="{% static 'css/dashboard_rector.css' %}">
+{% endblock %}
+
 {% block content %}
-<div class="cards" aria-label="Accesos rápidos">
+<div class="cards home-cards" aria-label="Accesos rápidos">
   <!-- Registro de notas -->
-  <article class="card" role="button" tabindex="0"
-           aria-label="Registro de notas"
+  <article class="card home-card"
+           role="button" tabindex="0"
+           aria-labelledby="label-registro-notas"
            data-link="{% url 'rector_registro_notas' %}">
-    <div class="card-box">
-      <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+    <div class="card-box icon" aria-hidden="true">
+      <i class="fa-solid fa-user-plus"></i>
     </div>
-    <a class="label" href="{% url 'rector_registro_notas' %}">Registro notas</a>
+    <a id="label-registro-notas"
+       class="label btn btn--danger"
+       href="{% url 'rector_registro_notas' %}">
+       Registro notas
+    </a>
   </article>
 
   <!-- Registro de estudiantes -->
-  <article class="card" role="button" tabindex="0"
-           aria-label="Registro de estudiantes"
+  <article class="card home-card"
+           role="button" tabindex="0"
+           aria-labelledby="label-registro-estudiantes"
            data-link="{% url 'rector_registro_estudiantes' %}">
-    <div class="card-box">
-      <i class="fa-solid fa-user-graduate" aria-hidden="true"></i>
+    <div class="card-box icon" aria-hidden="true">
+      <i class="fa-solid fa-user-graduate"></i>
     </div>
-    <a class="label" href="{% url 'rector_registro_estudiantes' %}">Registro estudiantes</a>
+    <a id="label-registro-estudiantes"
+       class="label btn btn--danger"
+       href="{% url 'rector_registro_estudiantes' %}">
+       Registro estudiantes
+    </a>
   </article>
 
   <!-- Reportes académicos -->
-  <article class="card" role="button" tabindex="0"
-           aria-label="Reportes académicos"
+  <article class="card home-card"
+           role="button" tabindex="0"
+           aria-labelledby="label-reportes-academicos"
            data-link="{% url 'rector_reportes_academicos' %}">
-    <div class="card-box">
-      <i class="fa-solid fa-clipboard-list" aria-hidden="true"></i>
+    <div class="card-box icon" aria-hidden="true">
+      <i class="fa-solid fa-clipboard-list"></i>
     </div>
-    <a class="label" href="{% url 'rector_reportes_academicos' %}">Reportes académicos</a>
+    <a id="label-reportes-academicos"
+       class="label btn btn--danger"
+       href="{% url 'rector_reportes_academicos' %}">
+       Reportes académicos
+    </a>
   </article>
+
+  <!-- Gráficas y Reportes -->
+  <article class="card home-card"
+          role="button" tabindex="0"
+          aria-labelledby="label-graficas-reportes"
+          data-link="{% url 'rector_graficas_reportes' %}">
+    <div class="card-box icon" aria-hidden="true">
+      <i class="fa-solid fa-chart-line"></i>
+    </div>
+    <a id="label-graficas-reportes"
+      class="label btn btn--danger"
+      href="{% url 'rector_graficas_reportes' %}">
+      Gráficas
+    </a>
+  </article>
+
 </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'js/dashboard_rector.js' %}" defer></script>
 {% endblock %}

@@ -1,0 +1,170 @@
+{% extends "core/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Gráficas y Reportes{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root {
+    --bg-dark: #0b1220;
+    --bg-card: #141c2e;
+    --border-light: rgba(255,255,255,.08);
+    --text-light: #e5ecf6;
+    --accent: #9c0f10;
+    --accent-hover: #800000;
+  }
+
+  .gr-wrap {
+    max-width: 68.75rem; /* 1100px */
+    margin: 0 auto;
+    padding: 1rem;
+  }
+
+  .gr-filtros {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .75rem;
+    margin-bottom: 1rem;
+  }
+  @media (max-width: 53.75rem) {
+    .gr-filtros { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- SELECTS ---------- */
+  .gr-field {
+    position: relative;
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: .75rem;
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.25);
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    padding: 0 .75rem;
+    transition: border-color .2s, box-shadow .2s;
+  }
+
+  .gr-field:hover {
+    border-color: var(--accent-hover);
+    box-shadow: 0 0 .5rem #800000;
+  }
+
+  .gr-field select {
+    flex: 1;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--text-light);
+    font-weight: 600;
+    font-size: 1rem;
+    appearance: none;
+    cursor: pointer;
+  }
+
+  .gr-field select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Menú desplegable del select */
+  select option {
+    background-color: var(--bg-card);
+    color: var(--text-light);
+  }
+
+  select option:checked,
+  select option:hover {
+    background-color: var(--accent);
+    color: #fff;
+  }
+
+  /* ---------- TARJETAS Y GRÁFICOS ---------- */
+  .gr-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .gr-card {
+    background: var(--bg-dark);
+    border: 1px solid var(--border-light);
+    border-radius: 1rem;
+    padding: 1rem;
+    box-shadow: 0 .75rem 1.5rem rgba(0,0,0,.35);
+    color: var(--text-light);
+  }
+
+  .gr-title {
+    font-weight: 800;
+    margin: 0 0 .5rem;
+    font-size: 1.05rem;
+  }
+
+  .chart {
+    width: 100%;
+    height: clamp(16rem, 45vw, 23.75rem);
+  }
+</style>
+{% endblock %}
+
+
+{% block page_banner %}
+  <div class="admin-bar">Gráficas (BETA)</div>
+{% endblock %}
+
+{% block content %}
+<section class="gr-wrap">
+  <div class="gr-filtros">
+    <label class="gr-field">
+      <select id="f-sede">
+        <option value="">Todas las sedes</option>
+      </select>
+    </label>
+    <label class="gr-field">
+      <select id="f-grado" disabled>
+        <option value="">Todos los grados</option>
+      </select>
+    </label>
+    <label class="gr-field">
+      <select id="f-grupo" disabled>
+        <option value="">Todos los grupos</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="gr-grid">
+    <article class="gr-card">
+      <h3 class="gr-title">Estudiantes activos por sede</h3>
+      <div id="chart-activos-sede" class="chart"></div>
+    </article>
+
+    <article class="gr-card">
+      <h3 class="gr-title">Reprobados por asignatura</h3>
+      <div id="chart-reprobados" class="chart"></div>
+    </article>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+
+  {# Resolver URLs de los endpoints #}
+  {% url 'api_sedes'                 as api_sedes_url %}
+  {% url 'api_grados_por_sede'       as api_grados_url %}
+  {% url 'api_grupos_por_sede_grado' as api_grupos_url %}
+  {% url 'api_metrics_activos'       as api_activos_url %}
+  {% url 'api_metrics_histograma'    as api_hist_url %}
+
+  <script>
+    window.GR_URLS = {
+      api_sedes: "{{ api_sedes_url|escapejs }}",
+      api_grados_por_sede: "{{ api_grados_url|escapejs }}",
+      api_grupos_por_sede_grado: "{{ api_grupos_url|escapejs }}",
+      api_metrics_activos: "{{ api_activos_url|escapejs }}",
+      api_metrics_histograma: "{{ api_hist_url|escapejs }}"
+    };
+  </script>
+
+  <script src="{% static 'core/js/graficas_reportes.js' %}"></script>
+{% endblock %}

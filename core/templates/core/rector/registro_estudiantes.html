@@ -3,60 +3,167 @@
 
 {% block title %}Registro Estudiantes{% endblock %}
 
+{% block extra_css %}
+<style>
+  /* ===== Escala base rem ===== */
+  :root {
+    font-size: 16px; /* 1rem = 16px */
+  }
+  @media (max-width: 75em){ :root { font-size: 15px; } } /* ~1200px */
+  @media (max-width: 62em){ :root { font-size: 14px; } } /* ~992px  */
+  @media (max-width: 48em){ :root { font-size: 13px; } } /* ~768px  */
+  @media (max-width: 36em){ :root { font-size: 12px; } } /* ~576px  */
+
+  /* ===== Estructura general ===== */
+  .re { width:100%; max-width:70rem; margin:0 auto; padding:1rem; }
+  .re-title {
+    text-align:center; font-weight:800; font-size:1.5rem; margin-bottom:1.25rem;
+  }
+
+  .re-wrap {
+    display:grid; grid-template-columns:1fr 2fr;
+    gap:1.25rem; align-items:start;
+  }
+  @media (max-width:56.25em){ /* ~900px */
+    .re-wrap { grid-template-columns:1fr; }
+  }
+
+  /* ===== Avatar ===== */
+  .re-left {
+    display:flex; justify-content:center;
+  }
+  .re-avatar {
+    width:6.25rem; height:6.25rem;
+    display:grid; place-items:center;
+    border-radius:50%; background:#0c0c0c;
+    box-shadow:0 .75rem 1.5rem rgba(0,0,0,.35), inset 0 -.5rem 1rem rgba(0,0,0,.2);
+  }
+  .re-avatar i {
+    font-size:3rem; color:#fff; filter:drop-shadow(0 .5rem 1rem rgba(0,0,0,.4));
+  }
+
+  /* ===== Tarjeta derecha ===== */
+  .re-right {
+    background:#0b1220; border-radius:1rem;
+    padding:1.25rem; box-shadow:0 .75rem 1.5rem rgba(0,0,0,.35);
+    border:1px solid rgba(255,255,255,.08);
+    color:#e5ecf6;
+  }
+
+  /* ===== Formulario ===== */
+  .re-form {
+    display:grid; gap:1rem; grid-template-columns:1fr;
+  }
+  @media (min-width:56.25em){
+    .re-form { grid-template-columns:repeat(2,1fr); }
+    .re-field--span-2 { grid-column:1 / -1; }
+  }
+
+  .re-field {
+    position:relative;
+    display:flex; align-items:center;
+    height:3.75rem;
+    border-radius:.875rem;
+    background:#fff; border:1px solid rgba(0,0,0,.08);
+    box-shadow:0 .625rem 1.25rem rgba(0,0,0,.22);
+    padding:0 .875rem 0 2.75rem;
+  }
+
+  .re-ico {
+    position:absolute; left:.875rem; top:50%; transform:translateY(-50%);
+    color:#111; opacity:.9;
+  }
+
+  .re-field input {
+    flex:1; border:none; outline:none; background:transparent;
+    font-weight:700; color:#111; font-size:1rem;
+  }
+  .re-field input::placeholder { color:#666; font-weight:600; }
+
+  /* ===== Acciones ===== */
+  .re-actions {
+    display:grid; gap:.75rem;
+    grid-template-columns:1fr;
+    margin-top:1rem;
+  }
+  @media (min-width:33.75em){ /* ~540px */
+    .re-actions{ grid-template-columns:repeat(2,1fr); }
+  }
+  .re-actions .btn {
+    height:2.75rem; border-radius:999rem;
+    background:var(--accent,#c62828); color:#fff; font-weight:800;
+    border:none; cursor:pointer;
+    box-shadow:0 .75rem 1.5rem rgba(156,15,16,.35);
+    transition:.15s transform ease, .15s box-shadow ease;
+  }
+  .re-actions .btn:hover {
+    transform:translateY(-.125rem);
+    box-shadow:0 1rem 2rem rgba(156,15,16,.45);
+  }
+
+  /* ===== Mensajes ===== */
+  #re-msg { margin-top:.625rem; font-weight:600; }
+  .re-msg { margin:.5rem 0; padding:.6rem .9rem; border-radius:.8rem; }
+  .re-msg--ok { background:#065f46; color:#d1fae5; }
+  .re-msg--err { background:#7f1d1d; color:#fee2e2; }
+
+</style>
+{% endblock %}
+
 {% block content %}
 <section class="re" aria-labelledby="titulo-re">
   <h1 id="titulo-re" class="re-title">Registro Estudiantes</h1>
 
   <div class="re-wrap">
-    <!-- Columna izquierda: avatar -->
+    <!-- Columna izquierda -->
     <aside class="re-left" aria-label="Avatar estudiante">
       <div class="re-avatar" aria-hidden="true">
-        <i class="fa-solid fa-user-graduate" aria-hidden="true"></i>
+        <i class="fa-solid fa-user-graduate"></i>
       </div>
     </aside>
 
-    <!-- Columna derecha: formulario + acciones -->
+    <!-- Columna derecha -->
     <div class="re-right">
-      <form id="re-form" class="re-form" autocomplete="off" novalidate>
-        {% csrf_token %}
+      <div class="re-card">
+        <form id="re-form" class="re-form" autocomplete="off" novalidate>
+          {% csrf_token %}
 
-        <!-- Nombre -->
-        <label class="re-field" for="re-nombre">
-          <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
-          <input id="re-nombre" name="nombre" type="text"
-                 placeholder="Nombre" aria-label="Nombre"
-                 pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$"
-                 title="El nombre solo puede contener letras y espacios"
-                 required />
-        </label>
+          <!-- Nombre -->
+          <label class="re-field" for="re-nombre">
+            <span class="re-ico"><i class="fa-solid fa-user"></i></span>
+            <input id="re-nombre" name="nombre" type="text" placeholder="Nombre" aria-label="Nombre"
+              pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$"
+              title="El nombre solo puede contener letras y espacios"
+              autocomplete="given-name" required>
+          </label>
 
-        <!-- Apellidos -->
-        <label class="re-field" for="re-apellido">
-          <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-user-pen"></i></span>
-          <input id="re-apellido" name="apellidos" type="text"
-                 placeholder="Apellidos" aria-label="Apellidos"
-                 pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$"
-                 title="Los apellidos solo pueden contener letras y espacios"
-                 required />
-        </label>
+          <!-- Apellidos -->
+          <label class="re-field" for="re-apellido">
+            <span class="re-ico"><i class="fa-solid fa-user-pen"></i></span>
+            <input id="re-apellido" name="apellidos" type="text" placeholder="Apellidos" aria-label="Apellidos"
+              pattern="^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$"
+              title="Los apellidos solo pueden contener letras y espacios"
+              autocomplete="family-name" required>
+          </label>
 
-        <!-- Número de documento -->
-        <label class="re-field" for="re-documento">
-          <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-id-card"></i></span>
-          <input id="re-documento" name="documento" type="text" inputmode="numeric"
-                 placeholder="Número de documento" aria-label="Número de documento"
-                 required />
-        </label>
-      </form>
+          <!-- Documento -->
+          <label class="re-field re-field--span-2" for="re-documento">
+            <span class="re-ico"><i class="fa-solid fa-id-card"></i></span>
+            <input id="re-documento" name="documento" type="text" inputmode="numeric"
+              placeholder="Número de documento" aria-label="Número de documento"
+              autocomplete="off" required>
+          </label>
+        </form>
 
-      <!-- Acciones -->
-      <div class="re-actions">
-        <button id="btn-crear" type="submit" form="re-form" class="re-btn">Crear</button>
-        <button type="reset" form="re-form" class="re-btn re-btn--ghost">Eliminar datos</button>
+        <!-- Botones -->
+        <div class="re-actions">
+          <button id="btn-crear" type="submit" form="re-form" class="btn">Crear</button>
+          <button type="reset" form="re-form" class="btn">Limpiar</button>
+        </div>
+
+        <!-- Mensaje dinámico -->
+        <div id="re-msg" class="re-msg" role="status" aria-live="polite"></div>
       </div>
-
-      <!-- Mensaje dinámico -->
-      <div id="re-msg" class="re-msg" role="alert" aria-live="polite"></div>
     </div>
   </div>
 </section>
@@ -70,69 +177,53 @@
   const ape    = document.getElementById('re-apellido');
   const doc    = document.getElementById('re-documento');
   const msg    = document.getElementById('re-msg');
+  const NAME_RX = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/;
 
-  // Solo dígitos en documento
+  const showMsg = (ok, text) => {
+    msg.className = 're-msg ' + (ok ? 're-msg--ok' : 're-msg--err');
+    msg.textContent = text;
+    msg.scrollIntoView({block:'nearest', behavior:'smooth'});
+  };
+  const getCSRFT = () => document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+
   doc?.addEventListener('input', () => {
     doc.value = doc.value.replace(/\D+/g, '').slice(0, 20);
   });
+  const normSpaces = v => v.replace(/\s+/g,' ').trim();
 
-  // Validación personalizada de letras en nombre y apellidos
-  function soloLetras(valor) {
-    return /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/.test(valor);
-  }
-
-  // Interceptar submit -> AJAX
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    msg.textContent = "";
+    const vNombre = normSpaces(nombre.value);
+    const vApe = normSpaces(ape.value);
+    const vDoc = (doc.value || '').trim();
 
-    if (!nombre.value.trim() || !ape.value.trim() || !doc.value.trim()) {
-      msg.textContent = "Completa Nombre, Apellido y Documento.";
-      msg.style.color = "red";
-      return;
-    }
+    if (!vNombre || !vApe || !vDoc)
+      return showMsg(false, 'Completa Nombre, Apellidos y Documento.');
+    if (!NAME_RX.test(vNombre))
+      return showMsg(false, 'El nombre solo puede contener letras y espacios.');
+    if (!NAME_RX.test(vApe))
+      return showMsg(false, 'Los apellidos solo pueden contener letras y espacios.');
 
-    if (!soloLetras(nombre.value.trim())) {
-      msg.textContent = "El nombre solo puede contener letras y espacios.";
-      msg.style.color = "red";
-      return;
-    }
-
-    if (!soloLetras(ape.value.trim())) {
-      msg.textContent = "El apellido solo puede contener letras y espacios.";
-      msg.style.color = "red";
-      return;
-    }
-
+    const btn = document.getElementById('btn-crear'); btn.disabled = true;
     try {
-      const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
       const resp = await fetch("{% url 'rector_registro_estudiantes_crear' %}", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": csrftoken,
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          "X-CSRFToken":getCSRFT(),
         },
-        body: JSON.stringify({
-          nombre: nombre.value.trim(),
-          apellidos: ape.value.trim(),
-          documento: doc.value.trim(),
-        }),
+        body:JSON.stringify({nombre:vNombre, apellidos:vApe, documento:vDoc}),
       });
-
-      const data = await resp.json();
-      if (data.ok) {
-        msg.textContent = data.msg;
-        msg.style.color = "green";
-        form.reset();
-      } else {
-        msg.textContent = data.msg || "Error en el registro.";
-        msg.style.color = "red";
-      }
-    } catch (err) {
-      msg.textContent = "Error de conexión con el servidor.";
-      msg.style.color = "red";
-    }
+      const data = await resp.json().catch(()=>({}));
+      if(resp.ok && data.ok){
+        showMsg(true, data.msg || 'Estudiante registrado con éxito.');
+        form.reset(); nombre.focus();
+      }else showMsg(false, data.msg || 'No se pudo registrar el estudiante.');
+    }catch(_){ showMsg(false,'Error de conexión con el servidor.'); }
+    finally{ btn.disabled=false; }
   });
+
+  form?.addEventListener('reset', ()=> setTimeout(()=>{ msg.textContent=''; msg.className='re-msg'; },0));
 })();
 </script>
 {% endblock %}

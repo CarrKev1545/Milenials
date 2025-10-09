@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,15 +20,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-%a&9qy-#v_^6y)*0-%6)u@q(xfqam6=5pb%+_g^=y7q(x2@t(*'
+SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-%a&9qy-#v_^6y)*0-%6)u@q(xfqam6=5pb%+_g^=y7q(x2@t(*")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = []
 
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+# --- Archivos estáticos: manifest + compresión + cache busting ---
 STATICFILES_DIRS = [ BASE_DIR / 'static' ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+if not DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -52,12 +62,16 @@ AUTH_USER_MODEL = 'core.Usuario'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.middleware.gzip.GZipMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'core.middleware.NoCacheForAuthenticatedHTMLMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -86,13 +100,17 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'BaseDeDatosMilenials',
-        'USER': 'postgres',
-        'PASSWORD': '1234',      
-        'HOST': '127.0.0.1',
-        'PORT': '5432',          
+        'NAME': os.environ.get("DB_NAME", "BaseDeDatosMilenials"),
+        'USER': os.environ.get("DB_USER", "basededatosmilenials_user"),
+        'PASSWORD': os.environ.get("DB_PASSWORD", "d0i39cDqDk61e9yRubB6lIhhraaYkF3E"),
+        'HOST': os.environ.get("DB_HOST", "localhost"),
+        'PORT': os.environ.get("DB_PORT", "5432"),
+        'OPTIONS': {'sslmode': 'require'},  # importante para Render
     }
 }
+
+# Mantén vivas las conexiones para evitar handshakes constantes
+DATABASES['default']['CONN_MAX_AGE'] = int(os.environ.get("DB_CONN_MAX_AGE", "60"))
 
 
 # Password validation
@@ -129,9 +147,26 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+
+if not DEBUG:
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# --- Email (SMTP) ---
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True") == "True"
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "ksantiagocarrilloucundinamarca@gmail.com")  # tu correo
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "ghhe hwva vgaw hgvn")  # tu contraseña/app password
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
+SERVER_EMAIL = DEFAULT_FROM_EMAIL  # para errores de Django

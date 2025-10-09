@@ -6,18 +6,22 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>{% block title %}Panel del Docente{% endblock %}</title>
 
-  {# === Mismo CSS global que usa el rector === #}
+  <!-- === Mismos CSS que usa el Rector === -->
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+  <link rel="stylesheet" href="{% static 'css/dashboard.patch.css' %}">
+  <link rel="stylesheet" href="{% static 'css/responsive.patch.css' %}">
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   {% block extra_css %}{% endblock %}
 </head>
 <body>
 
-  {# === NAVBAR idéntico en estructura, pero con opciones del DOCENTE === #}
+  <!-- === NAVBAR (idéntico en estructura, opciones del Docente) === -->
   <header class="navbar" role="navigation" aria-label="Barra principal">
     <div class="nav-left">
-      <img src="{% static 'img/logo2.jpeg' %}" alt="Logo colegio" class="logo">
+      <img src="{% static 'img/logo2.jpeg' %}" alt="Logo colegio" class="logo" />
       <div class="nav-title">
         <h3>MILLENNIALS</h3>
         <span class="user-name">{{ request.user.usuario }} · DOCENTE</span>
@@ -25,21 +29,20 @@
     </div>
     <nav class="nav-menu" aria-label="Menú principal">
       <a href="{% url 'dashboard_docente' %}">Inicio</a>
-      {# OJO: el rol docente no muestra más botones aquí #}
     </nav>
     <div class="nav-right">
       <a href="{% url 'logout' %}" class="btn-logout">Cerrar Sesión</a>
     </div>
   </header>
 
-  {# === CONTENIDO (las vistas del docente pegan aquí) === #}
+  <!-- === CONTENIDO === -->
   {% block content %}{% endblock %}
 
-  {# === FOOTER igual al rector === #}
+  <!-- === FOOTER igual al Rector === -->
   <footer class="site-footer" role="contentinfo" aria-label="Pie de página del sitio">
     <div class="footer-inner">
       <div class="footer-left">
-        <img src="{% static 'img/logo2.jpeg' %}" alt="Logo colegio" class="footer-logo">
+        <img src="{% static 'img/logo2.jpeg' %}" alt="Logo colegio" class="footer-logo" />
         <div class="footer-school">
           <div class="school-name">Nombre del Colegio</div>
           <div class="school-sub">Sede / Ciudad</div>
@@ -58,8 +61,9 @@
     </div>
   </footer>
 
-  {# === JS globales como en el rector === #}
+  <!-- === JS globales (mismos del Rector) === -->
   <script src="{% static 'js/dashboard.js' %}"></script>
+  <!-- Si tu módulo docente usa APIs para filtros/notas, deja este JS; si no existe, puedes omitirlo -->
   <script src="{% static 'core/js/registro_notas_docente_api.js' %}"></script>
   {% block extra_js %}{% endblock %}
 </body>

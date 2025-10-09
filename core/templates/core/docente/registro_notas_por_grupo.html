@@ -5,62 +5,67 @@
 
 {% block extra_css %}
 <style>
+  /* ===== Escala base rem + ajustes fluidos ===== */
+  :root { font-size: 16px; } /* 1rem = 16px */
+  @media (max-width: 75em) { :root { font-size: 15px; } } /* ~1200px */
+  @media (max-width: 62em) { :root { font-size: 14px; } } /* ~992px  */
+  @media (max-width: 48em) { :root { font-size: 13px; } } /* ~768px  */
+  @media (max-width: 36em) { :root { font-size: 12px; } } /* ~576px  */
+
   .page-title{
     position:sticky; top:var(--navbar-height); z-index:40;
-    background:var(--accent); color:#fff; font-weight:800; letter-spacing:.2px;
-    text-align:center; padding:10px 12px; box-shadow:0 4px 12px rgba(0,0,0,.35)
+    background:var(--accent); color:#fff; font-weight:800; letter-spacing:.0125em;
+    text-align:center; padding:.625rem .75rem; box-shadow:0 .25rem .75rem rgba(0,0,0,.35)
   }
 
   /* ===== Contenedor tarjeta (igual a rector) ===== */
-  .rg{width:100%;max-width:1180px;margin:0 auto;padding:0 20px}
-  .rg-wrap{position:relative;margin-top:14px}
+  .rg{width:100%;max-width:73.75rem;margin:0 auto;padding:0 1.25rem} /* 1180px, 20px */
+  .rg-wrap{position:relative;margin-top:.875rem}                      /* 14px */
   .rg-wrap::before{
-    content:""; position:absolute; inset:-18px -22px; border-radius:18px;
+    content:""; position:absolute; inset:-1.125rem -1.375rem; border-radius:1.125rem; /* 18px 22px */
     background:
       radial-gradient(140% 160% at 10% 0%, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 45%),
       linear-gradient(135deg, rgba(22,22,24,.88) 0%, rgba(16,16,18,.86) 100%);
-    border:1px solid rgba(255,255,255,.10); backdrop-filter: blur(6px) saturate(115%);
-    box-shadow:0 22px 44px rgba(0,0,0,.50); z-index:0
+    border:1px solid rgba(255,255,255,.10); backdrop-filter: blur(.375rem) saturate(115%); /* 6px */
+    box-shadow:0 1.375rem 2.75rem rgba(0,0,0,.50); z-index:0                     /* 22px 44px */
   }
-  .rg-inner{position:relative;z-index:1;padding:28px 24px 24px}
-  .rg-badge{width:370px;max-width:90vw;margin:0 auto;margin-top:-22px;background:#0c0c0c;border-radius:16px;
-    box-shadow:0 16px 30px rgba(0,0,0,.55), inset 0 -8px 22px rgba(0,0,0,.22);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px 16px 12px}
-  .rg-badge i{font-size:82px;color:#fff;filter:drop-shadow(0 10px 30px rgba(0,0,0,.6))}
-  .rg-chip{margin-top:12px;background:var(--accent);color:#fff;padding:8px 18px;border-radius:999px;font-weight:800;letter-spacing:.2px}
+  .rg-inner{position:relative;z-index:1;padding:1.75rem 1.5rem 1.5rem}           /* 28px 24px */
+  .rg-badge{width:23.125rem;max-width:90vw;margin:0 auto;margin-top:-1.375rem;background:#0c0c0c;border-radius:1rem;
+    box-shadow:0 1rem 1.875rem rgba(0,0,0,.55), inset 0 -.5rem 1.375rem rgba(0,0,0,.22);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.125rem 1rem .75rem}
+  .rg-badge i{font-size:5.125rem;color:#fff;filter:drop-shadow(0 .625rem 1.875rem rgba(0,0,0,.6))} /* 82px 10px 30px */
+  .rg-chip{margin-top:.75rem;background:var(--accent);color:#fff;padding:.5rem 1.125rem;border-radius:999px;font-weight:800;letter-spacing:.0125em}
 
-  /* ===== Chips de resumen (mismo header oscuro que rector) ===== */
+  /* ===== Chips de resumen ===== */
   :root{
-    /* tokens de la cabecera de tablas de rector (fallbacks si no existieran) */
     --panel-dark:   #0f172a;
     --panel-darker: #0b1220;
   }
-  .meta-tags{display:flex;flex-wrap:wrap;gap:10px;margin:16px 2px 10px}
+  .meta-tags{display:flex;flex-wrap:wrap;gap:.625rem;margin:1rem .125rem .625rem} /* 10px 16px 2px 10px */
   .meta-tag{
     background:linear-gradient(180deg,var(--panel-dark),var(--panel-darker));
     color:#fff;border:1px solid rgba(255,255,255,.08);
-    padding:8px 12px;border-radius:12px;font-weight:900;letter-spacing:.2px;
-    box-shadow:0 8px 16px rgba(0,0,0,.28)
+    padding:.5rem .75rem;border-radius:.75rem;font-weight:900;letter-spacing:.0125em;
+    box-shadow:0 .5rem 1rem rgba(0,0,0,.28)
   }
 
   /* ===== Tarjeta & tabla ===== */
   .table-card{
-    background:#fff;border-radius:16px;box-shadow:0 12px 30px rgba(0,0,0,.18);
+    background:#fff;border-radius:1rem;box-shadow:0 .75rem 1.875rem rgba(0,0,0,.18);
     border:1px solid #e5e9f2; overflow:hidden
   }
-  .table-responsive{width:100%;max-height:460px;overflow:auto;background:#eef2f6}
-  .table-responsive::-webkit-scrollbar{height:10px;width:10px}
+  .table-responsive{width:100%;max-height:28.75rem;overflow:auto;background:#eef2f6} /* 460px */
+  .table-responsive::-webkit-scrollbar{height:.625rem;width:.625rem}
   .table-responsive::-webkit-scrollbar-thumb{background:#9aa4b2;border-radius:999px}
   .table-responsive::-webkit-scrollbar-track{background:#e6ebf3;border-radius:999px}
 
-  table.tabla{width:100%;border-collapse:separate;border-spacing:0 10px}
+  table.tabla{width:100%;border-collapse:separate;border-spacing:0 .625rem} /* 10px */
 
-  /* Header de tabla con los mismos colores que rector */
   .tabla thead th{
     position:sticky; top:0; z-index:4;
     background:linear-gradient(180deg,var(--panel-dark),var(--panel-darker));
-    color:#fff;font-weight:900;text-transform:uppercase;letter-spacing:.3px;
-    text-align:left;padding:14px 16px; box-shadow:0 4px 0 rgba(255,255,255,.04)
+    color:#fff;font-weight:900;text-transform:uppercase;letter-spacing:.02em;
+    text-align:left;padding:.875rem 1rem; box-shadow:0 .25rem 0 rgba(255,255,255,.04)
   }
   .tabla th:nth-child(1){width:42%}
   .tabla th:nth-child(2){width:16%}
@@ -68,63 +73,61 @@
   .tabla th:nth-child(4){width:10%}
   .tabla th:nth-child(5){width:16%}
 
-  /* Filas “card” */
   .tabla tbody td{
     background:#fff; color:#0b1220; border:1px solid #e6ebf3;
-    padding:14px 16px; vertical-align:middle;
+    padding:.875rem 1rem; vertical-align:middle;
     transition: filter .12s ease, box-shadow .12s ease, background .12s ease
   }
-  .tabla tbody tr td:first-child{border-top-left-radius:12px;border-bottom-left-radius:12px;border-left-width:1px}
-  .tabla tbody tr td:last-child {border-top-right-radius:12px;border-bottom-right-radius:12px;border-right-width:1px}
-  .tabla tbody tr:hover td{filter:saturate(110%); box-shadow:0 8px 18px rgba(2,6,23,.08); background:#fff}
+  .tabla tbody tr td:first-child{border-top-left-radius:.75rem;border-bottom-left-radius:.75rem;border-left-width:1px}
+  .tabla tbody tr td:last-child {border-top-right-radius:.75rem;border-bottom-right-radius:.75rem;border-right-width:1px}
+  .tabla tbody tr:hover td{filter:saturate(110%); box-shadow:0 .5rem 1.125rem rgba(2,6,23,.08); background:#fff}
 
-  /* Congelar primera columna (como rector) */
+  /* Congelar primera columna */
   .tabla thead th:first-child{left:0; z-index:5}
-  .tabla tbody td:first-child{position:sticky; left:0; z-index:3; background:#fff; box-shadow:1px 0 0 #e6ebf3}
+  .tabla tbody td:first-child{position:sticky; left:0; z-index:3; background:#fff; box-shadow:.0625rem 0 0 #e6ebf3}
 
   /* Tipografías */
-  .alum{font-weight:900;letter-spacing:.2px}
+  .alum{font-weight:900;letter-spacing:.0125em}
   .doc{opacity:.9;font-weight:800;font-variant-numeric:tabular-nums;
        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
 
-  /* Inputs con focus en el color institucional (var(--accent)) */
+  /* Inputs */
   .inp-nota, .inp-fallas{
-    width:118px;height:40px;border:1px solid #cfd8dc;border-radius:10px;background:#f8fafc;
-    padding:0 10px;font-weight:800;text-align:center;font-variant-numeric:tabular-nums; letter-spacing:.2px;
+    width:7.375rem; height:2.5rem; border:1px solid #cfd8dc; border-radius:.625rem; background:#f8fafc; /* 118x40, 10px */
+    padding:0 .625rem; font-weight:800; text-align:center; font-variant-numeric:tabular-nums; letter-spacing:.0125em;
     transition:border-color .12s ease, box-shadow .12s ease, background .12s ease
   }
-  .inp-fallas{width:96px}
+  .inp-fallas{width:6rem}
   .inp-nota:focus, .inp-fallas:focus{
     outline:none; border-color: var(--accent);
-    box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); background:#fff
+    box-shadow:0 0 0 .1875rem color-mix(in srgb, var(--accent) 25%, transparent); background:#fff /* 3px */
   }
   .inp-nota::-webkit-outer-spin-button,
   .inp-nota::-webkit-inner-spin-button,
   .inp-fallas::-webkit-outer-spin-button,
   .inp-fallas::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0 }
 
-  /* Botón Guardar: exactamente el acento institucional */
+  /* Botón Guardar */
   .tabla [data-guardar-nota].rg-btn{
-    height:40px;min-width:132px;border-radius:10px;
+    height:2.5rem; min-width:8.25rem; border-radius:.625rem;
     background:var(--accent);
-    box-shadow:0 12px 22px color-mix(in srgb, var(--accent) 28%, transparent);
-    font-weight:900; letter-spacing:.2px
+    box-shadow:0 .75rem 1.375rem color-mix(in srgb, var(--accent) 28%, transparent);
+    font-weight:900; letter-spacing:.0125em
   }
-  .tabla [data-guardar-nota].rg-btn:hover{transform:translateY(-1px)}
+  .tabla [data-guardar-nota].rg-btn:hover{transform:translateY(-.0625rem)}
   .tabla [data-guardar-nota].rg-btn:disabled{opacity:.55;box-shadow:none;cursor:not-allowed}
 
   .tabla td.actions{position:relative}
-  .tabla .save-status{position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:.86rem; font-weight:800; color:#059669}
+  .tabla .save-status{position:absolute; right:.625rem; top:50%; transform:translateY(-50%); font-size:.86rem; font-weight:800; color:#059669}
 
-  .msg{display:grid; place-items:center; height:82px; color:#334155; font-weight:800}
+  .msg{display:grid; place-items:center; height:5.125rem; color:#334155; font-weight:800} /* 82px */
 
-  @media (max-width: 900px){
+  @media (max-width: 56.25em){ /* ~900px */
     .tabla th:nth-child(2), .tabla td:nth-child(2){display:none}
     .tabla th:nth-child(1){width:auto}
   }
 </style>
 {% endblock %}
-
 
 {% block content %}
   <div class="page-title">Registro de notas</div>
@@ -160,7 +163,7 @@
             </div>
           </div>
 
-          <div class="rg-actions" style="margin-top:16px">
+          <div class="rg-actions" style="margin-top:1rem">
             <a href="{% url 'docente_registro_notas_filtro' %}" class="rg-btn rg-btn--ghost">Volver a filtros</a>
           </div>
         </div>
@@ -171,7 +174,8 @@
 
 {% block extra_js %}
 {{ block.super }}
-<script src="{% static 'core/js/registro_notas_docente_api.js' %}"></script>
+<!-- <script src="{% static 'core/js/registro_notas_docente_api.js' %}"></script> -->
+
 <script>
   /* ========= LECTURA DE PARÁMETROS ========= */
   const qs = new URLSearchParams(window.location.search);
@@ -238,10 +242,16 @@
     }
   })();
 
+  /* ========= CSRF ========= */
+  function getCookie(name){
+    const v = `; ${document.cookie}`.split(`; ${name}=`); if (v.length === 2) return v.pop().split(';').shift();
+  }
+  const csrftoken = getCookie('csrftoken');
+
   /* ========= Tabla: estudiantes + notas ========= */
   const $tbody = document.querySelector("#tabla-estudiantes tbody");
   function putMsg(text){
-    $tbody.innerHTML = `<tr><td colspan="5" style="padding:20px"><div class="msg">${text}</div></td></tr>`;
+    $tbody.innerHTML = `<tr><td colspan="5" style="padding:1.25rem"><div class="msg">${text}</div></td></tr>`;
   }
 
   async function cargarTabla(){
@@ -289,5 +299,55 @@
   }
 
   document.addEventListener("DOMContentLoaded", cargarTabla);
+
+  /* ========= Guardar por fila (inline) ========= */
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-guardar-nota]");
+    if (!btn) return;
+
+    const tr = btn.closest("tr");
+    const estudiante_id = tr.getAttribute("data-row-estudiante");
+    const asignatura_id = tr.getAttribute("data-asignatura-id");
+    const periodo_id    = tr.getAttribute("data-periodo-id");
+    const inpNota   = tr.querySelector(".inp-nota");
+    const inpFallas = tr.querySelector(".inp-fallas");
+    const statusEl  = tr.querySelector(".save-status");
+
+    const nota   = (inpNota.value || "").trim();
+    const fallas = (inpFallas.value || "0").trim();
+
+    btn.disabled = true; statusEl.textContent = "Guardando…";
+
+    try{
+      const resp = await fetch("{% url 'docente_registrar_nota' %}", {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": csrftoken,
+          "Accept": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+        },
+        body: new URLSearchParams({
+          estudiante_id, asignatura_id, periodo_id, nota, fallas
+        })
+      });
+
+      const data = await resp.json().catch(()=> ({}));
+      if (!resp.ok || !data.ok){
+        throw new Error(data?.msg || `Error ${resp.status}`);
+      }
+
+      // Persistimos los valores guardados (para poder resaltar cambios si quieres)
+      inpNota.setAttribute("data-saved-value", nota);
+      inpFallas.setAttribute("data-saved-value", fallas);
+      statusEl.textContent = "Guardado ✓";
+      setTimeout(()=> statusEl.textContent = "", 2200);
+    }catch(err){
+      statusEl.textContent = "Error al guardar";
+      alert(String(err));
+    }finally{
+      btn.disabled = false;
+    }
+  });
 </script>
 {% endblock %}

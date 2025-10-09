@@ -1,10 +1,97 @@
 {% extends "core/base_dashboard.html" %}
 {% block title %}Registro de Estudiantes{% endblock %}
+
 {% block content %}
-<section class="cards" aria-label="Registro de Estudiantes">
-  <div class="card" tabindex="0">
-    <div class="card-box"><i class="fa-solid fa-user-graduate" aria-hidden="true"></i></div>
-    <div class="label">Registro de Estudiantes (en construcción)</div>
-  </div>
+<section class="cards home-cards" aria-label="Registro de Estudiantes">
+  <article class="card home-card center" tabindex="0" aria-describedby="wip-desc">
+    <div class="card-box icon" aria-hidden="true">
+      <i class="fa-solid fa-user-graduate"></i>
+    </div>
+    <div id="wip-desc" class="label text-muted">Módulo en construcción</div>
+    <div class="mt-4">
+      <button type="button" class="btn btn--muted" disabled>Pronto</button>
+    </div>
+  </article>
 </section>
+
+{# ================== ESQUELETO PARA ACTIVAR CUANDO TENGAS LA LÓGICA ==================
+
+<form method="post" class="mb-4">
+  {% csrf_token %}
+  <!-- Filtros / Búsqueda -->
+  <div class="card mb-4">
+    <div class="form-row">
+      <input id="buscar" name="buscar" class="input" placeholder="Buscar por nombre o documento">
+      <select id="grado" name="grado" class="select">
+        <option value="">Todos los grados</option>
+        <!-- opciones -->
+      </select>
+      <select id="grupo" name="grupo" class="select">
+        <option value="">Todos los grupos</option>
+        <!-- opciones -->
+      </select>
+      <select id="jornada" name="jornada" class="select">
+        <option value="">Jornada</option>
+        <option value="mañana">Mañana</option>
+        <option value="tarde">Tarde</option>
+      </select>
+      <button type="submit" class="btn">Filtrar</button>
+    </div>
+  </div>
+
+  <!-- Formulario de registro/edición -->
+  <div class="card mb-4">
+    <div class="form-row">
+      <input id="nombres"   name="nombres"   class="input" placeholder="Nombres" required>
+      <input id="apellidos" name="apellidos" class="input" placeholder="Apellidos" required>
+      <input id="documento" name="documento" class="input" placeholder="Documento" required>
+    </div>
+    <div class="form-row">
+      <select id="grado_form" name="grado_form" class="select" required>
+        <option value="">Grado</option>
+        <!-- opciones -->
+      </select>
+      <select id="grupo_form" name="grupo_form" class="select" required>
+        <option value="">Grupo</option>
+        <!-- opciones -->
+      </select>
+      <input id="email" name="email" type="email" class="input" placeholder="Correo (opcional)">
+    </div>
+    <div class="mt-4">
+      <button type="submit" class="btn">Guardar</button>
+      <button type="reset" class="btn btn--ghost">Limpiar</button>
+    </div>
+  </div>
+</form>
+
+<!-- Tabla responsiva -->
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Estudiante</th>
+        <th>Documento</th>
+        <th>Grado</th>
+        <th>Grupo</th>
+        <th class="cell-actions">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {# Ejemplo de fila; aquí iteras tus estudiantes #}
+      <tr>
+        <td>Nombre Apellido</td>
+        <td>123456789</td>
+        <td>6°</td>
+        <td>A</td>
+        <td class="cell-actions">
+          <button type="button" class="btn btn--ghost">Ver</button>
+          <button type="button" class="btn">Editar</button>
+          <button type="button" class="btn btn--danger">Eliminar</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+#}
 {% endblock %}

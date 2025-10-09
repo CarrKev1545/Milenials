@@ -1,0 +1,70 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{% block title %}Panel del Administrativo{% endblock %}</title>
+
+  <!-- === Mismos CSS que usa el Rector === -->
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+  <link rel="stylesheet" href="{% static 'css/dashboard.patch.css' %}">
+  <link rel="stylesheet" href="{% static 'css/responsive.patch.css' %}">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- === NAVBAR (idéntico en estructura, opciones del Administrativo) === -->
+  <header class="navbar" role="navigation" aria-label="Barra principal">
+    <div class="nav-left">
+      <img src="{% static 'img/logo2.jpeg' %}" alt="Logo colegio" class="logo" />
+      <div class="nav-title">
+        <h3>MILLENNIALS</h3>
+        <span class="user-name">{{ request.user.usuario }} · ADMINISTRATIVO</span>
+      </div>
+    </div>
+    <nav class="nav-menu" aria-label="Menú principal">
+      <a href="{% url 'dashboard_admin' %}">Inicio</a>
+    </nav>
+    <div class="nav-right">
+      <a href="{% url 'logout' %}" class="btn-logout">Cerrar Sesión</a>
+    </div>
+  </header>
+
+  <!-- === CONTENIDO === -->
+  {% block content %}{% endblock %}
+
+  <!-- === FOOTER igual al Rector === -->
+  <footer class="site-footer" role="contentinfo" aria-label="Pie de página del sitio">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <img src="{% static 'img/logo2.jpeg' %}" alt="Logo colegio" class="footer-logo" />
+        <div class="footer-school">
+          <div class="school-name">Nombre del Colegio</div>
+          <div class="school-sub">Sede / Ciudad</div>
+        </div>
+      </div>
+      <div class="footer-center">
+        <div>Dirección: Calle Falsa 123</div>
+        <div>Tel: (+57) 300 000 0000 · Email: info@colegio.edu.co</div>
+      </div>
+      <div class="footer-right">
+        <nav class="footer-links">
+          <a href="#">Privacidad</a><a href="#">Términos</a><a href="#">Contacto</a>
+        </nav>
+        <div class="copyright">© {% now "Y" %} Nombre del Colegio</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- === JS globales (mismos del Rector) === -->
+  <script src="{% static 'js/dashboard.js' %}"></script>
+  <!-- Si tu módulo docente usa APIs para filtros/notas, deja este JS; si no existe, puedes omitirlo -->
+  <script src="{% static 'core/js/registro_notas_docente_api.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

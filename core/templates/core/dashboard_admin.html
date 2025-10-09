@@ -1,10 +1,62 @@
-{% extends "core/base.html" %}
-{% block title %}Dashboard Administrativo{% endblock %}
+{% extends "core/base_dashboard_administrativo.html" %}
+{% load static %}
+
+{% block title %}Panel Administrativo{% endblock %}
+
 {% block content %}
-  <h1>Panel Administrativo</h1>
-  <ul>
-    <li>Gestión de usuarios</li>
-    <li>Matriculas, actas, certificados</li>
-    <li>Soporte a exportes PDF/Excel</li>
-  </ul>
+<main class="main" role="main">
+  <div class="cards">
+    <!-- Reportes académicos -->
+    <article class="card home-card" role="button" tabindex="0"
+             aria-labelledby="label-reportes-academicos"
+             data-link="{% url 'administrativo_reportes_academicos_filtro' %}">
+      <div class="card-box">
+        <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+      </div>
+      <a id="label-reportes-academicos"
+         class="label btn btn--danger"
+         href="{% url 'administrativo_reportes_academicos_filtro' %}">
+        Reportes Académicos
+      </a>
+    </article>
+
+    <!-- Gráficas y Reportes -->
+    <article class="card home-card"
+            role="button" tabindex="0"
+            aria-labelledby="label-graficas-reportes"
+            data-link="{% url 'administrativo_graficas_reportes' %}">
+      <div class="card-box icon" aria-hidden="true">
+        <i class="fa-solid fa-chart-pie"></i>
+      </div>
+      <a id="label-graficas-reportes"
+        class="label btn btn--danger"
+        href="{% url 'administrativo_graficas_reportes' %}">
+        Gráficas y Reportes
+      </a>
+    </article>
+
+  </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Toda la tarjeta es clickeable (igual que los otros dashboards)
+  document.addEventListener('click', (ev) => {
+    const card = ev.target.closest('.card[data-link], .home-card[data-link]');
+    if (!card) return;
+    const url = card.getAttribute('data-link');
+    if (url) window.location.href = url;
+  });
+
+  // Accesible con Enter/Espacio
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Enter' && ev.key !== ' ') return;
+    const card = document.activeElement && document.activeElement.closest('.card[data-link], .home-card[data-link]');
+    if (!card) return;
+    ev.preventDefault();
+    const url = card.getAttribute('data-link');
+    if (url) window.location.href = url;
+  });
+</script>
 {% endblock %}

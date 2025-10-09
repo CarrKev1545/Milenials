@@ -1,86 +1,76 @@
+{% extends "core/base_dashboard.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Reportes académicos</title>
 
-  <!-- CSS global -->
-  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-  <!-- Iconos -->
-  <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-</head>
-<body>
-  <!-- ===== NAVBAR ===== -->
-  <header class="navbar" role="navigation" aria-label="Barra principal">
-    <div class="nav-left">
-      <img src="{% static 'img/logo2.jpeg' %}" alt="Logo colegio" class="logo" />
-      <div class="nav-title">
-        <h3>RECTOR / <span class="nowrap">COORDINADOR</span></h3>
-        <span class="user-name">{{ request.user.usuario }}</span>
-      </div>
+{% block title %}Reportes académicos{% endblock %}
+
+{% block page_banner %}
+<!-- Franja roja bajo el encabezado -->
+<div class="admin-bar">Reportes académicos</div>
+{% endblock %}
+
+{% block content %}
+<section class="cards home-cards" aria-label="Opciones de reportes académicos">
+  <!-- Por grupos -->
+  <a class="card home-card" href="{% url 'rector_reportes_academicos_por_grupo' %}" aria-label="Reportes por grupos">
+    <div class="card-box icon" aria-hidden="true">
+      <i class="fa-solid fa-people-group"></i>
     </div>
+    <span class="label btn btn--danger">Por grupos</span>
+  </a>
 
-    <nav class="nav-menu" aria-label="Menú principal">
-      <a href="{% url 'dashboard_rector' %}">Inicio</a>
-      <a href="{% url 'rector_estudiantes_a_grupos' %}">Estudiante a grupos</a>
-      <a href="{% url 'rector_asignacion_docentes_grupos' %}">Asignación de Docentes a grupos</a>
-    </nav>
-
-    <div class="nav-right">
-      <a href="{% url 'logout' %}" class="btn-logout">Cerrar Sesión</a>
+  <!-- Por estudiante -->
+  <a class="card home-card" href="{% url 'rector_reportes_academicos_por_estudiante' %}" aria-label="Reportes por estudiante">
+    <div class="card-box icon" aria-hidden="true">
+      <i class="fa-solid fa-user-plus"></i>
     </div>
-  </header>
+    <span class="label btn btn--danger">Por estudiante</span>
+  </a>
+</section>
+{% endblock %}
 
-  <!-- Barra roja -->
-  <div class="admin-bar">Reportes académicos</div>
+{% block extra_css %}
+<style>
+  /* ===== Escala base rem + ajustes fluidos (no afecta lógica) ===== */
+  :root { font-size: 16px; }                  /* 1rem = 16px */
+  @media (max-width: 75em) { :root { font-size: 15px; } } /* ~1200px */
+  @media (max-width: 62em) { :root { font-size: 14px; } } /* ~992px  */
+  @media (max-width: 48em) { :root { font-size: 13px; } } /* ~768px  */
+  @media (max-width: 36em) { :root { font-size: 12px; } } /* ~576px  */
 
-  <!-- ===== CONTENIDO ===== -->
-  <main class="main main--cards" role="main">
-    <section class="cards cards--center" aria-label="Opciones">
-      <!-- Card: Por grupos -->
-      <a href="{% url 'rector_reportes_academicos_por_grupo' %}" class="card">
-        <div class="card-box" aria-hidden="true">
-          <i class="fa-solid fa-people-group"></i>
-        </div>
-        <div class="label">Por grupos</div>
-      </a>
+  /* ===== Layout de tarjetas ===== */
+  .cards.home-cards{
+    max-width: 56.25rem;                     /* 900px -> 56.25rem */
+    margin-inline: auto;
 
-      <!-- Card: Por estudiante -->
-      <a href="{% url 'rector_reportes_academicos_por_estudiante' %}" class="card">
-        <div class="card-box" aria-hidden="true">
-          <i class="fa-solid fa-user-plus"></i>
-        </div>
-        <div class="label">Por estudiante</div>
-      </a>
-    </section>
-  </main>
+    display: grid;
+    grid-template-columns: repeat(2, minmax(16.25rem, 1fr)); /* 260px -> 16.25rem */
+    gap: clamp(.75rem, 2vw, 1.375rem);       /* 12px–22px */
+    place-items: center;
+    padding: 0 1rem;
+  }
 
-  <!-- ===== FOOTER ===== -->
-  <footer class="site-footer" role="contentinfo" aria-label="Pie de página del sitio">
-    <div class="footer-inner">
-      <div class="footer-left">
-        <img src="{% static 'img/logo2.jpeg' %}" alt="Logo colegio" class="footer-logo" />
-        <div class="footer-school">
-          <div class="school-name">Nombre del Colegio</div>
-          <div class="school-sub">Sede / Ciudad</div>
-        </div>
-      </div>
-      <div class="footer-center">
-        <div>Dirección: Calle Falsa 123</div>
-        <div>Tel: (+57) 300 000 0000 · Email: info@colegio.edu.co</div>
-      </div>
-      <div class="footer-right">
-        <nav class="footer-links">
-          <a href="#">Privacidad</a>
-          <a href="#">Términos</a>
-          <a href="#">Contacto</a>
-        </nav>
-        <div class="copyright">© {% now "Y" %} Nombre del Colegio</div>
-      </div>
-    </div>
-  </footer>
-</body>
-</html>
+  @media (max-width: 42.5em){                /* ~680px */
+    .cards.home-cards{ grid-template-columns: 1fr; }
+  }
+
+  /* Iconos más fluidos y label compacto */
+  .home-card .icon i{ font-size: clamp(4.5rem, 7vw, 6.25rem); } /* 72–100px */
+  .home-card .label{ margin-top: .2rem; }
+
+  /* Quitar subrayado en las tarjetas y blindaje visual */
+  .cards.home-cards .card{
+    text-decoration: none !important;
+  }
+  .cards.home-cards .card .card-box i{
+    text-decoration: none;
+    border: 0;
+  }
+
+  /* Foco visible para accesibilidad por teclado */
+  .cards.home-cards .card:focus-visible{
+    outline: .1875rem solid rgba(156,15,16,.55);  /* 3px */
+    outline-offset: .25rem;                       /* 4px */
+    border-radius: 1.125rem;                      /* 18px */
+  }
+</style>
+{% endblock %}

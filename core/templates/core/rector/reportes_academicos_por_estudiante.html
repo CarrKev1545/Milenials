@@ -1,186 +1,241 @@
+{% extends "core/base_dashboard.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Reportes académicos — Por estudiante</title>
 
-  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% block title %}Reportes académicos — Por estudiante{% endblock %}
 
-  <style>
-    .page-title{position:sticky;top:var(--navbar-height);z-index:40;background:var(--accent);color:#fff;font-weight:800;letter-spacing:.2px;text-align:center;padding:10px 12px;box-shadow:0 4px 12px rgba(0,0,0,.35)}
-    .np { width:100%; max-width:1280px; margin:0 auto; padding:0 20px; }
-    .np-wrap{ position:relative; margin-top:14px; }
-    .np-wrap::before{
-      content:""; position:absolute; inset:-18px -22px; border-radius:18px;
-      background: radial-gradient(140% 160% at 10% 0%,rgba(255,255,255,.06) 0%,rgba(255,255,255,0) 45%),
-                  linear-gradient(135deg, rgba(22,22,24,.88) 0%, rgba(16,16,18,.86) 100%);
-      border:1px solid rgba(255,255,255,.10); backdrop-filter: blur(6px) saturate(115%);
-      box-shadow:0 22px 44px rgba(0,0,0,.50); z-index:0;
-    }
-    .np-inner{ position:relative; z-index:1; padding:28px 24px 24px; }
+{% block extra_css %}
+<style>
+  /* ===== Barra roja ===== */
+  .page-title{
+    position:sticky; top:var(--navbar-height); z-index:40;
+    background:var(--accent); color:#fff; font-weight:800; letter-spacing:.2px;
+    text-align:center; padding:10px 12px; box-shadow:0 4px 12px rgba(0,0,0,.35);
+  }
+
+  /* ===== Panel glass ===== */
+  .np{ width:100%; max-width:1280px; margin:0 auto; padding-inline:clamp(12px,3vw,20px); }
+  .np-wrap{ position:relative; margin-top:14px; display:block; }
+  .np-wrap::before{
+    content:""; position:absolute; inset:-18px -22px; border-radius:18px;
+    background:
+      radial-gradient(140% 160% at 10% 0%, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 45%),
+      linear-gradient(135deg, rgba(22,22,24,.88) 0%, rgba(16,16,18,.86) 100%);
+    border:1px solid rgba(255,255,255,.10);
+    backdrop-filter: blur(6px) saturate(115%);
+    box-shadow:0 22px 44px rgba(0,0,0,.50);
+    z-index:0; pointer-events:none;
+  }
+  .np-inner{
+    position:relative; z-index:1;
+    padding:28px 24px 24px;
+    text-align: initial; /* evita alineaciones heredadas */
+  }
+
+  /* ===== Badge centrado ===== */
+  /* En móvil/tablet usamos % del contenedor (no vw) para evitar “corrimiento” */
+  .np-badge{
+    width: clamp(240px, 92%, 360px);
+    margin: -22px auto 0;        /* centrado por márgenes */
+    background:#0c0c0c; border-radius:16px;
+    box-shadow:0 16px 30px rgba(0,0,0,.55), inset 0 -8px 22px rgba(0,0,0,.22);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:18px 16px 12px; position:relative;
+  }
+  /* En escritorio anclamos al centro con left:50% (sin doble centrado) */
+  @media (min-width:900px){
     .np-badge{
-      width:360px; max-width:90vw; margin:0 auto; margin-top:-22px; background:#0c0c0c; border-radius:16px;
-      box-shadow:0 16px 30px rgba(0,0,0,.55), inset 0 -8px 22px rgba(0,0,0,.22);
-      display:flex; flex-direction:column; align-items:center; justify-content:center; padding:18px 16px 12px;
+      width: clamp(260px, 28vw, 420px);
+      left:50%; transform:translateX(-50%);
+      margin-left:0 !important; margin-right:0 !important;
     }
-    .np-badge i{ font-size:82px; color:#fff; line-height:1; filter:drop-shadow(0 10px 30px rgba(0,0,0,.6)); }
-    .np-chip{ margin-top:12px; background:var(--accent); color:#fff; padding:8px 18px; border-radius:999px; font-weight:800; letter-spacing:.2px; box-shadow:0 12px 24px rgba(0,0,0,.45); }
-    .np-grid{ margin-top:18px; display:grid; grid-template-columns:1fr 1fr; gap:14px 20px; align-items:center; }
-    .np-field{
-      position:relative; display:flex; align-items:center; gap:10px; height:48px; padding:0 14px 0 50px;
-      background:#fff; border-radius:14px; border:1px solid rgba(0,0,0,.06); box-shadow:0 10px 20px rgba(0,0,0,.22); width:100%;
-    }
-    .np-field input, .np-field select{ appearance:none; width:100%; border:none; outline:none; background:transparent; color:#111; font-weight:600; }
-    .np-field input[readonly]{ background:#f7f7f7; cursor:not-allowed; }
-    .np-ico{ position:absolute; left:14px; top:50%; transform:translateY(-50%); width:26px; display:grid; place-items:center; color:#111; opacity:.95; }
-    .np-caret{ position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#111; opacity:.85; }
-    .np-actions{ margin-top:18px; display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
-    .np-btn{ height:48px; min-width:180px; border-radius:12px; border:none; cursor:pointer; font-weight:800; color:#fff; background:var(--accent); box-shadow:0 12px 22px rgba(156,15,16,.38); transition:.12s transform ease,.12s box-shadow ease,.12s background ease; }
-    .np-btn:hover{ transform:translateY(-2px); box-shadow:0 18px 28px rgba(156,15,16,.48); }
-    .np-btn:active{ transform: translateY(0) scale(.985); }
-    .np-btn--ghost{ background:#b51415; }
-    @media (max-width:1020px){ .np-grid{ grid-template-columns:1fr; } }
-  </style>
-</head>
-<body>
-  <header class="navbar" role="navigation" aria-label="Barra principal">
-    <div class="nav-left">
-      <img src="{% static 'img/logo2.jpeg' %}" alt="Logo colegio" class="logo">
-      <div class="nav-title">
-        <h3>RECTOR / <span class="nowrap">COORDINADOR</span></h3>
-        <span class="user-name">{{ request.user.usuario }}</span>
-      </div>
-    </div>
-    <nav class="nav-menu" aria-label="Menú principal">
-      <a href="{% url 'dashboard_rector' %}">Inicio</a>
-      <a href="{% url 'rector_estudiantes_a_grupos' %}">Estudiante a grupos</a>
-      <a href="{% url 'rector_asignacion_docentes_grupos' %}">Asignación de Docentes a grupos</a>
-    </nav>
-    <div class="nav-right">
-      <a href="{% url 'logout' %}" class="btn-logout">Cerrar Sesión</a>
-    </div>
-  </header>
+  }
+  .np-badge i{ font-size:82px; color:#fff; line-height:1; filter:drop-shadow(0 10px 30px rgba(0,0,0,.6)); }
+  .np-chip{
+    margin-top:12px; background:var(--accent); color:#fff; padding:8px 18px;
+    border-radius:999px; font-weight:800; letter-spacing:.2px; box-shadow:0 12px 24px rgba(0,0,0,.45);
+  }
 
+  /* ===== Grid de campos ===== */
+  .np-grid{ margin-top:18px; display:grid; grid-template-columns:1fr 1fr; gap:14px 20px; align-items:center; }
+  @media (max-width:1020px){ .np-grid{ grid-template-columns:1fr; } }
+
+  /* ===== Campos ===== */
+  .np-field{
+    position:relative; display:flex; align-items:center; gap:10px; height:48px; padding:0 14px 0 50px;
+    background:#fff; border-radius:14px; border:1px solid rgba(0,0,0,.06); box-shadow:0 10px 20px rgba(0,0,0,.22); width:100%;
+  }
+  .np-field input, .np-field select{ appearance:none; width:100%; border:none; outline:none; background:transparent; color:#111; font-weight:600; }
+  .np-field input[readonly]{ background:#f7f7f7; cursor:not-allowed; }
+  .np-ico{ position:absolute; left:14px; top:50%; transform:translateY(-50%); width:26px; display:grid; place-items:center; color:#111; opacity:.95; }
+  .np-caret{ position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#111; opacity:.85; }
+
+  /* ===== Acciones ===== */
+  .np-actions{ margin-top:6px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .np-btn{
+    height:48px; min-width:180px; border-radius:12px; border:none; cursor:pointer; font-weight:800; color:#fff;
+    background:var(--accent); box-shadow:0 12px 22px rgba(156,15,16,.38);
+    transition:.12s transform ease,.12s box-shadow ease,.12s background ease;
+  }
+  .np-btn:hover{ transform:translateY(-2px); box-shadow:0 18px 28px rgba(156,15,16,.48); }
+  .np-btn:active{ transform: translateY(0) scale(.985); }
+  .np-btn--ghost{ background:#b51415; }
+
+  /* ===== Estilo oscuro para el selector PDF/Excel ===== */
+  #formato{
+    height:48px; border-radius:12px; padding:0 12px;
+    background:#222; color:#fff; border:1px solid rgba(255,255,255,.18);
+    box-shadow:0 12px 22px rgba(0,0,0,.35);
+    min-width:130px; font-weight:700;
+  }
+  #formato:focus{ outline:none; box-shadow:0 0 0 3px rgba(255,255,255,.18), 0 12px 22px rgba(0,0,0,.35); }
+  /* Nota: los <option> se renderizan nativamente; color puede variar según SO */
+
+  /* Micro-ajuste ≤360px */
+  @media (max-width:360px){
+    .np-badge i{ font-size:68px; }
+    .np-chip{ padding:6px 14px; }
+  }
+  
+  /* --- Hacer que TODO el cuadro sea clic/touch para abrir el <select> --- */
+.np-field{
+  position: relative;
+  display: flex; align-items: center;
+  height: 48px;
+  padding: 0;                       /* quitamos padding del contenedor */
+  background:#fff; border-radius:14px; border:1px solid rgba(0,0,0,.06);
+  box-shadow:0 10px 20px rgba(0,0,0,.22);
+  width:100%;
+  cursor: pointer;                  /* feedback de clic */
+}
+
+/* El <select> cubre el 100% del cuadro: cualquier toque lo abre */
+.np-field select{
+  position: absolute; inset: 0;     /* top/right/bottom/left: 0 */
+  width: 100%; height: 100%;
+  appearance: none;
+  border: 0; outline: none; background: transparent;
+  color:#111; font-weight:600; cursor: pointer;
+
+  /* Espacios internos para icono y caret (mantiene el diseño actual) */
+  padding-left: 50px;               /* deja sitio al icono de la izquierda */
+  padding-right: 36px;              /* deja sitio a la flecha (caret) */
+}
+
+/* Los inputs siguen viéndose bien con icono: solo les damos padding interno */
+.np-field input{
+  width: 100%;
+  border: 0; outline: none; background: transparent;
+  color:#111; font-weight:600;
+  padding-left: 50px;               /* mismo offset que los selects */
+}
+
+/* La flecha es decorativa y no bloquea el clic */
+.np-caret{
+  position:absolute; right:10px; top:50%; transform:translateY(-50%);
+  color:#111; opacity:.85;
+  pointer-events: none;             /* el clic atraviesa hacia el select */
+}
+
+</style>
+{% endblock %}
+
+{% block page_banner %}
   <div class="page-title">Reportes académicos</div>
+{% endblock %}
 
-  <main class="main" role="main">
-    <section class="np" aria-label="Reportes por estudiante">
-      <div class="np-wrap">
-        <div class="np-inner">
-          <div class="np-badge" aria-hidden="true">
-            <i class="fa-solid fa-user-graduate"></i>
-            <div class="np-chip">POR ESTUDIANTE</div>
+{% block content %}
+<main class="main" role="main">
+  <section class="np" aria-label="Reportes por estudiante">
+    <div class="np-wrap">
+      <div class="np-inner">
+        <div class="np-badge" aria-hidden="true">
+          <i class="fa-solid fa-user-graduate"></i>
+          <div class="np-chip">POR ESTUDIANTE</div>
+        </div>
+
+        <!-- IMPORTANTE: action correcto -->
+        <form class="np-grid" method="get" action="{% url 'rector_reportes_academicos_tabla' %}">
+          <!-- Sede -->
+          <label class="np-field">
+            <span class="np-ico"><i class="fa-solid fa-building-columns"></i></span>
+            <select id="sede_id" name="sede_id" aria-label="Seleccione la sede">
+              <option value="">Seleccione la sede</option>
+            </select>
+            <span class="np-caret"><i class="fa-solid fa-chevron-down"></i></span>
+          </label>
+
+          <!-- Estudiante -->
+          <label class="np-field">
+            <span class="np-ico"><i class="fa-solid fa-user-graduate"></i></span>
+            <select id="estudiante_id" name="estudiante_id" aria-label="Seleccione estudiante" disabled>
+              <option value="">Seleccione estudiante</option>
+            </select>
+          </label>
+
+          <!-- Grado -->
+          <label class="np-field">
+            <span class="np-ico"><i class="fa-solid fa-sitemap"></i></span>
+            <select id="grado_id" name="grado_id" aria-label="Seleccione el grado" disabled>
+              <option value="">Grado</option>
+            </select>
+            <span class="np-caret"><i class="fa-solid fa-chevron-down"></i></span>
+          </label>
+
+          <!-- Nombre (solo lectura) -->
+          <label class="np-field">
+            <span class="np-ico"><i class="fa-solid fa-id-card"></i></span>
+            <input id="estudiante_nombre" type="text" name="nombre" placeholder="Nombre del estudiante" aria-label="Nombre del estudiante" readonly />
+          </label>
+
+          <!-- Grupo -->
+          <label class="np-field">
+            <span class="np-ico"><i class="fa-solid fa-people-roof"></i></span>
+            <select id="grupo_id" name="grupo_id" aria-label="Seleccione el grupo" disabled>
+              <option value="">Grupo</option>
+            </select>
+            <span class="np-caret"><i class="fa-solid fa-chevron-down"></i></span>
+          </label>
+
+          <!-- Periodo (opcional) -->
+          <label class="np-field">
+            <span class="np-ico"><i class="fa-solid fa-calendar-days"></i></span>
+            <select id="periodo_id" name="periodo_id" aria-label="Seleccione periodo" disabled>
+              <option value="">Periodo (opcional)</option>
+            </select>
+            <span class="np-caret"><i class="fa-solid fa-chevron-down"></i></span>
+          </label>
+
+          <div class="np-actions" style="grid-column:1/-1;">
+            <button type="button" class="np-btn" id="btn-descargar">Descargar</button>
+            <select id="formato" class="np-input" style="height:48px;border-radius:12px;padding:0 12px;">
+              <option value="pdf">PDF</option>
+              <option value="excel">Excel</option>
+            </select>
+            <button type="reset" class="np-btn np-btn--ghost">Limpiar</button>
           </div>
 
-          <!-- IMPORTANTE: action apunta al name correcto -->
-          <form class="np-grid" method="get" action="{% url 'rector_reportes_academicos_tabla' %}">
-            <!-- Sede -->
-            <label class="np-field">
-              <span class="np-ico"><i class="fa-solid fa-building-columns"></i></span>
-              <select id="sede_id" name="sede_id" aria-label="Seleccione la sede">
-                <option value="">Seleccione la sede</option>
-              </select>
-              <span class="np-caret"><i class="fa-solid fa-chevron-down"></i></span>
-            </label>
-
-            <!-- Estudiante (se llena después de elegir grupo) -->
-            <label class="np-field">
-              <span class="np-ico"><i class="fa-solid fa-user-graduate"></i></span>
-              <select id="estudiante_id" name="estudiante_id" aria-label="Seleccione estudiante" disabled>
-                <option value="">Seleccione estudiante</option>
-              </select>
-            </label>
-
-            <!-- Grado -->
-            <label class="np-field">
-              <span class="np-ico"><i class="fa-solid fa-sitemap"></i></span>
-              <select id="grado_id" name="grado_id" aria-label="Seleccione el grado" disabled>
-                <option value="">Grado</option>
-              </select>
-              <span class="np-caret"><i class="fa-solid fa-chevron-down"></i></span>
-            </label>
-
-            <!-- Nombre (solo lectura) -->
-            <label class="np-field">
-              <span class="np-ico"><i class="fa-solid fa-id-card"></i></span>
-              <input id="estudiante_nombre" type="text" name="nombre" placeholder="Nombre del estudiante" aria-label="Nombre del estudiante" readonly />
-            </label>
-
-            <!-- Grupo -->
-            <label class="np-field">
-              <span class="np-ico"><i class="fa-solid fa-people-roof"></i></span>
-              <select id="grupo_id" name="grupo_id" aria-label="Seleccione el grupo" disabled>
-                <option value="">Grupo</option>
-              </select>
-              <span class="np-caret"><i class="fa-solid fa-chevron-down"></i></span>
-            </label>
-
-            <!-- Periodo (opcional; para buscar no es obligatorio; para descargar sí) -->
-            <label class="np-field">
-              <span class="np-ico"><i class="fa-solid fa-calendar-days"></i></span>
-              <select id="periodo_id" name="periodo_id" aria-label="Seleccione periodo" disabled>
-                <option value="">Periodo (opcional)</option>
-              </select>
-              <span class="np-caret"><i class="fa-solid fa-chevron-down"></i></span>
-            </label>
-
-            <div class="np-actions" style="grid-column:1/-1;">
-              <button id="btnBuscar" type="submit" class="np-btn" disabled>Buscar</button>
-
-              <!-- Descargar (PDF/Excel) -->
-              <button type="button" class="np-btn" id="btn-descargar">Descargar</button>
-              <select id="formato" class="np-input" style="height:48px;border-radius:12px;padding:0 12px;">
-                <option value="pdf">PDF</option>
-                <option value="excel">Excel</option>
-              </select>
-
-              <button type="reset" class="np-btn np-btn--ghost">Limpiar</button>
-            </div>
-
-            <!-- TEXTOS para el chip {{ filtros }} -->
-            <input type="hidden" name="sede">
-            <input type="hidden" name="grado">
-            <input type="hidden" name="grupo">
-            <input type="hidden" name="estudiante">
-            <input type="hidden" name="periodo">
-          </form>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="site-footer" role="contentinfo" aria-label="Pie del sitio">
-    <div class="footer-inner">
-      <div class="footer-left">
-        <img src="{% static 'img/logo2.jpeg' %}" alt="Logo colegio" class="footer-logo">
-        <div class="footer-school">
-          <div class="school-name">Nombre del Colegio</div>
-          <div class="school-sub">Sede / Ciudad</div>
-        </div>
-      </div>
-      <div class="footer-center">
-        <div>Dirección: Calle Falsa 123</div>
-        <div>Tel: (+57) 300 000 0000 · Email: info@colegio.edu.co</div>
-      </div>
-      <div class="footer-right">
-        <nav class="footer-links">
-          <a href="#">Privacidad</a>
-          <a href="#">Términos</a>
-          <a href="#">Contacto</a>
-        </nav>
-        <div class="copyright">© {% now "Y" %} Nombre del Colegio</div>
+          <!-- TEXTOS legibles para el chip {{ filtros }} -->
+          <input type="hidden" name="sede">
+          <input type="hidden" name="grado">
+          <input type="hidden" name="grupo">
+          <input type="hidden" name="estudiante">
+          <input type="hidden" name="periodo">
+        </form>
       </div>
     </div>
-  </footer>
+  </section>
+</main>
+{% endblock %}
 
-  <script>
+{% block extra_js %}
+<script>
   const $ = s => document.querySelector(s);
   const setSelect = (el, items, placeholder="Seleccione") => {
     el.innerHTML = `<option value="">${placeholder}</option>`;
-    (items || []).forEach(it => el.insertAdjacentHTML('beforeend', `<option value="${it.id}">${it.nombre || (it.apellidos + " " + it.nombre)}</option>`));
+    (items || []).forEach(it => el.insertAdjacentHTML(
+      'beforeend',
+      `<option value="${it.id}">${it.nombre || (it.apellidos + " " + it.nombre)}</option>`
+    ));
   };
   const enable = (el, on=true) => el.disabled = !on;
 
@@ -191,7 +246,7 @@
   const periodoSel = $('#periodo_id');
   const estSel     = $('#estudiante_id');
   const estNombre  = $('#estudiante_nombre');
-  const btnBuscar  = $('#btnBuscar');
+  const btnBuscar  = $('#btnBuscar');   // si no existe, evitamos error más abajo
 
   // Hidden (textos legibles)
   const hSede  = document.querySelector('input[name="sede"]');
@@ -253,7 +308,7 @@
     validate();
   });
 
-  // Grupo -> estudiantes activos del grupo
+  // Grupo -> estudiantes
   grupoSel.addEventListener('change', async e=>{
     st.grupo_id = e.target.value || "";
     hGrupo.value = grupoSel.options[grupoSel.selectedIndex]?.text || "";
@@ -288,12 +343,11 @@
   });
 
   function validate(){
-    // Para enviar a la tabla: sede_id, grado_id, grupo_id, estudiante_id (periodo_id opcional)
     const ok = !!(st.sede_id && st.grado_id && st.grupo_id && st.estudiante_id);
-    btnBuscar.disabled = !ok;
+    if (btnBuscar) btnBuscar.disabled = !ok; // guard opcional por si no existe
   }
 
-  /* ====== BLOQUE DE DESCARGA (según imagen) ====== */
+  /* ====== Descarga ====== */
   document.getElementById('btn-descargar').addEventListener('click', ()=>{
     const grupo   = document.getElementById('grupo_id').value;
     const periodo = document.getElementById('periodo_id').value;
@@ -304,17 +358,11 @@
       alert('Seleccione grupo, periodo y estudiante');
       return;
     }
-    const q = new URLSearchParams({
-      grupo_id: grupo,
-      periodo_id: periodo,
-      estudiante_id: est,
-      formato
-    });
+    const q = new URLSearchParams({ grupo_id: grupo, periodo_id: periodo, estudiante_id: est, formato });
     window.location.href = "{% url 'rector_reportes_academicos_export' %}?"+q.toString();
   });
-  /* =============================================== */
 
-  // Reset visual también debe limpiar hidden
+  // Reset visual + hidden
   document.querySelector('form').addEventListener('reset', ()=>{
     setTimeout(()=>{
       hSede.value = hGrado.value = hGrupo.value = hEst.value = hPer.value = "";
@@ -326,7 +374,5 @@
       validate();
     },0);
   });
-  </script>
-</body>
-</html>
-
+</script>
+{% endblock %}
