@@ -3,9 +3,14 @@
 {% block title %}Planillas{% endblock %}
 
 {% block content %}
+<!-- Cinta roja superior como en Reportes académicos -->
+<div class="section-ribbon">
+  <div class="container text-center fw-semibold">Planillas</div>
+</div>
+
+<!-- Hero con fondo + tarjeta “vidrio” (mismo layout que reportes) -->
 <div class="hero-bg planillas-hero d-flex align-items-center">
   <div class="container py-5">
-    <!-- Tarjeta tipo "vidrio" centrada (mismo ancho que reportes) -->
     <div class="glass-card mx-auto shadow-lg" style="max-width:1100px;">
       <div class="text-center pt-4">
         <div class="icon-badge mb-2">
@@ -16,6 +21,7 @@
       </div>
 
       <div class="p-4 p-md-5">
+        <!-- MISMA LÓGICA / MISMOS NOMBRES DE CAMPOS -->
         <form method="get" class="row g-3 align-items-end">
           <div class="col-12 col-md-4">
             <label class="form-label fw-semibold"><i class="bi bi-bank2 me-1"></i>Sede</label>
@@ -52,7 +58,7 @@
               <i class="bi bi-funnel me-1"></i> Aplicar filtros
             </button>
 
-            <!-- Descargas (misma lógica/URLs que ya tienes) -->
+            <!-- MISMAS URLS (sin namespace) -->
             <a class="btn btn-outline-light px-4" target="_blank"
                href="{% url 'planillas_export_landing' %}?formato=pdf&sede={{ sel_sede }}&grado={{ sel_grado }}&grupo={{ sel_grupo }}">
               <i class="bi bi-filetype-pdf me-1"></i> Descargar PDF
