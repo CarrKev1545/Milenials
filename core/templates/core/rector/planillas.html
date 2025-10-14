@@ -12,7 +12,7 @@
           <label class="form-label">Sede</label>
           <select name="sede" class="form-select">
             <option value="">Todas</option>
-            {% for id,nombre in sedes %}
+            {% for id, nombre in sedes %}
               <option value="{{ id }}" {% if sel_sede|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
             {% endfor %}
           </select>
@@ -22,7 +22,7 @@
           <label class="form-label">Grado</label>
           <select name="grado" class="form-select">
             <option value="">Todos</option>
-            {% for id,nombre in grados %}
+            {% for id, nombre in grados %}
               <option value="{{ id }}" {% if sel_grado|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
             {% endfor %}
           </select>
@@ -32,7 +32,7 @@
           <label class="form-label">Grupo</label>
           <select name="grupo" class="form-select">
             <option value="">Todos</option>
-            {% for id,full in grupos %}
+            {% for id, full in grupos %}
               <option value="{{ id }}" {% if sel_grupo|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ full }}</option>
             {% endfor %}
           </select>
@@ -43,11 +43,12 @@
 
           <!-- Descargas en nueva pestaña (no afecta la principal) -->
           <a class="btn btn-outline-secondary" target="_blank"
-             href="{% url 'core:planillas_export_landing' %}?formato=pdf&sede={{ sel_sede }}&grado={{ sel_grado }}&grupo={{ sel_grupo }}">
+             href="{% url 'planillas_export_landing' %}?formato=pdf&sede={{ sel_sede }}&grado={{ sel_grado }}&grupo={{ sel_grupo }}">
             Descargar PDF
           </a>
+
           <a class="btn btn-outline-secondary" target="_blank"
-             href="{% url 'core:planillas_export_landing' %}?formato=excel&sede={{ sel_sede }}&grado={{ sel_grado }}&grupo={{ sel_grupo }}">
+             href="{% url 'planillas_export_landing' %}?formato=excel&sede={{ sel_sede }}&grado={{ sel_grado }}&grupo={{ sel_grupo }}">
             Descargar Excel
           </a>
         </div>
