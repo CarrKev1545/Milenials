@@ -20,7 +20,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('', include('core.urls')),                 # Login y vistas de core en la raíz (/)
+    path('', include(('core.urls', 'core'), namespace='core')),               # Login y vistas de core en la raíz (/)
     path('admin/', admin.site.urls),
     path('academico/', include('academico.urls')),  # App académico
     path('reportes/', include('reportes.urls')),    # App reportes
@@ -29,3 +29,4 @@ urlpatterns = [
 # En desarrollo: servir archivos subidos por usuarios (MEDIA)
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
