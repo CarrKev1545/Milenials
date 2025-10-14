@@ -1,59 +1,82 @@
 {% extends "core/base.html" %}
-{% block page_title %}Planillas{% endblock %}
+{% load static %}
+{% block title %}Planillas{% endblock %}
 
-{% block dashboard_content %}
-  <h4 class="mb-4">Planillas — Estudiantes activos</h4>
+{% block content %}
+<!-- Cinta roja superior como en Reportes académicos -->
+<div class="section-ribbon">
+  <div class="container text-center fw-semibold">Planillas</div>
+</div>
 
-  <p class="text-muted mb-4">Descarga por sede, grado y grupo</p>
+<!-- Hero con fondo + tarjeta “vidrio” (mismo layout que reportes) -->
+<div class="hero-bg planillas-hero d-flex align-items-center">
+  <div class="container py-5">
+    <div class="glass-card mx-auto shadow-lg" style="max-width:1100px;">
+      <div class="text-center pt-4">
+        <div class="icon-badge mb-2">
+          <i class="bi bi-people-fill"></i>
+        </div>
+        <h2 class="module-title mb-1">Planillas — Estudiantes activos</h2>
+        <div class="module-subtitle">Descarga por sede, grado y grupo</div>
+      </div>
 
-  <form method="get" class="row g-3 mb-3">
-    <div class="col-12">
-      <label class="form-label">Sede</label>
-      <select name="sede" class="form-select">
-        <option value="">Todas</option>
-        {% for id, nombre in sedes %}
-          <option value="{{ id }}" {% if sel_sede|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
-        {% endfor %}
-      </select>
+      <div class="p-4 p-md-5">
+        <!-- MISMA LÓGICA / MISMOS NOMBRES DE CAMPOS -->
+        <form method="get" class="row g-3 align-items-end">
+          <div class="col-12 col-md-4">
+            <label class="form-label fw-semibold"><i class="bi bi-bank2 me-1"></i>Sede</label>
+            <select name="sede" class="form-select">
+              <option value="">Todas</option>
+              {% for id,nombre in sedes %}
+                <option value="{{ id }}" {% if sel_sede|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-12 col-md-4">
+            <label class="form-label fw-semibold"><i class="bi bi-diagram-3 me-1"></i>Grado</label>
+            <select name="grado" class="form-select">
+              <option value="">Todos</option>
+              {% for id,nombre in grados %}
+                <option value="{{ id }}" {% if sel_grado|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-12 col-md-4">
+            <label class="form-label fw-semibold"><i class="bi bi-people me-1"></i>Grupo</label>
+            <select name="grupo" class="form-select">
+              <option value="">Todos</option>
+              {% for id,full in grupos %}
+                <option value="{{ id }}" {% if sel_grupo|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ full }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-12 d-flex flex-wrap gap-2 mt-2">
+            <button class="btn btn-danger px-4" type="submit">
+              <i class="bi bi-funnel me-1"></i> Aplicar filtros
+            </button>
+
+            <!-- MISMAS URLS (sin namespace) -->
+            <a class="btn btn-outline-light px-4" target="_blank"
+               href="{% url 'planillas_export_landing' %}?formato=pdf&sede={{ sel_sede }}&grado={{ sel_grado }}&grupo={{ sel_grupo }}">
+              <i class="bi bi-filetype-pdf me-1"></i> Descargar PDF
+            </a>
+
+            <a class="btn btn-outline-light px-4" target="_blank"
+               href="{% url 'planillas_export_landing' %}?formato=excel&sede={{ sel_sede }}&grado={{ sel_grado }}&grupo={{ sel_grupo }}">
+              <i class="bi bi-file-earmark-spreadsheet me-1"></i> Descargar Excel
+            </a>
+          </div>
+        </form>
+
+        <p class="text-muted small mt-3 mb-0">
+          Selecciona filtros y usa las opciones de descarga. La exportación se abre en otra pestaña.
+        </p>
+      </div>
     </div>
-
-    <div class="col-12">
-      <label class="form-label">Grado</label>
-      <select name="grado" class="form-select">
-        <option value="">Todos</option>
-        {% for id, nombre in grados %}
-          <option value="{{ id }}" {% if sel_grado|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
-        {% endfor %}
-      </select>
-    </div>
-
-    <div class="col-12">
-      <label class="form-label">Grupo</label>
-      <select name="grupo" class="form-select">
-        <option value="">Todos</option>
-        {% for id, full in grupos %}
-          <option value="{{ id }}" {% if sel_grupo|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ full }}</option>
-        {% endfor %}
-      </select>
-    </div>
-
-    <div class="col-12 d-flex flex-wrap gap-2 mt-1">
-      <button class="btn btn-primary rounded-pill px-4" type="submit">Aplicar filtros</button>
-
-      <!-- OJO: sin namespace para que no falle el reverse en servidor -->
-      <a class="btn btn-outline-light rounded-pill px-4" target="_blank"
-         href="{% url 'planillas_export_landing' %}?formato=pdf&sede={{ sel_sede }}&grado={{ sel_grado }}&grupo={{ sel_grupo }}">
-        Descargar PDF
-      </a>
-
-      <a class="btn btn-outline-light rounded-pill px-4" target="_blank"
-         href="{% url 'planillas_export_landing' %}?formato=excel&sede={{ sel_sede }}&grado={{ sel_grado }}&grupo={{ sel_grupo }}">
-        Descargar Excel
-      </a>
-    </div>
-  </form>
-
-  <p class="text-muted small mb-0">
-    Selecciona filtros y usa las opciones de descarga. La exportación se abre en otra pestaña.
-  </p>
+  </div>
+</div>
 {% endblock %}
+
