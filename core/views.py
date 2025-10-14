@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
 
 # HTTP y respuestas
-from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseBadRequest
+from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.views.decorators.http import require_GET, require_POST
 from django.views.decorators.csrf import csrf_exempt
@@ -35,12 +35,14 @@ from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
 import json
 import re
-
+from django.shortcuts import render
 from django.views.decorators.cache import never_cache  # <-- importa esto
 
 # imports de modelos (deben estar juntos)
 from .models import Sede, Grupo, Estudiante, EstudianteGrupo
-
+from django.db import connection
+from django.utils import timezone
+from django.urls import reverse
 
 # =========================================================
 # Login / Logout
@@ -2864,7 +2866,7 @@ def _estudiantes_para_exportar(*, grupo_id: str | None, sede_id: str | None, gra
 
     return res
 
-from django.urls import reverse
+
 
 def docente_boletin_grupo_pdf_alias(request):
     params = request.GET.copy()
@@ -3298,3 +3300,205 @@ def api_metrics_histograma(request):
     series = [{"name": f"{b:.1f}", "value": counts[b]} for b in all_bins]
 
     return JsonResponse({"series": series})
+
+
+def user_is_rector(user):
+    return hasattr(user, "rol") and str(user.rol).upper() == "RECTOR"
+
+
+def rector_required(view_func):
+    def _wrapped(request, *args, **kwargs):
+        if not request.user.is_authenticated or not user_is_rector(request.user):
+            return HttpResponseForbidden("Solo para usuarios con rol Rector.")
+        return view_func(request, *args, **kwargs)
+    return _wrapped
+
+
+@never_cache
+@login_required
+@rector_required
+@require_GET
+def planillas_export_landing(request):
+    formato = (request.GET.get("formato") or "").lower()
+    sede = request.GET.get("sede") or ""
+    grado = request.GET.get("grado") or ""
+    grupo = request.GET.get("grupo") or ""
+
+    base_qs = f"sede={sede}&grado={grado}&grupo={grupo}"
+    url_pdf = f"{reverse('core:planillas_export_pdf')}?{base_qs}"
+    url_excel = f"{reverse('core:planillas_export_excel')}?{base_qs}"
+
+    contexto = {
+        "url_pdf": url_pdf,
+        "url_excel": url_excel,
+        "sel_sede": sede or "Todas",
+        "sel_grado": grado or "Todos",
+        "sel_grupo": grupo or "Todos",
+        "formato": formato,
+    }
+    return render(request, "core/rector/landing.html", contexto)
+
+
+@login_required
+@rector_required
+@require_GET
+def planillas_export_excel(request):
+    sede = (request.GET.get("sede") or "").strip()
+    grado = (request.GET.get("grado") or "").strip()
+    grupo = (request.GET.get("grupo") or "").strip()
+
+    for v in (sede, grado, grupo):
+        if v and not re.fullmatch(r"\d{1,10}", v):
+            return HttpResponse("Parámetros inválidos.", status=400)
+
+    with connection.cursor() as cur:
+        cur.execute("""
+            SELECT e.apellidos, e.nombre, e.documento,
+                   gr.nombre AS grado, g.nombre AS grupo
+            FROM public.estudiante_grupo eg
+            JOIN public.estudiantes e ON e.id = eg.estudiante_id
+            JOIN public.grupos g ON g.id = eg.grupo_id
+            JOIN public.grados gr ON gr.id = g.grado_id
+            LEFT JOIN public.sedes s ON s.id = g.sede_id
+            WHERE eg.fecha_fin IS NULL
+              AND (%s = '' OR s.id::text = %s)
+              AND (%s = '' OR gr.id::text = %s)
+              AND (%s = '' OR g.id::text = %s)
+            ORDER BY e.apellidos, e.nombre;
+        """, [sede, sede, grado, grado, grupo, grupo])
+        filas = cur.fetchall()
+
+        cur.execute("SELECT COALESCE((SELECT nombre FROM public.sedes WHERE id::text=%s), 'Todas');", [sede or ""])
+        header_sede = cur.fetchone()[0]
+        cur.execute("SELECT COALESCE((SELECT nombre FROM public.grados WHERE id::text=%s), 'Todos');", [grado or ""])
+        header_grado = cur.fetchone()[0]
+        cur.execute("SELECT COALESCE((SELECT nombre FROM public.grupos WHERE id::text=%s), 'Todos');", [grupo or ""])
+        header_grupo = cur.fetchone()[0]
+
+    titulo = f"Planilla - Sede: {header_sede} | Grado: {header_grado} | Grupo: {header_grupo}"
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Estudiantes activos"
+
+    ws.merge_cells("A1:E1")
+    cell_title = ws["A1"]
+    cell_title.value = titulo
+    cell_title.font = Font(size=14, bold=True)
+    cell_title.alignment = Alignment(horizontal="center")
+
+    ws.append([])
+    headers = ["Apellidos", "Nombres", "Documento", "Grado", "Grupo"]
+    ws.append(headers)
+    for col_idx in range(1, len(headers) + 1):
+        ws.cell(row=3, column=col_idx).font = Font(bold=True)
+
+    for ap, no, doc, gr_nombre, g_nombre in filas:
+        ws.append([ap, no, doc, gr_nombre, g_nombre])
+
+    for col in ws.columns:
+        max_len = 0
+        col_letter = get_column_letter(col[0].column)
+        for cell in col:
+            try:
+                max_len = max(max_len, len(str(cell.value)))
+            except Exception:
+                pass
+        ws.column_dimensions[col_letter].width = min(max_len + 2, 40)
+
+    now_str = timezone.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"planilla_estudiantes_{now_str}.xlsx"
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    wb.save(response)
+    return response
+
+
+@login_required
+@rector_required
+@require_GET
+def planillas_export_pdf(request):
+    sede = (request.GET.get("sede") or "").strip()
+    grado = (request.GET.get("grado") or "").strip()
+    grupo = (request.GET.get("grupo") or "").strip()
+
+    for v in (sede, grado, grupo):
+        if v and not re.fullmatch(r"\d{1,10}", v):
+            return HttpResponse("Parámetros inválidos.", status=400)
+
+    with connection.cursor() as cur:
+        cur.execute("""
+            SELECT e.apellidos, e.nombre, e.documento,
+                   gr.nombre AS grado, g.nombre AS grupo
+            FROM public.estudiante_grupo eg
+            JOIN public.estudiantes e ON e.id = eg.estudiante_id
+            JOIN public.grupos g ON g.id = eg.grupo_id
+            JOIN public.grados gr ON gr.id = g.grado_id
+            LEFT JOIN public.sedes s ON s.id = g.sede_id
+            WHERE eg.fecha_fin IS NULL
+              AND (%s = '' OR s.id::text = %s)
+              AND (%s = '' OR gr.id::text = %s)
+              AND (%s = '' OR g.id::text = %s)
+            ORDER BY e.apellidos, e.nombre;
+        """, [sede, sede, grado, grado, grupo, grupo])
+        filas = cur.fetchall()
+
+        cur.execute("SELECT COALESCE((SELECT nombre FROM public.sedes WHERE id::text=%s), 'Todas');", [sede or ""])
+        header_sede = cur.fetchone()[0]
+        cur.execute("SELECT COALESCE((SELECT nombre FROM public.grados WHERE id::text=%s), 'Todos');", [grado or ""])
+        header_grado = cur.fetchone()[0]
+        cur.execute("SELECT COALESCE((SELECT nombre FROM public.grupos WHERE id::text=%s), 'Todos');", [grupo or ""])
+        header_grupo = cur.fetchone()[0]
+
+    html = render_to_string(
+        "core/rector/pdf.html",
+        {
+            "filas": filas,
+            "header_sede": header_sede,
+            "header_grado": header_grado,
+            "header_grupo": header_grupo,
+            "generado": timezone.now(),
+        },
+    )
+
+    pdf_bytes = HTML(string=html).write_pdf(
+        stylesheets=[CSS(string="""
+            @page { size: A4; margin: 18mm; }
+            h1 { font-size: 16pt; margin: 0 0 10px 0; }
+            .meta { font-size: 10pt; margin-bottom: 8px; color: #555; }
+            table { width:100%; border-collapse: collapse; font-size: 10pt; }
+            th, td { border: 1px solid #ddd; padding: 6px 8px; }
+            th { background: #f2f2f2; text-align: left; }
+            tr:nth-child(even) td { background: #fafafa; }
+        """)]
+    )
+
+    response = HttpResponse(pdf_bytes, content_type="application/pdf")
+    response["Content-Disposition"] = 'inline; filename="planilla_estudiantes.pdf"'
+    return response
+
+@login_required
+@rector_required
+def planillas_index(request):
+    sede  = (request.GET.get("sede") or "").strip()
+    grado = (request.GET.get("grado") or "").strip()
+    grupo = (request.GET.get("grupo") or "").strip()
+    with connection.cursor() as cur:
+        cur.execute("SELECT id, nombre FROM public.sedes ORDER BY nombre;")
+        sedes = cur.fetchall()
+        cur.execute("SELECT id, nombre FROM public.grados ORDER BY nombre;")
+        grados = cur.fetchall()
+        cur.execute("""
+            SELECT g.id, CONCAT(s.nombre, ' - ', gr.nombre, ' - ', g.nombre)
+            FROM public.grupos g
+            JOIN public.sedes s  ON s.id  = g.sede_id
+            JOIN public.grados gr ON gr.id = g.grado_id
+            ORDER BY s.nombre, gr.nombre, g.nombre;
+        """)
+        grupos = cur.fetchall()
+    return render(request, "core/rector/planillas.html", {
+        "sedes": sedes, "grados": grados, "grupos": grupos,
+        "sel_sede": sede, "sel_grado": grado, "sel_grupo": grupo,
+    })

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <title>Planilla Estudiantes</title>
+  <style>
+    /* Página y tipografía (WeasyPrint) */
+    @page { size: A4; margin: 18mm; }
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #111; }
+
+    h1 {
+      font-size: 16pt;
+      margin: 0 0 10px 0;
+      letter-spacing: .2px;
+    }
+
+    .meta {
+      font-size: 10pt;
+      margin-bottom: 10px;
+      color: #555;
+    }
+
+    /* Tabla */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed; /* columnas consistentes en varias páginas */
+      font-size: 10pt;
+    }
+
+    /* Repetir encabezado en cada página */
+    thead { display: table-header-group; }
+    tfoot { display: table-row-group; }
+    tr { page-break-inside: avoid; }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 6px 8px;
+      vertical-align: middle;
+      word-break: break-word;
+    }
+
+    th {
+      background: #f2f2f2;
+      text-align: left;
+      font-weight: bold;
+    }
+
+    /* Zebra rows (opcional, mantiene contraste al imprimir) */
+    tbody tr:nth-child(even) td { background: #fafafa; }
+
+    /* Alineaciones útiles */
+    .col-doc { text-align: right; }
+    .col-gr  { width: 16%; }
+    .col-gp  { width: 16%; }
+  </style>
+</head>
+<body>
+  <h1>Planilla de Estudiantes Activos</h1>
+
+  <div class="meta">
+    <strong>Sede:</strong> {{ header_sede }} &nbsp;|&nbsp;
+    <strong>Grado:</strong> {{ header_grado }} &nbsp;|&nbsp;
+    <strong>Grupo:</strong> {{ header_grupo }}<br>
+    <small>Generado: {{ generado|date:"Y-m-d H:i" }}</small>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Apellidos</th>
+        <th>Nombres</th>
+        <th class="col-doc">Documento</th>
+        <th class="col-gr">Grado</th>
+        <th class="col-gp">Grupo</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ap, no, doc, gr, g in filas %}
+      <tr>
+        <td>{{ ap }}</td>
+        <td>{{ no }}</td>
+        <td class="col-doc">{{ doc }}</td>
+        <td class="col-gr">{{ gr }}</td>
+        <td class="col-gp">{{ g }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" style="text-align:center; padding:10px;">
+          No hay estudiantes con estos filtros.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
+

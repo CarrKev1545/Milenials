@@ -1,0 +1,62 @@
+{% extends "core/rector/base_dashboard.html" %}
+{% block title %}Planillas{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="card shadow-sm mx-auto" style="max-width:1080px;">
+    <div class="card-body">
+      <h4 class="mb-3">Planillas — Estudiantes activos</h4>
+
+      <form method="get" class="row g-3 mb-3">
+        <div class="col-12 col-md-4">
+          <label class="form-label">Sede</label>
+          <select name="sede" class="form-select">
+            <option value="">Todas</option>
+            {% for id,nombre in sedes %}
+              <option value="{{ id }}" {% if sel_sede|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <label class="form-label">Grado</label>
+          <select name="grado" class="form-select">
+            <option value="">Todos</option>
+            {% for id,nombre in grados %}
+              <option value="{{ id }}" {% if sel_grado|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <label class="form-label">Grupo</label>
+          <select name="grupo" class="form-select">
+            <option value="">Todos</option>
+            {% for id,full in grupos %}
+              <option value="{{ id }}" {% if sel_grupo|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ full }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-12 d-flex gap-2">
+          <button class="btn btn-primary" type="submit">Aplicar filtros</button>
+
+          <!-- Descargas en nueva pestaña (no afecta la principal) -->
+          <a class="btn btn-outline-secondary" target="_blank"
+             href="{% url 'core:planillas_export_landing' %}?formato=pdf&sede={{ sel_sede }}&grado={{ sel_grado }}&grupo={{ sel_grupo }}">
+            Descargar PDF
+          </a>
+          <a class="btn btn-outline-secondary" target="_blank"
+             href="{% url 'core:planillas_export_landing' %}?formato=excel&sede={{ sel_sede }}&grado={{ sel_grado }}&grupo={{ sel_grupo }}">
+            Descargar Excel
+          </a>
+        </div>
+      </form>
+
+      <p class="text-muted small mb-0">
+        Selecciona filtros y usa las opciones de descarga. La exportación se abre en otra pestaña.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

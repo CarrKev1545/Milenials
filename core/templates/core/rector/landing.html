@@ -1,0 +1,57 @@
+{% extends "core/rector/base_dashboard.html" %}
+
+{% block title %}Exportar planillas{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="card shadow-sm mx-auto" style="max-width: 920px;">
+    <div class="card-body">
+      <h4 class="mb-2">Exportar planilla de estudiantes activos</h4>
+
+      <p class="text-muted mb-3">
+        Filtros — Sede: <strong>{{ sel_sede|default:"Todas" }}</strong>,
+        Grado: <strong>{{ sel_grado|default:"Todos" }}</strong>,
+        Grupo: <strong>{{ sel_grupo|default:"Todos" }}</strong>
+      </p>
+
+      <div class="d-flex flex-wrap gap-2 mb-2">
+        <a class="btn btn-primary" href="{{ url_pdf }}">Generar PDF</a>
+        <a class="btn btn-outline-secondary" href="{{ url_excel }}">Generar Excel</a>
+      </div>
+
+      {% if formato %}
+      <div id="auto-msg" class="small text-muted">
+        Iniciando descarga de {{ formato|upper }}…
+        <span class="ms-1" aria-hidden="true">⏳</span>
+      </div>
+      {% else %}
+      <div class="small text-muted">
+        Esta página se abrió aparte para no afectar tu pantalla principal.
+      </div>
+      {% endif %}
+
+      <noscript>
+        <div class="alert alert-warning mt-3" role="alert" style="font-size:.95rem;">
+          JavaScript está deshabilitado. Haz clic en
+          <a href="{{ url_pdf }}" class="alert-link">PDF</a> o
+          <a href="{{ url_excel }}" class="alert-link">Excel</a> para descargar.
+        </div>
+      </noscript>
+    </div>
+  </div>
+</div>
+
+{% if formato == "pdf" %}
+<script>
+  (function(){
+    try { window.location.replace("{{ url_pdf }}"); } catch(e){}
+  })();
+</script>
+{% elif formato == "excel" %}
+<script>
+  (function(){
+    try { window.location.replace("{{ url_excel }}"); } catch(e){}
+  })();
+</script>
+{% endif %}
+{% endblock %}
