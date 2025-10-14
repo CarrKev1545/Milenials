@@ -59,14 +59,14 @@
             </button>
 
             <!-- MISMAS URLS (sin namespace) -->
-            <a class="btn btn-outline-light px-4" target="_blank"
-               href="{% url 'planillas_export_landing' %}?formato=pdf&sede={{ sel_sede }}&grado={{ sel_grado }}&grupo={{ sel_grupo }}">
-              <i class="bi bi-filetype-pdf me-1"></i> Descargar PDF
+            <a class="btn btn-outline-secondary" target="_blank"
+              href="{% url 'planillas_export_landing' %}?formato=pdf&sede={{ sel_sede }}&grado={{ sel_grado }}&grupo={{ sel_grupo }}">
+              Descargar PDF
             </a>
 
-            <a class="btn btn-outline-light px-4" target="_blank"
+            <a class="btn btn-outline-secondary" target="_blank"
                href="{% url 'planillas_export_landing' %}?formato=excel&sede={{ sel_sede }}&grado={{ sel_grado }}&grupo={{ sel_grupo }}">
-              <i class="bi bi-file-earmark-spreadsheet me-1"></i> Descargar Excel
+                Descargar Excel
             </a>
           </div>
         </form>

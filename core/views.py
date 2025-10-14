@@ -3,7 +3,7 @@ from __future__ import annotations  # ← Debe ser la PRIMERA línea del archivo
 # Autenticación y permisos
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
-
+from urllib.parse import urlencode
 # HTTP y respuestas
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
 from django.shortcuts import redirect, render, get_object_or_404
@@ -22,7 +22,7 @@ from django.template.loader import render_to_string
 # WeasyPrint compatible (nube OK, local Windows no rompe el server)
 from core.utils.weasy_compat import HTML, CSS, WEASY_AVAILABLE, WEASY_IMPORT_ERROR
 from core.utils.decorators import require_weasy  # si usas el decorador
-
+from django.urls import reverse 
 
 
 # Base de datos
