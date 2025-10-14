@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 
-
+app_name = "core"
 
 urlpatterns = [
     # ===== Autenticación =====
@@ -254,8 +254,6 @@ urlpatterns = [
     # Métricas / Gráficas
     path("api/metrics/reprobados", views.api_metrics_reprobados, name="api_metrics_reprobados"),
     path("api/metrics/histograma", views.api_metrics_histograma, name="api_metrics_histograma"),
-     
-    # Pantalla principal del módulo Planillas (con filtros)
     path("rector/planillas/", views.planillas_index, name="planillas_index"),
 
     # Pág. intermedia y descargas (no tocan la principal)
