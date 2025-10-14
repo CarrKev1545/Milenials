@@ -283,3 +283,66 @@ td { text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 
 
 /* Controles embebidos en tabla */
 table input[type="number"], table select{ max-width: 100%; min-width: 88px; }
+/* Fondo tipo hero: usa tu misma imagen del dashboard */
+.planillas-hero {
+  min-height: calc(100vh - 180px);
+  background: url("/static/img/fondo2.jpg") center/cover no-repeat fixed;
+}
+
+/* Tarjeta “vidrio” como en Reportes Académicos */
+.glass-card {
+  border-radius: 18px;
+  background: rgba(18, 18, 18, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: #f3f3f3;
+}
+
+/* Títulos del módulo */
+.module-title {
+  font-weight: 700;
+  letter-spacing: .2px;
+}
+.module-subtitle {
+  color: #d0d0d0;
+  font-size: .95rem;
+}
+
+/* Badge de icono grande arriba */
+.icon-badge {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  display: inline-grid;
+  place-items: center;
+  background: #8b0000;                /* rojo institucional */
+  color: #fff;
+  box-shadow: 0 10px 25px rgba(139,0,0,.35);
+  font-size: 30px;
+}
+
+/* Botones: consistente con el rojo del sitio */
+.btn-danger {
+  background-color: #8b0000;
+  border-color: #8b0000;
+}
+.btn-danger:hover {
+  background-color: #a30c0c;
+  border-color: #a30c0c;
+}
+
+/* Inputs más oscuros para el tema dark */
+.glass-card .form-select,
+.glass-card .form-control {
+  background-color: #111;
+  color: #eaeaea;
+  border-color: rgba(255,255,255,.12);
+}
+.glass-card .form-select:focus,
+.glass-card .form-control:focus {
+  background-color: #111;
+  color: #fff;
+  border-color: #8b0000;
+  box-shadow: 0 0 0 0.2rem rgba(139,0,0,.25);
+}
