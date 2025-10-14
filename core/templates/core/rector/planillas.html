@@ -1,162 +1,59 @@
 {% extends "core/base.html" %}
-{% load static %}
+{% block page_title %}Planillas{% endblock %}
 
+{% block dashboard_content %}
+  <h4 class="mb-4">Planillas — Estudiantes activos</h4>
 
-{# === Estilos locales para replicar el dashboard sin tocar otros templates === #}
-{% block extra_css %}
-<style>
-  /* Barra roja superior (igual al dashboard) */
-  .dash-topbar {
-    background: #8f1515;
-    color: #fff;
-    font-weight: 600;
-    text-align: center;
-    padding: .9rem 1rem;
-    border-bottom: 1px solid rgba(255,255,255,.08);
-  }
+  <p class="text-muted mb-4">Descarga por sede, grado y grupo</p>
 
-  /* Fondo de foto a pantalla completa */
-  .dash-bg {
-    position: relative;
-    min-height: calc(100vh - 60px);
-    background: #111 url("{% static 'img/fondo2.jpg' %}") center/cover no-repeat fixed;
-  }
-
-  /* Sombra de viñeta para que el fondo quede “oscurecido” como en dashboard */
-  .dash-bg::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(0deg, rgba(0,0,0,.55), rgba(0,0,0,.55));
-  }
-
-  /* Tarjeta central estilo “glass” */
-  .dash-card {
-    position: relative;
-    margin: 24px auto 48px;
-    max-width: 1040px;
-    background: rgba(39, 39, 39, .86);
-    border-radius: 16px;
-    box-shadow: 0 20px 38px rgba(0,0,0,.35);
-    backdrop-filter: blur(6px);
-  }
-
-  .dash-card .dash-card-body {
-    padding: 26px 28px 28px;
-  }
-
-  .dash-title {
-    display: block;
-    font-size: 1.35rem;
-    font-weight: 700;
-    color: #fff;
-    margin-bottom: 10px;
-  }
-
-  .dash-subtitle {
-    color: #cfcfcf;
-    margin-bottom: 18px;
-  }
-
-  /* Controles */
-  .form-label { color:#dcdcdc; font-weight:600; }
-  .form-select, .form-control {
-    background-color: #fff;
-    border-radius: 8px;
-  }
-
-  /* Botones rojo vino como en el dashboard */
-  .btn-mill { 
-    background:#8f1515; 
-    color:#fff; 
-    border:none; 
-    border-radius: 22px; 
-    padding:.6rem 1.1rem; 
-    font-weight:600;
-  }
-  .btn-mill:hover { filter: brightness(1.08); color:#fff; }
-  .btn-mill-outline {
-    background: transparent;
-    color:#fff;
-    border:2px solid #8f1515;
-    border-radius: 22px;
-    padding:.52rem 1.05rem;
-    font-weight:600;
-  }
-  .btn-mill-outline:hover { background:#8f1515; color:#fff; }
-
-  /* Pequeñas mejoras responsive */
-  @media (max-width: 768px){
-    .dash-card .dash-card-body { padding: 20px 16px 18px; }
-  }
-</style>
-{% endblock %}
-
-{% block content %}
-
-  <!-- Barra superior del módulo (igual a la del dashboard) -->
-  <div class="dash-topbar">Planillas</div>
-
-  <!-- Fondo y tarjeta -->
-  <div class="dash-bg">
-    <div class="dash-card">
-      <div class="dash-card-body">
-
-        <span class="dash-title">Planillas — Estudiantes activos</span>
-        <p class="dash-subtitle mb-3">Descarga por sede, grado y grupo</p>
-
-        <form method="get" class="row g-3 mb-3">
-          <div class="col-12 col-md-4">
-            <label class="form-label">Sede</label>
-            <select name="sede" class="form-select">
-              <option value="">Todas</option>
-              {% for id,nombre in sedes %}
-                <option value="{{ id }}" {% if sel_sede|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <div class="col-12 col-md-4">
-            <label class="form-label">Grado</label>
-            <select name="grado" class="form-select">
-              <option value="">Todos</option>
-              {% for id,nombre in grados %}
-                <option value="{{ id }}" {% if sel_grado|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <div class="col-12 col-md-4">
-            <label class="form-label">Grupo</label>
-            <select name="grupo" class="form-select">
-              <option value="">Todos</option>
-              {% for id,full in grupos %}
-                <option value="{{ id }}" {% if sel_grupo|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ full }}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <div class="col-12 d-flex flex-wrap gap-2 mt-1">
-            <button class="btn-mill" type="submit">Aplicar filtros</button>
-
-            <!-- Descargas en nueva pestaña (NO toca la vista principal) -->
-            <a class="btn-mill-outline" target="_blank"
-               href="{% url 'planillas_export_landing' %}?formato=pdf&sede={{ sel_sede }}&grado={{ sel_grado }}&grupo={{ sel_grupo }}">
-              Descargar PDF
-            </a>
-            <a class="btn-mill-outline" target="_blank"
-               href="{% url 'planillas_export_landing' %}?formato=excel&sede={{ sel_sede }}&grado={{ sel_grado }}&grupo={{ sel_grupo }}">
-              Descargar Excel
-            </a>
-          </div>
-        </form>
-
-        <p class="text-muted small mb-0">
-          Selecciona filtros y usa las opciones de descarga. La exportación se abre en otra pestaña.
-        </p>
-
-      </div>
+  <form method="get" class="row g-3 mb-3">
+    <div class="col-12">
+      <label class="form-label">Sede</label>
+      <select name="sede" class="form-select">
+        <option value="">Todas</option>
+        {% for id, nombre in sedes %}
+          <option value="{{ id }}" {% if sel_sede|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
+        {% endfor %}
+      </select>
     </div>
-  </div>
 
+    <div class="col-12">
+      <label class="form-label">Grado</label>
+      <select name="grado" class="form-select">
+        <option value="">Todos</option>
+        {% for id, nombre in grados %}
+          <option value="{{ id }}" {% if sel_grado|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-12">
+      <label class="form-label">Grupo</label>
+      <select name="grupo" class="form-select">
+        <option value="">Todos</option>
+        {% for id, full in grupos %}
+          <option value="{{ id }}" {% if sel_grupo|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ full }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-12 d-flex flex-wrap gap-2 mt-1">
+      <button class="btn btn-primary rounded-pill px-4" type="submit">Aplicar filtros</button>
+
+      <!-- OJO: sin namespace para que no falle el reverse en servidor -->
+      <a class="btn btn-outline-light rounded-pill px-4" target="_blank"
+         href="{% url 'planillas_export_landing' %}?formato=pdf&sede={{ sel_sede }}&grado={{ sel_grado }}&grupo={{ sel_grupo }}">
+        Descargar PDF
+      </a>
+
+      <a class="btn btn-outline-light rounded-pill px-4" target="_blank"
+         href="{% url 'planillas_export_landing' %}?formato=excel&sede={{ sel_sede }}&grado={{ sel_grado }}&grupo={{ sel_grupo }}">
+        Descargar Excel
+      </a>
+    </div>
+  </form>
+
+  <p class="text-muted small mb-0">
+    Selecciona filtros y usa las opciones de descarga. La exportación se abre en otra pestaña.
+  </p>
 {% endblock %}
