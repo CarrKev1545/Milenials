@@ -3358,18 +3358,88 @@ def planillas_export_landing(request):
     return render(request, "core/rector/landing.html", contexto)
 
 
+# =========================
+#  LISTADO / FILTROS (UI)
+# =========================
+@login_required
+@rector_required
+def planillas_index(request):
+    """
+    Pantalla con filtros (sede, grado, grupo) y botones de descarga.
+    """
+    sede  = (request.GET.get("sede") or "").strip()
+    grado = (request.GET.get("grado") or "").strip()
+    grupo = (request.GET.get("grupo") or "").strip()
+
+    with connection.cursor() as cur:
+        cur.execute("SELECT id, nombre FROM public.sedes ORDER BY nombre;")
+        sedes = cur.fetchall()
+
+        cur.execute("SELECT id, nombre FROM public.grados ORDER BY nombre;")
+        grados = cur.fetchall()
+
+        cur.execute("""
+            SELECT g.id, CONCAT(s.nombre, ' - ', gr.nombre, ' - ', g.nombre)
+            FROM public.grupos g
+            JOIN public.sedes  s  ON s.id  = g.sede_id
+            JOIN public.grados gr ON gr.id = g.grado_id
+            ORDER BY s.nombre, gr.nombre, g.nombre;
+        """)
+        grupos = cur.fetchall()
+
+    return render(
+        request,
+        "core/rector/planillas.html",
+        {
+            "sedes": sedes, "grados": grados, "grupos": grupos,
+            "sel_sede": sede, "sel_grado": grado, "sel_grupo": grupo,
+        },
+    )
+
+
+# ======================================
+#  LANDING DE EXPORTACIÓN (REDIRECCIÓN)
+# ======================================
+@login_required
+@rector_required
+@require_GET
+def planillas_export_landing(request):
+    """
+    Recibe ?formato=pdf|excel + filtros y redirige a la URL concreta
+    de exportación manteniendo los parámetros. **Sin namespace `core:`**.
+    """
+    formato = (request.GET.get("formato") or "pdf").lower()
+    sede    = (request.GET.get("sede") or "").strip()
+    grado   = (request.GET.get("grado") or "").strip()
+    grupo   = (request.GET.get("grupo") or "").strip()
+
+    base_qs = urlencode({"sede": sede, "grado": grado, "grupo": grupo})
+
+    if formato == "excel":
+        url = f"{reverse('planillas_export_excel')}?{base_qs}"
+    else:
+        url = f"{reverse('planillas_export_pdf')}?{base_qs}"
+
+    return redirect(url)
+
+
+# =========================
+#  EXPORTACIÓN A EXCEL
+# =========================
 @login_required
 @rector_required
 @require_GET
 def planillas_export_excel(request):
-    sede = (request.GET.get("sede") or "").strip()
+    sede  = (request.GET.get("sede") or "").strip()
     grado = (request.GET.get("grado") or "").strip()
     grupo = (request.GET.get("grupo") or "").strip()
 
+    # Validación segura de params numéricos
     for v in (sede, grado, grupo):
         if v and not re.fullmatch(r"\d{1,10}", v):
             return HttpResponse("Parámetros inválidos.", status=400)
 
+    # Consulta
     with connection.cursor() as cur:
         cur.execute("""
             SELECT e.apellidos, e.nombre, e.documento,
@@ -3387,15 +3457,27 @@ def planillas_export_excel(request):
         """, [sede, sede, grado, grado, grupo, grupo])
         filas = cur.fetchall()
 
-        cur.execute("SELECT COALESCE((SELECT nombre FROM public.sedes WHERE id::text=%s), 'Todas');", [sede or ""])
+        cur.execute(
+            "SELECT COALESCE((SELECT nombre FROM public.sedes WHERE id::text=%s), 'Todas');",
+            [sede or ""],
+        )
         header_sede = cur.fetchone()[0]
-        cur.execute("SELECT COALESCE((SELECT nombre FROM public.grados WHERE id::text=%s), 'Todos');", [grado or ""])
+
+        cur.execute(
+            "SELECT COALESCE((SELECT nombre FROM public.grados WHERE id::text=%s), 'Todos');",
+            [grado or ""],
+        )
         header_grado = cur.fetchone()[0]
-        cur.execute("SELECT COALESCE((SELECT nombre FROM public.grupos WHERE id::text=%s), 'Todos');", [grupo or ""])
+
+        cur.execute(
+            "SELECT COALESCE((SELECT nombre FROM public.grupos WHERE id::text=%s), 'Todos');",
+            [grupo or ""],
+        )
         header_grupo = cur.fetchone()[0]
 
     titulo = f"Planilla - Sede: {header_sede} | Grado: {header_grado} | Grupo: {header_grupo}"
 
+    # Excel
     wb = Workbook()
     ws = wb.active
     ws.title = "Estudiantes activos"
@@ -3406,7 +3488,7 @@ def planillas_export_excel(request):
     cell_title.font = Font(size=14, bold=True)
     cell_title.alignment = Alignment(horizontal="center")
 
-    ws.append([])
+    ws.append([])  # fila en blanco
     headers = ["Apellidos", "Nombres", "Documento", "Grado", "Grupo"]
     ws.append(headers)
     for col_idx in range(1, len(headers) + 1):
@@ -3415,6 +3497,7 @@ def planillas_export_excel(request):
     for ap, no, doc, gr_nombre, g_nombre in filas:
         ws.append([ap, no, doc, gr_nombre, g_nombre])
 
+    # Auto width
     for col in ws.columns:
         max_len = 0
         col_letter = get_column_letter(col[0].column)
@@ -3435,11 +3518,14 @@ def planillas_export_excel(request):
     return response
 
 
+# =========================
+#  EXPORTACIÓN A PDF
+# =========================
 @login_required
 @rector_required
 @require_GET
 def planillas_export_pdf(request):
-    sede = (request.GET.get("sede") or "").strip()
+    sede  = (request.GET.get("sede") or "").strip()
     grado = (request.GET.get("grado") or "").strip()
     grupo = (request.GET.get("grupo") or "").strip()
 
@@ -3464,13 +3550,23 @@ def planillas_export_pdf(request):
         """, [sede, sede, grado, grado, grupo, grupo])
         filas = cur.fetchall()
 
-        cur.execute("SELECT COALESCE((SELECT nombre FROM public.sedes WHERE id::text=%s), 'Todas');", [sede or ""])
+        cur.execute(
+            "SELECT COALESCE((SELECT nombre FROM public.sedes WHERE id::text=%s), 'Todas');",
+            [sede or ""],
+        )
         header_sede = cur.fetchone()[0]
-        cur.execute("SELECT COALESCE((SELECT nombre FROM public.grados WHERE id::text=%s), 'Todos');", [grado or ""])
+        cur.execute(
+            "SELECT COALESCE((SELECT nombre FROM public.grados WHERE id::text=%s), 'Todos');",
+            [grado or ""],
+        )
         header_grado = cur.fetchone()[0]
-        cur.execute("SELECT COALESCE((SELECT nombre FROM public.grupos WHERE id::text=%s), 'Todos');", [grupo or ""])
+        cur.execute(
+            "SELECT COALESCE((SELECT nombre FROM public.grupos WHERE id::text=%s), 'Todos');",
+            [grupo or ""],
+        )
         header_grupo = cur.fetchone()[0]
 
+    # Render HTML para PDF
     html = render_to_string(
         "core/rector/pdf.html",
         {
@@ -3497,127 +3593,4 @@ def planillas_export_pdf(request):
     response = HttpResponse(pdf_bytes, content_type="application/pdf")
     response["Content-Disposition"] = 'inline; filename="planilla_estudiantes.pdf"'
     return response
-
-@login_required
-@rector_required
-def planillas_index(request):
-    sede  = (request.GET.get("sede") or "").strip()
-    grado = (request.GET.get("grado") or "").strip()
-    grupo = (request.GET.get("grupo") or "").strip()
-    with connection.cursor() as cur:
-        cur.execute("SELECT id, nombre FROM public.sedes ORDER BY nombre;")
-        sedes = cur.fetchall()
-        cur.execute("SELECT id, nombre FROM public.grados ORDER BY nombre;")
-        grados = cur.fetchall()
-        cur.execute("""
-            SELECT g.id, CONCAT(s.nombre, ' - ', gr.nombre, ' - ', g.nombre)
-            FROM public.grupos g
-            JOIN public.sedes s  ON s.id  = g.sede_id
-            JOIN public.grados gr ON gr.id = g.grado_id
-            ORDER BY s.nombre, gr.nombre, g.nombre;
-        """)
-        grupos = cur.fetchall()
-    return render(request, "core/rector/planillas.html", {
-        "sedes": sedes, "grados": grados, "grupos": grupos,
-        "sel_sede": sede, "sel_grado": grado, "sel_grupo": grupo,
-    })
-# ========= Helpers de exportación de BOLETINES =========
-from django.http import HttpResponse
-from django.utils import timezone
-from django.template.loader import render_to_string
-from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment
-from openpyxl.utils import get_column_letter
-from core.utils.weasy_compat import HTML, CSS, WEASY_AVAILABLE, WEASY_IMPORT_ERROR
-
-def exportar_boletines_excel(boletines, filename=None):
-    """
-    boletines: lista de dicts o de tuplas. Si son dicts, se usan las llaves como encabezados.
-    """
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Boletines"
-
-    # Encabezados
-    if not boletines:
-        headers = ["Mensaje"]
-        ws.append(headers)
-        ws.append(["No hay datos para exportar"])
-    else:
-        if isinstance(boletines[0], dict):
-            headers = list(boletines[0].keys())
-            ws.append(headers)
-            for row in boletines:
-                ws.append([row.get(k, "") for k in headers])
-        else:
-            # Asumimos tuplas uniformes; ajusta si necesitas encabezados específicos
-            headers = [f"Columna {i+1}" for i in range(len(boletines[0]))]
-            ws.append(headers)
-            for row in boletines:
-                ws.append(list(row))
-
-    # Estilo encabezados
-    for col_idx in range(1, len(ws[1]) + 1):
-        c = ws.cell(row=1, column=col_idx)
-        c.font = Font(bold=True)
-        c.alignment = Alignment(horizontal="center")
-
-    # Auto width
-    for col in ws.columns:
-        max_len = 0
-        col_letter = get_column_letter(col[0].column)
-        for cell in col:
-            try:
-                max_len = max(max_len, len(str(cell.value or "")))
-            except Exception:
-                pass
-        ws.column_dimensions[col_letter].width = min(max_len + 2, 45)
-
-    # Respuesta
-    if not filename:
-        now_str = timezone.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"boletines_{now_str}.xlsx"
-
-    resp = HttpResponse(
-        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-    resp["Content-Disposition"] = f'attachment; filename="{filename}"'
-    wb.save(resp)
-    return resp
-
-
-def exportar_boletines_pdf(boletines, template_name="core/boletines/boletin.html", filename=None, extra_ctx=None):
-    """
-    Genera PDF con WeasyPrint usando una plantilla. Si WeasyPrint no está disponible en este equipo,
-    devuelve una respuesta 501 con explicación.
-    """
-    if not WEASY_AVAILABLE:
-        return HttpResponse(
-            "No es posible generar PDF en este equipo (faltan dependencias nativas de WeasyPrint). "
-            "En la nube funciona normal. "
-            f"Detalle: {WEASY_IMPORT_ERROR}",
-            status=501,
-        )
-
-    ctx = {"boletines": boletines, **(extra_ctx or {})}
-    html = render_to_string(template_name, ctx)
-
-    pdf_bytes = HTML(string=html).write_pdf(
-        stylesheets=[CSS(string="""
-            @page { size: A4; margin: 18mm; }
-            body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; }
-            table { width:100%; border-collapse: collapse; }
-            th, td { border: 1px solid #ddd; padding: 6px 8px; }
-            th { background: #f2f2f2; text-align: left; }
-        """)]
-    )
-
-    if not filename:
-        now_str = timezone.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"boletines_{now_str}.pdf"
-
-    resp = HttpResponse(pdf_bytes, content_type="application/pdf")
-    resp["Content-Disposition"] = f'inline; filename="{filename}"'
-    return resp
-# ========= Fin helpers =========
 
