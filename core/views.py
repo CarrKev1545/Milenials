@@ -16,9 +16,14 @@ from django.utils.timezone import now
 from django.utils.encoding import force_str
 from django.conf import settings
 
-# Templates y exportación a PDF
+# Templates
 from django.template.loader import render_to_string
-from weasyprint import HTML, CSS
+
+# WeasyPrint compatible (nube OK, local Windows no rompe el server)
+from core.utils.weasy_compat import HTML, CSS, WEASY_AVAILABLE, WEASY_IMPORT_ERROR
+from core.utils.decorators import require_weasy  # si usas el decorador
+
+
 
 # Base de datos
 from django.db import transaction, IntegrityError, connection
@@ -2581,6 +2586,12 @@ def rector_reportes_academicos_export(request):
       - opcionalmente de un solo estudiante si llega ?estudiante_id=
     Requiere ?periodo_id= y ?formato=pdf|excel
     """
+    from django.http import HttpResponse
+    from django.template.loader import render_to_string
+    from django.conf import settings
+    # Import compat de WeasyPrint (no rompe en local sin DLLs)
+    from core.utils.weasy_compat import HTML, CSS, WEASY_AVAILABLE
+
     formato       = (request.GET.get('formato') or 'pdf').lower()
     grupo_id      = (request.GET.get('grupo_id') or '').strip()
     grado_id      = (request.GET.get('grado_id') or '').strip()
@@ -2634,6 +2645,13 @@ def rector_reportes_academicos_export(request):
         return resp
 
     # ========= PDF (WeasyPrint) =========
+    # Fallback automático en local si no hay DLLs de WeasyPrint → entrega Excel
+    if formato == "pdf" and not WEASY_AVAILABLE:
+        qs = request.GET.copy()
+        qs["formato"] = "excel"
+        # Redirige a la misma URL pero pidiendo Excel (evita 500 y mantiene UX)
+        return redirect(f"{request.path}?{qs.urlencode()}")
+
     html = render_to_string(
         "boletines/boletin_alumno.html",
         {
@@ -2665,6 +2683,7 @@ def rector_reportes_academicos_export(request):
     response = HttpResponse(pdf, content_type="application/pdf")
     response['Content-Disposition'] = f'inline; filename="{filename}"'
     return response
+
 
 
 # ===== POST: Registrar / actualizar NOTA =====
@@ -3502,3 +3521,103 @@ def planillas_index(request):
         "sedes": sedes, "grados": grados, "grupos": grupos,
         "sel_sede": sede, "sel_grado": grado, "sel_grupo": grupo,
     })
+# ========= Helpers de exportación de BOLETINES =========
+from django.http import HttpResponse
+from django.utils import timezone
+from django.template.loader import render_to_string
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment
+from openpyxl.utils import get_column_letter
+from core.utils.weasy_compat import HTML, CSS, WEASY_AVAILABLE, WEASY_IMPORT_ERROR
+
+def exportar_boletines_excel(boletines, filename=None):
+    """
+    boletines: lista de dicts o de tuplas. Si son dicts, se usan las llaves como encabezados.
+    """
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Boletines"
+
+    # Encabezados
+    if not boletines:
+        headers = ["Mensaje"]
+        ws.append(headers)
+        ws.append(["No hay datos para exportar"])
+    else:
+        if isinstance(boletines[0], dict):
+            headers = list(boletines[0].keys())
+            ws.append(headers)
+            for row in boletines:
+                ws.append([row.get(k, "") for k in headers])
+        else:
+            # Asumimos tuplas uniformes; ajusta si necesitas encabezados específicos
+            headers = [f"Columna {i+1}" for i in range(len(boletines[0]))]
+            ws.append(headers)
+            for row in boletines:
+                ws.append(list(row))
+
+    # Estilo encabezados
+    for col_idx in range(1, len(ws[1]) + 1):
+        c = ws.cell(row=1, column=col_idx)
+        c.font = Font(bold=True)
+        c.alignment = Alignment(horizontal="center")
+
+    # Auto width
+    for col in ws.columns:
+        max_len = 0
+        col_letter = get_column_letter(col[0].column)
+        for cell in col:
+            try:
+                max_len = max(max_len, len(str(cell.value or "")))
+            except Exception:
+                pass
+        ws.column_dimensions[col_letter].width = min(max_len + 2, 45)
+
+    # Respuesta
+    if not filename:
+        now_str = timezone.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"boletines_{now_str}.xlsx"
+
+    resp = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    resp["Content-Disposition"] = f'attachment; filename="{filename}"'
+    wb.save(resp)
+    return resp
+
+
+def exportar_boletines_pdf(boletines, template_name="core/boletines/boletin.html", filename=None, extra_ctx=None):
+    """
+    Genera PDF con WeasyPrint usando una plantilla. Si WeasyPrint no está disponible en este equipo,
+    devuelve una respuesta 501 con explicación.
+    """
+    if not WEASY_AVAILABLE:
+        return HttpResponse(
+            "No es posible generar PDF en este equipo (faltan dependencias nativas de WeasyPrint). "
+            "En la nube funciona normal. "
+            f"Detalle: {WEASY_IMPORT_ERROR}",
+            status=501,
+        )
+
+    ctx = {"boletines": boletines, **(extra_ctx or {})}
+    html = render_to_string(template_name, ctx)
+
+    pdf_bytes = HTML(string=html).write_pdf(
+        stylesheets=[CSS(string="""
+            @page { size: A4; margin: 18mm; }
+            body { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; }
+            table { width:100%; border-collapse: collapse; }
+            th, td { border: 1px solid #ddd; padding: 6px 8px; }
+            th { background: #f2f2f2; text-align: left; }
+        """)]
+    )
+
+    if not filename:
+        now_str = timezone.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"boletines_{now_str}.pdf"
+
+    resp = HttpResponse(pdf_bytes, content_type="application/pdf")
+    resp["Content-Disposition"] = f'inline; filename="{filename}"'
+    return resp
+# ========= Fin helpers =========
+
