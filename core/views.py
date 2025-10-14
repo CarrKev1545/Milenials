@@ -3594,3 +3594,57 @@ def planillas_export_pdf(request):
     response["Content-Disposition"] = 'inline; filename="planilla_estudiantes.pdf"'
     return response
 
+@login_required
+@rector_required
+@require_GET
+def api_grados_por_sede(request):
+    """
+    Devuelve los GRADOS que existen para la sede dada,
+    detectándolos según los grupos creados en esa sede.
+    """
+    sede_id = (request.GET.get("sede_id") or "").strip()
+
+    with connection.cursor() as cur:
+        if sede_id:
+            cur.execute("""
+                SELECT DISTINCT gr.id, gr.nombre
+                FROM public.grupos g
+                JOIN public.grados gr ON gr.id = g.grado_id
+                WHERE g.sede_id::text = %s
+                ORDER BY gr.nombre;
+            """, [sede_id])
+        else:
+            # Si no hay sede, puedes devolver todos o ninguno.
+            # Aquí devolvemos todos (útil para pre-cargar).
+            cur.execute("SELECT id, nombre FROM public.grados ORDER BY nombre;")
+        rows = cur.fetchall()
+
+    data = [{"id": str(i), "nombre": n} for (i, n) in rows]
+    return JsonResponse({"results": data})
+
+
+@login_required
+@rector_required
+@require_GET
+def api_grupos_por_sede_grado(request):
+    """
+    Devuelve los GRUPOS de una sede (opcionalmente filtrados por grado).
+    """
+    sede_id = (request.GET.get("sede_id") or "").strip()
+    grado_id = (request.GET.get("grado_id") or "").strip()
+
+    with connection.cursor() as cur:
+        cur.execute("""
+            SELECT g.id,
+                   CONCAT(s.nombre, ' - ', gr.nombre, ' - ', g.nombre) AS full
+            FROM public.grupos g
+            JOIN public.sedes s  ON s.id  = g.sede_id
+            JOIN public.grados gr ON gr.id = g.grado_id
+            WHERE (%s = '' OR g.sede_id::text = %s)
+              AND (%s = '' OR g.grado_id::text = %s)
+            ORDER BY s.nombre, gr.nombre, g.nombre;
+        """, [sede_id, sede_id, grado_id, grado_id])
+        rows = cur.fetchall()
+
+    data = [{"id": str(i), "full": f} for (i, f) in rows]
+    return JsonResponse({"results": data})

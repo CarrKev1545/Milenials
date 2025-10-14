@@ -3,177 +3,185 @@
 
 {% block content %}
 <div class="container-fluid">
-  <div class="card glass-panel mx-auto" style="max-width:1180px;">
+  <div class="card card-dashboard shadow mx-auto" style="max-width:1080px;">
     <div class="card-body">
-      <h3 class="mb-3">Planillas — Estudiantes activos</h3>
-      <p class="text-muted mb-4">Descarga por sede, grado y grupo</p>
+      <h4 class="mb-3">Planillas — Estudiantes activos</h4>
 
-      <div class="row g-3">
+      <form class="row g-3 mb-3" onsubmit="return false;">
+        <div class="col-12">
+          <small class="text-muted">Descarga por sede, grado y grupo</small>
+        </div>
 
         <!-- SEDE -->
         <div class="col-12">
           <label class="form-label">Sede</label>
-          <select id="selSede" class="form-select">
+          <select id="selSede" name="sede" class="form-select">
             <option value="">Todas</option>
-            {% for id, nombre in sedes %}
+            {% for id,nombre in sedes %}
               <option value="{{ id }}" {% if sel_sede|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
             {% endfor %}
           </select>
         </div>
 
-        <!-- GRADO (depende de SEDE) -->
+        <!-- GRADO (se llena según sede) -->
         <div class="col-12">
           <label class="form-label">Grado</label>
-          <select id="selGrado" class="form-select">
+          <select id="selGrado" name="grado" class="form-select">
             <option value="">Todos</option>
-            {# Se llena al vuelo según la sede; si vienes con valor, lo aplicamos al cargar #}
+            {% for id,nombre in grados %}
+              <option value="{{ id }}" {% if sel_grado|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
+            {% endfor %}
           </select>
         </div>
 
-        <!-- GRUPO (depende de SEDE y GRADO) -->
+        <!-- GRUPO (se llena según sede y grado) -->
         <div class="col-12">
           <label class="form-label">Grupo</label>
-          <select id="selGrupo" class="form-select">
+          <select id="selGrupo" name="grupo" class="form-select">
             <option value="">Todos</option>
-            {# Se llena al vuelo según sede/grado #}
+            {% for id,full in grupos %}
+              <option value="{{ id }}" {% if sel_grupo|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ full }}</option>
+            {% endfor %}
           </select>
         </div>
 
-        <div class="col-12 d-flex gap-2 mt-2">
+        <div class="col-12 d-flex gap-2">
           <a id="btnPdf"
              class="btn btn-danger"
-             target="_blank"
-             href="{% url 'planillas_export_pdf' %}">
-            Descargar PDF
-          </a>
+             href="{% url 'planillas_export_pdf' %}">Descargar PDF</a>
 
-          <a id="btnXls"
+          <a id="btnExcel"
              class="btn btn-danger"
-             target="_blank"
-             href="{% url 'planillas_export_excel' %}">
-            Descargar Excel
-          </a>
+             href="{% url 'planillas_export_excel' %}">Descargar Excel</a>
         </div>
-      </div>
+      </form>
 
-      <p class="text-muted small mt-3 mb-0">
-        Selecciona filtros: los botones de descarga usan automáticamente la sede, el grado y el grupo elegidos. La exportación se abre en otra pestaña.
+      <p class="text-muted small mb-0">
+        Selecciona filtros: los botones de descarga usan automáticamente la sede, el grado y el grupo elegidos.
+        La exportación se abre en otra pestaña.
       </p>
     </div>
   </div>
 </div>
 
 <script>
-(function() {
-  const $sede  = document.getElementById('selSede');
-  const $grado = document.getElementById('selGrado');
-  const $grupo = document.getElementById('selGrupo');
-  const $btnPdf = document.getElementById('btnPdf');
-  const $btnXls = document.getElementById('btnXls');
+(function () {
+  const sedeSel  = document.getElementById('selSede');
+  const gradoSel = document.getElementById('selGrado');
+  const grupoSel = document.getElementById('selGrupo');
 
-  const pdfBase = $btnPdf.getAttribute('href');
-  const xlsBase = $btnXls.getAttribute('href');
+  const btnPdf   = document.getElementById('btnPdf');
+  const btnExcel = document.getElementById('btnExcel');
 
-  // Valores que llegan del servidor (si venías con query ?sede=&grado=&grupo=)
-  const preSede  = "{{ sel_sede|default:'' }}";
-  const preGrado = "{{ sel_grado|default:'' }}";
-  const preGrupo = "{{ sel_grupo|default:'' }}";
+  // Construye el query y lo aplica a los botones
+  function updateLinks() {
+    const sede  = sedeSel.value || '';
+    const grado = gradoSel.value || '';
+    const grupo = grupoSel.value || '';
 
-  function qs() {
-    const params = new URLSearchParams();
-    if ($sede.value)  params.set('sede',  $sede.value);
-    if ($grado.value) params.set('grado', $grado.value);
-    if ($grupo.value) params.set('grupo', $grupo.value);
-    return params.toString();
+    const qs = new URLSearchParams({sede, grado, grupo}).toString();
+
+    // Bases de exportación vienen desde el template vía {% url ... %}.
+    const basePdf   = btnPdf.getAttribute('href').split('?')[0];
+    const baseExcel = btnExcel.getAttribute('href').split('?')[0];
+
+    btnPdf.href   = `${basePdf}?${qs}`;
+    btnExcel.href = `${baseExcel}?${qs}`;
   }
 
-  function refreshLinks() {
-    const query = qs();
-    $btnPdf.href = query ? `${pdfBase}?${query}` : pdfBase;
-    $btnXls.href = query ? `${xlsBase}?${query}` : xlsBase;
+  // Helpers para combos
+  function resetSelect(selectEl, placeholderText) {
+    selectEl.innerHTML = '';
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = placeholderText;
+    selectEl.appendChild(opt);
   }
 
-  // Helpers para poblar selects
-  function setOptions($select, items, placeholderText) {
-    const prev = $select.value;
-    $select.innerHTML = ''; // limpia
-    const optAll = document.createElement('option');
-    optAll.value = '';
-    optAll.textContent = placeholderText;
-    $select.appendChild(optAll);
-
-    items.forEach(([id, nombre]) => {
+  function fillSelect(selectEl, items, valueKey, labelKey) {
+    for (const item of items) {
       const opt = document.createElement('option');
-      opt.value = id;
-      opt.textContent = nombre;
-      $select.appendChild(opt);
-    });
-
-    // si el valor previo sigue existiendo, lo reponemos; si no, queda "Todos"
-    if ([...$select.options].some(o => o.value === prev)) {
-      $select.value = prev;
-    } else {
-      $select.value = '';
+      opt.value = item[valueKey];
+      opt.textContent = item[labelKey];
+      selectEl.appendChild(opt);
     }
   }
 
-  async function cargarGrados() {
-    // Grado depende de Sede
-    const sede = $sede.value;
-    if (!sede) {
-      setOptions($grado, [], 'Todos');
-      await cargarGrupos();   // grupos también cambian
-      refreshLinks();
+  async function loadGrados() {
+    // Vacía grado y grupo
+    resetSelect(gradoSel, 'Todos');
+    resetSelect(grupoSel, 'Todos');
+
+    const sedeId = sedeSel.value || '';
+    if (!sedeId) {
+      // Sin sede elegida, deja grados como “Todos” (opcional: podrías cargar todos)
+      updateLinks();
       return;
     }
-    const url = `/api/grados-por-sede/?sede_id=${encodeURIComponent(sede)}`;
-    const data = await fetch(url).then(r => r.json()).catch(() => []);
-    // Esperamos una lista tipo [[id, nombre], ...]
-    setOptions($grado, data, 'Todos');
 
-    // Si vienes con un grado pre-seleccionado:
-    if (preGrado && [...$grado.options].some(o => o.value === preGrado)) {
-      $grado.value = preGrado;
+    gradoSel.disabled = true;
+    try {
+      const url = `/api/grados-por-sede/?sede_id=${encodeURIComponent(sedeId)}`;
+      const res = await fetch(url, {cache: 'no-store'});
+      const data = await res.json();
+      fillSelect(gradoSel, data.results, 'id', 'nombre');
+
+      // Si venías con un grado seleccionado (por GET), intenta mantenerlo
+      const pre = "{{ sel_grado|default_if_none:'' }}";
+      if (pre) { gradoSel.value = pre; }
+    } catch (e) {
+      console.error('Error cargando grados:', e);
+    } finally {
+      gradoSel.disabled = false;
+      updateLinks();
+      // al cambiar grados, también refrescamos grupos
+      loadGrupos();
     }
-    await cargarGrupos();   // al cambiar grado, refrescamos grupos
-    refreshLinks();
   }
 
-  async function cargarGrupos() {
-    // Grupo depende de Sede y (opcional) Grado
-    const sede  = $sede.value || '';
-    const grado = $grado.value || '';
-    const url = `/api/grupos-por-sede-grado/?sede_id=${encodeURIComponent(sede)}&grado_id=${encodeURIComponent(grado)}`;
-    const data = await fetch(url).then(r => r.json()).catch(() => []);
-    setOptions($grupo, data, 'Todos');
+  async function loadGrupos() {
+    resetSelect(grupoSel, 'Todos');
 
-    if (preGrupo && [...$grupo.options].some(o => o.value === preGrupo)) {
-      $grupo.value = preGrupo;
+    const sedeId  = sedeSel.value || '';
+    const gradoId = gradoSel.value || '';
+
+    grupoSel.disabled = true;
+    try {
+      const url = `/api/grupos-por-sede-grado/?sede_id=${encodeURIComponent(sedeId)}&grado_id=${encodeURIComponent(gradoId)}`;
+      const res = await fetch(url, {cache: 'no-store'});
+      const data = await res.json();
+      fillSelect(grupoSel, data.results, 'id', 'full');
+
+      const pre = "{{ sel_grupo|default_if_none:'' }}";
+      if (pre) { grupoSel.value = pre; }
+    } catch (e) {
+      console.error('Error cargando grupos:', e);
+    } finally {
+      grupoSel.disabled = false;
+      updateLinks();
     }
-    refreshLinks();
   }
 
   // Eventos
-  $sede.addEventListener('change', async () => {
-    // Al cambiar de sede, refresco grados y luego grupos
-    await cargarGrados();
+  sedeSel.addEventListener('change', () => {
+    // Si cambia sede, recarga grados y grupos
+    loadGrados();
   });
-
-  $grado.addEventListener('change', async () => {
-    await cargarGrupos();
+  gradoSel.addEventListener('change', () => {
+    // Si cambia grado, recarga grupos
+    loadGrupos();
   });
+  grupoSel.addEventListener('change', updateLinks);
 
-  $grupo.addEventListener('change', refreshLinks);
-
-  // Init: si hay sede/grado/grupo iniciales, los aplicamos
-  async function init() {
-    // Si ya viene una sede preseleccionada en el HTML, úsala
-    if (preSede) $sede.value = preSede;
-    await cargarGrados();
-    refreshLinks();
-  }
-
-  init();
+  // Init en carga (poblar combos dependientes y armar links)
+  document.addEventListener('DOMContentLoaded', () => {
+    // Arrancamos poblando en cascada con lo que haya seleccionado por GET (si aplica)
+    if (sedeSel.value) {
+      loadGrados();
+    } else {
+      updateLinks();
+    }
+  });
 })();
 </script>
 {% endblock %}
