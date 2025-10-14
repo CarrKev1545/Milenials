@@ -1,55 +1,65 @@
 # core/db_errors.py
-from django.db import IntegrityError
-from psycopg2 import errors as pgerr
+"""
+Mapeo de errores de base de datos compatible con psycopg v3 (psycopg)
+y con psycopg2 si alguna vez se usa localmente.
+"""
+
+from typing import Optional
+
+# Intentamos psycopg (v3) primero; si no, psycopg2; si no, None.
+_pg_errors = None
+try:
+    from psycopg import errors as _pg_errors  # psycopg v3
+    DRIVER = "psycopg3"
+except Exception:
+    try:
+        from psycopg2 import errors as _pg_errors  # psycopg2
+        DRIVER = "psycopg2"
+    except Exception:
+        DRIVER = None
+
+
+def _get_sqlstate(exc: Exception) -> Optional[str]:
+    """Obtiene SQLSTATE si está disponible (psycopg3: .sqlstate, psycopg2: .pgcode)."""
+    for obj in (exc, getattr(exc, "__cause__", None), getattr(exc, "__context__", None)):
+        if obj is None:
+            continue
+        code = getattr(obj, "sqlstate", None) or getattr(obj, "pgcode", None)
+        if code:
+            return str(code)
+    return None
+
 
 def map_db_error(exc: Exception) -> str:
     """
-    Devuelve un mensaje legible según la constraint/trigger que haya fallado.
-    Usa exc.orig (psycopg2) para identificar la clase y el texto.
+    Retorna una etiqueta corta:
+      'unique'   -> violación de unicidad (23505)
+      'fk'       -> violación de llave foránea (23503)
+      'not_null' -> NOT NULL (23502)
+      'check'    -> check constraint (23514)
+      'other'    -> cualquier otro
     """
-    # Fallback genérico
-    default = "No se pudo guardar por una regla de datos. Revisa la información."
+    # 1) Si tenemos clases de errores del driver, probamos por isinstance
+    cause = getattr(exc, "__cause__", None)
+    if _pg_errors and cause is not None:
+        if isinstance(cause, getattr(_pg_errors, "UniqueViolation", tuple())):
+            return "unique"
+        if isinstance(cause, getattr(_pg_errors, "ForeignKeyViolation", tuple())):
+            return "fk"
+        if isinstance(cause, getattr(_pg_errors, "NotNullViolation", tuple())):
+            return "not_null"
+        if isinstance(cause, getattr(_pg_errors, "CheckViolation", tuple())):
+            return "check"
 
-    if not isinstance(exc, IntegrityError):
-        return default
+    # 2) Fallback por SQLSTATE
+    sqlstate = _get_sqlstate(exc)
+    if sqlstate == "23505":
+        return "unique"
+    if sqlstate == "23503":
+        return "fk"
+    if sqlstate == "23502":
+        return "not_null"
+    if sqlstate == "23514":
+        return "check"
 
-    orig = getattr(exc, "orig", None)
-    if orig is None:
-        return default
-
-    txt = str(orig)
-
-    # ---- CHECK violations (reglas de negocio) ----
-    if isinstance(orig, pgerr.CheckViolation):
-        if "notas_nota_rango" in txt:
-            return "La nota debe estar entre 1.00 y 5.00."
-        if "notas_fallas_no_negativas" in txt:
-            return "Las fallas no pueden ser negativas."
-        if "periodos_fechas_ok" in txt:
-            return "La fecha de inicio no puede ser mayor que la fecha de fin."
-        if "estudiantes_documento_formato" in txt:
-            return "Documento inválido: solo dígitos (5–20 caracteres)."
-        if "usuarios_email_formato" in txt:
-            return "Email inválido."
-        # Trigger validación notas ↔ grupo/asignatura
-        if "fn_validar_nota_estudiante_en_grupo" in txt or "trg_notas_valida_estudiante_en_grupo" in txt:
-            return "No se puede registrar la nota: el estudiante no tiene un grupo activo o la asignatura no pertenece a ese grupo."
-
-        # Trigger validación de docente_asignacion ↔ grupo
-        if "fn_validar_docente_asignacion_sobre_grupo" in txt or "trg_docente_asignacion_valida_grupo" in txt:
-            return "Asignación inválida: el docente no tiene ese grupo asociado."
-
-    # ---- UNIQUE violations ----
-    if isinstance(orig, pgerr.UniqueViolation):
-        if "ux_estudiante_grupo_un_activo" in txt:
-            return "El estudiante ya tiene un grupo activo."
-        if "ux_periodos_un_abierto" in txt:
-            return "Ya existe un periodo abierto. Cierra el actual antes de abrir otro."
-        if "ux_docente_asignacion" in txt:
-            return "Ese docente ya tiene esa asignatura en ese grupo."
-
-    # ---- FK violations ----
-    if isinstance(orig, pgerr.ForeignKeyViolation):
-        return "Referencia inexistente (verifique estudiante, grupo, asignatura o período)."
-
-    return default
+    return "other"
