@@ -254,8 +254,8 @@ urlpatterns = [
     # Métricas / Gráficas
     path("api/metrics/reprobados", views.api_metrics_reprobados, name="api_metrics_reprobados"),
     path("api/metrics/histograma", views.api_metrics_histograma, name="api_metrics_histograma"),
+    
     path("rector/planillas/", views.planillas_index, name="planillas_index"),
-
     # Pág. intermedia y descargas (no tocan la principal)
     path("rector/planillas/exportar/", views.planillas_export_landing, name="planillas_export_landing"),
     path("rector/planillas/export/pdf/", views.planillas_export_pdf, name="planillas_export_pdf"),
