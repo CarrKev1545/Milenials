@@ -45,14 +45,19 @@
           </select>
         </div>
 
-        <div class="col-12 d-flex gap-2">
-          <a id="btnPdf"
-             class="btn btn-danger"
-             href="{% url 'planillas_export_pdf' %}">Descargar PDF</a>
+        <a id="btnPdf"
+          class="btn btn-danger"
+           href="{% url 'planillas_export_pdf' %}"
+           target="_blank" rel="noopener">
+           Descargar PDF
+         </a>
 
-          <a id="btnExcel"
-             class="btn btn-danger"
-             href="{% url 'planillas_export_excel' %}">Descargar Excel</a>
+         <a id="btnExcel"
+           class="btn btn-danger"
+           href="{% url 'planillas_export_excel' %}"
+           target="_blank" rel="noopener">
+           Descargar Excel
+          </a>
         </div>
       </form>
 
