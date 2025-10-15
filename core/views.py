@@ -48,6 +48,9 @@ from .models import Sede, Grupo, Estudiante, EstudianteGrupo
 from django.db import connection
 from django.utils import timezone
 from django.urls import reverse
+from django.db import connection, transaction
+from django.contrib import messages
+from django.views.decorators.http import require_http_methods
 
 # =========================================================
 # Login / Logout
@@ -3648,3 +3651,115 @@ def api_grupos_por_sede_grado(request):
 
     data = [{"id": str(i), "full": f} for (i, f) in rows]
     return JsonResponse({"results": data})
+@login_required
+@rector_required
+@require_http_methods(["GET", "POST"])
+def rector_eliminar_estudiante(request):
+    """
+    Página para que el Rector elimine estudiantes por documento.
+    - GET: muestra el formulario.
+    - POST: elimina (tras confirmación en el modal).
+    Hereda diseño base.
+    """
+    if request.method == "POST":
+        documento = (request.POST.get("documento") or "").strip()
+        if not re.fullmatch(r"\d{5,20}", documento):
+            messages.error(request, "Documento inválido. Debe tener solo dígitos (5–20).")
+            return redirect("rector_eliminar_estudiante")
+
+        try:
+            with transaction.atomic():
+                with connection.cursor() as cur:
+                    # 1) Obtener ID del estudiante por documento
+                    cur.execute("SELECT id, nombre, apellidos FROM public.estudiantes WHERE documento=%s;", [documento])
+                    row = cur.fetchone()
+                    if not row:
+                        messages.error(request, f"No existe estudiante con documento {documento}.")
+                        return redirect("rector_eliminar_estudiante")
+
+                    est_id, est_nombre, est_apellidos = row
+
+                    # 2) Borrar historial y notas del estudiante (por FKs en NOTAS = RESTRICT)
+                    cur.execute("DELETE FROM public.notas_historial WHERE estudiante_id=%s;", [est_id])
+                    hist_borradas = cur.rowcount or 0
+
+                    cur.execute("DELETE FROM public.notas WHERE estudiante_id=%s;", [est_id])
+                    notas_borradas = cur.rowcount or 0
+
+                    # 3) Borrar estudiante (estudiante_grupo se borra por CASCADE)
+                    cur.execute("DELETE FROM public.estudiantes WHERE id=%s;", [est_id])
+                    est_borrados = cur.rowcount or 0
+
+            if est_borrados:
+                messages.success(
+                    request,
+                    f"Estudiante {est_apellidos} {est_nombre} (doc: {documento}) eliminado. "
+                    f"Notas: {notas_borradas}, Historial: {hist_borradas}."
+                )
+            else:
+                messages.warning(request, "No se pudo eliminar el estudiante (ya no existía).")
+
+        except Exception as e:
+            # Si algo falla por alguna regla o FK no contemplada
+            messages.error(request, f"No se pudo eliminar: {e}")
+
+        return redirect("rector_eliminar_estudiante")
+
+    # GET
+    return render(request, "core/rector/eliminar_estudiante.html")
+
+
+@login_required
+@rector_required
+@require_GET
+def api_estudiante_por_documento(request):
+    """
+    Devuelve datos del estudiante y su grupo ACTUAL (si tiene) por documento.
+    Respuesta JSON para el preview en la vista.
+    """
+    documento = (request.GET.get("doc") or "").strip()
+    if not documento:
+        return JsonResponse({"ok": False, "error": "Falta parámetro doc"}, status=400)
+
+    if not re.fullmatch(r"\d{5,20}", documento):
+        return JsonResponse({"ok": False, "error": "Documento inválido"}, status=400)
+
+    with connection.cursor() as cur:
+        cur.execute("""
+            SELECT
+                e.id,
+                e.documento,
+                e.nombre,
+                e.apellidos,
+                s.nombre AS sede,
+                gr.nombre AS grado,
+                g.nombre  AS grupo
+            FROM public.estudiantes e
+            LEFT JOIN public.estudiante_grupo eg
+                   ON eg.estudiante_id = e.id
+                  AND eg.fecha_fin IS NULL
+            LEFT JOIN public.grupos g ON g.id = eg.grupo_id
+            LEFT JOIN public.grados gr ON gr.id = g.grado_id
+            LEFT JOIN public.sedes  s  ON s.id  = g.sede_id
+            WHERE e.documento = %s
+            LIMIT 1;
+        """, [documento])
+        row = cur.fetchone()
+
+    if not row:
+        return JsonResponse({"ok": False, "found": False})
+
+    est_id, doc, nombre, apellidos, sede, grado, grupo = row
+    return JsonResponse({
+        "ok": True,
+        "found": True,
+        "estudiante": {
+            "id": est_id,
+            "documento": doc,
+            "nombre": nombre,
+            "apellidos": apellidos,
+            "sede": sede or "-",
+            "grado": grado or "-",
+            "grupo": grupo or "-",
+        }
+    })

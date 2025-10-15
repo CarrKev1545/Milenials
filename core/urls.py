@@ -264,6 +264,9 @@ urlpatterns = [
     path("rector/planillas/export/excel/", views.planillas_export_excel, name="planillas_export_excel"),
     path("api/grados-por-sede/", views.api_grados_por_sede, name="api_grados_por_sede"),
     path("api/grupos-por-sede-grado/", views.api_grupos_por_sede_grado, name="api_grupos_por_sede_grado"),
+
+    path("rector/estudiantes/eliminar/", views.rector_eliminar_estudiante, name="rector_eliminar_estudiante"),
+    path("api/estudiante-por-documento/", views.api_estudiante_por_documento, name="api_estudiante_por_documento"),
 ]
 
 
