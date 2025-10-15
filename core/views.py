@@ -93,33 +93,60 @@ def login_view(request: HttpRequest) -> HttpResponse:
         usuario = (request.POST.get("usuario") or "").strip()
         password = request.POST.get("password") or ""
 
-        # 1) Intento normal con Django (usuarios del auth)
+        # 1) Intento normal con Django
         user = authenticate(request, username=usuario, password=password)
 
+        # 2) Fallback contra public.usuarios (tu helper)
         if user is None:
-            # 2) Fallback contra public.usuarios (bcrypt/texto/password_plain)
             row = autenticar_usuario_tabla_usuarios(usuario, password)
             if row:
                 u_id, nombre, apellidos, rol, usuario_db, email_db = row
 
-                # Sincroniza/crea usuario Django para sesión
                 User = get_user_model()
-                user, _created = User.objects.get_or_create(
-                    username=usuario_db,
-                    defaults={
-                        "first_name": nombre,
-                        "last_name": apellidos,
-                        "email": email_db,
-                        "is_active": True,
-                    },
+                # Lista de campos reales del modelo de usuario
+                user_fields = {f.name for f in User._meta.get_fields()}
+
+                # Campo de búsqueda: 'usuario' si existe, si no USERNAME_FIELD, si no 'username'
+                lookup_field = (
+                    'usuario' if 'usuario' in user_fields
+                    else getattr(User, 'USERNAME_FIELD', 'username')
                 )
 
-                # Guarda el rol para redirección
-                user.rol = str(rol)                     # atributo en runtime
-                request.session["rol"] = str(rol)       # respaldo en sesión
-                request.session["usuario_custom_id"] = int(u_id)
+                lookup_kwargs = {lookup_field: usuario_db}
 
-                # Marca backend y loguea
+                # Defaults mapeando a tus campos reales
+                defaults = {}
+                if 'first_name' in user_fields:
+                    defaults['first_name'] = nombre
+                elif 'nombre' in user_fields:
+                    defaults['nombre'] = nombre
+
+                if 'last_name' in user_fields:
+                    defaults['last_name'] = apellidos
+                elif 'apellidos' in user_fields:
+                    defaults['apellidos'] = apellidos
+
+                if 'email' in user_fields:
+                    defaults['email'] = email_db
+
+                if 'rol' in user_fields:
+                    defaults['rol'] = str(rol)
+
+                if 'is_active' in user_fields:
+                    defaults['is_active'] = True
+
+                user, _created = User.objects.get_or_create(
+                    defaults=defaults,
+                    **lookup_kwargs
+                )
+
+                # Asegura rol en objeto/sesión para _redir_por_rol
+                if hasattr(user, 'rol'):
+                    user.rol = str(rol)
+                request.session['rol'] = str(rol)
+                request.session['usuario_custom_id'] = int(u_id)
+
+                # Marca backend y login
                 user.backend = "django.contrib.auth.backends.ModelBackend"
                 login(request, user)
 
@@ -131,8 +158,9 @@ def login_view(request: HttpRequest) -> HttpResponse:
         if user is None:
             error = "Usuario o contraseña incorrectos"
         else:
-            # si vienes por Django auth, intenta setear rol desde sesión previa si existe
-            user.rol = request.session.get("rol", getattr(user, "rol", ""))
+            # opcional: intenta propagar rol desde sesión si existiera
+            if hasattr(user, 'rol') and not getattr(user, 'rol', None):
+                user.rol = request.session.get('rol', '')
             login(request, user)
             if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
                 return redirect(next_url)
