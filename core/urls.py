@@ -269,7 +269,9 @@ urlpatterns = [
     path("api/estudiante-por-documento-simple/", views.api_estudiante_por_documento_simple, name="api_estudiante_por_documento_simple"),
     path("api/grupos-por-sede-grado-simple/", views.api_grupos_por_sede_grado_simple,name="api_grupos_por_sede_grado_simple",),
     path("api/grados-por-sede-simple/",views.api_grados_por_sede_simple,name="api_grados_por_sede_simple",),
+    path("api/estudiante-por-documento-elim/",views.api_estudiante_por_documento_elim,name="api_estudiante_por_documento_elim",),
 ]
+
 
 
 
