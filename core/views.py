@@ -3658,8 +3658,7 @@ def rector_eliminar_estudiante(request):
     """
     Página para que el Rector elimine estudiantes por documento.
     - GET: muestra el formulario.
-    - POST: elimina (tras confirmación en el modal).
-    Hereda diseño base.
+    - POST: elimina (con respaldo previo en estudiantes_borrados).
     """
     if request.method == "POST":
         documento = (request.POST.get("documento") or "").strip()
@@ -3670,37 +3669,74 @@ def rector_eliminar_estudiante(request):
         try:
             with transaction.atomic():
                 with connection.cursor() as cur:
-                    # 1) Obtener ID del estudiante por documento
-                    cur.execute("SELECT id, nombre, apellidos FROM public.estudiantes WHERE documento=%s;", [documento])
+                    # 1) Obtener estudiante por documento
+                    cur.execute("""
+                        SELECT e.id, e.nombre, e.apellidos, e.sede_id, COALESCE(s.nombre, '')
+                        FROM public.estudiantes e
+                        LEFT JOIN public.sedes s ON s.id = e.sede_id
+                        WHERE e.documento = %s
+                        LIMIT 1
+                    """, [documento])
                     row = cur.fetchone()
+
                     if not row:
                         messages.error(request, f"No existe estudiante con documento {documento}.")
                         return redirect("rector_eliminar_estudiante")
 
-                    est_id, est_nombre, est_apellidos = row
+                    est_id, est_nombre, est_apellidos, est_sede_id, est_sede_nombre = row
 
-                    # 2) Borrar historial y notas del estudiante (por FKs en NOTAS = RESTRICT)
+                    # 2) Obtener snapshot de su último grupo activo (si existe)
+                    cur.execute("""
+                        SELECT s.nombre AS sede, gr.nombre AS grado, g.nombre AS grupo
+                        FROM public.estudiante_grupo eg
+                        JOIN public.grupos g  ON g.id  = eg.grupo_id
+                        JOIN public.grados gr ON gr.id = g.grado_id
+                        JOIN public.sedes  s  ON s.id  = g.sede_id
+                        WHERE eg.estudiante_id = %s
+                          AND eg.fecha_fin IS NULL
+                        ORDER BY eg.id DESC
+                        LIMIT 1
+                    """, [est_id])
+                    last_grp = cur.fetchone()
+
+                    sede_snap  = (last_grp[0] if last_grp else est_sede_nombre) or None
+                    grado_snap = (last_grp[1] if last_grp else None)
+                    grupo_snap = (last_grp[2] if last_grp else None)
+
+                    # 3) Guardar respaldo en estudiantes_borrados (auditoría)
+                    cur.execute("""
+                        INSERT INTO public.estudiantes_borrados
+                          (estudiante_id, documento, nombre, apellidos, sede_id, sede,
+                           grado, grupo, eliminado_por, eliminado_en, extra)
+                        VALUES
+                          (%s, %s, %s, %s, %s, %s,
+                           %s, %s, %s, now(),
+                           jsonb_build_object('ip', %s, 'ua', %s))
+                    """, [
+                        est_id, documento, est_nombre, est_apellidos,
+                        est_sede_id, sede_snap, grado_snap, grupo_snap,
+                        request.user.username,
+                        request.META.get("REMOTE_ADDR"),
+                        request.META.get("HTTP_USER_AGENT"),
+                    ])
+
+                    # 4) Borrar datos dependientes y estudiante
+                    #    (historial primero; notas luego; estudiante al final.
+                    #     estudiante_grupo cae por CASCADE según tu esquema)
                     cur.execute("DELETE FROM public.notas_historial WHERE estudiante_id=%s;", [est_id])
-                    hist_borradas = cur.rowcount or 0
-
-                    cur.execute("DELETE FROM public.notas WHERE estudiante_id=%s;", [est_id])
-                    notas_borradas = cur.rowcount or 0
-
-                    # 3) Borrar estudiante (estudiante_grupo se borra por CASCADE)
-                    cur.execute("DELETE FROM public.estudiantes WHERE id=%s;", [est_id])
+                    cur.execute("DELETE FROM public.notas           WHERE estudiante_id=%s;", [est_id])
+                    cur.execute("DELETE FROM public.estudiantes     WHERE id=%s;", [est_id])
                     est_borrados = cur.rowcount or 0
 
             if est_borrados:
                 messages.success(
                     request,
                     f"Estudiante {est_apellidos} {est_nombre} (doc: {documento}) eliminado correctamente."
-                   
                 )
             else:
                 messages.warning(request, "No se pudo eliminar el estudiante (ya no existía).")
 
         except Exception as e:
-            # Si algo falla por alguna regla o FK no contemplada
             messages.error(request, f"No se pudo eliminar: {e}")
 
         return redirect("rector_eliminar_estudiante")
