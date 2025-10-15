@@ -3795,3 +3795,61 @@ def api_estudiante_por_documento_simple(request: HttpRequest) -> JsonResponse:
         "apellidos": r[3],
         "nombre_completo": f"{r[2]} {r[3]}".strip(),
     })
+
+@login_required
+@rector_required
+@require_GET
+def api_estudiante_por_documento_elim(request):
+    """
+    Versión estable para 'Eliminar Estudiantes'.
+    Devuelve {ok, found, estudiante{...}} siempre con las mismas claves,
+    y NO colisiona con otras APIs similares.
+    """
+    documento = (request.GET.get("doc") or "").strip()
+    if not documento:
+        return JsonResponse({"ok": False, "error": "Falta parámetro doc", "found": False}, status=400)
+
+    # Acepta 5 a 20 dígitos (igual que el form); si quieres flexibilizar, ajusta aquí.
+    if not re.fullmatch(r"\d{5,20}", documento):
+        return JsonResponse({"ok": False, "error": "Documento inválido", "found": False}, status=400)
+
+    with connection.cursor() as cur:
+        cur.execute("""
+            SELECT
+                e.id,
+                e.documento,
+                e.nombre,
+                e.apellidos,
+                s.nombre AS sede,
+                gr.nombre AS grado,
+                g.nombre  AS grupo
+            FROM public.estudiantes e
+            LEFT JOIN public.estudiante_grupo eg
+                   ON eg.estudiante_id = e.id
+                  AND eg.fecha_fin IS NULL
+            LEFT JOIN public.grupos g ON g.id = eg.grupo_id
+            LEFT JOIN public.grados gr ON gr.id = g.grado_id
+            LEFT JOIN public.sedes  s  ON s.id  = g.sede_id
+            WHERE e.documento = %s
+            LIMIT 1;
+        """, [documento])
+        row = cur.fetchone()
+
+    if not row:
+        # Contrato consistente para el front
+        return JsonResponse({"ok": True, "found": False})
+
+    est_id, doc, nombre, apellidos, sede, grado, grupo = row
+    return JsonResponse({
+        "ok": True,
+        "found": True,
+        "estudiante": {
+            "id": est_id,
+            "documento": doc,
+            "nombre": nombre,
+            "apellidos": apellidos,
+            "sede": sede or "-",
+            "grado": grado or "-",
+            "grupo": grupo or "-",
+        }
+    })
