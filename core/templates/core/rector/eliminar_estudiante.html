@@ -1,118 +1,184 @@
 {% extends "core/base.html" %}
-{% block title %}Eliminar estudiantes{% endblock %}
+{% load static %}
+{% block title %}Eliminar Estudiantes{% endblock %}
 
 {% block content %}
-<div class="container-lg my-4">
-  <div class="card shadow-sm bg-dark text-light rounded-3">
+<div class="container-fluid">
+  <div class="card shadow-sm mx-auto" style="max-width: 920px;">
     <div class="card-body">
 
-      <h4 class="mb-4">Eliminar Estudiantes</h4>
-
-      <!-- Formulario de búsqueda -->
-      <form id="frm-buscar" method="get" class="row g-3 align-items-end">
-        <div class="col-12 col-md-8">
-          <label class="form-label">Documento del estudiante</label>
-          <input id="doc" name="doc" class="form-control"
-                 placeholder="Solo dígitos (5–20)"
-                 inputmode="numeric" pattern="\d{5,20}"
-                 value="{{ request.GET.doc|default_if_none:'' }}">
-          <div class="form-text text-secondary">
-            Escribe el documento y te mostraremos los datos antes de eliminar.
-          </div>
-        </div>
-
-        <div class="col-auto">
-          <button class="btn btn-primary" type="submit">Buscar</button>
-        </div>
-
-        <div class="col-auto">
-          <a class="btn btn-outline-light" href="{{ request.path }}">Limpiar</a>
-        </div>
-
-        <div class="col-auto">
-          <!-- Importante: este botón abre el modal; queda deshabilitado si no hay alumno -->
-          <button id="btn-open-confirm" type="button"
-                  class="btn btn-danger"
-                  data-bs-toggle="modal" data-bs-target="#modalConfirm"
-                  {% if not alumno %}disabled{% endif %}>
-            Eliminar Estudiante
-          </button>
-        </div>
-      </form>
-
-      {% if alumno %}
-      <!-- Resumen del estudiante -->
-      <div class="border rounded-3 mt-4 p-3 bg-dark">
-        <h6 class="text-muted mb-3">Resumen del estudiante</h6>
-        <dl class="row mb-0">
-          <dt class="col-sm-3">Nombres:</dt>
-          <dd class="col-sm-9">{{ alumno.nombres }}</dd>
-
-          <dt class="col-sm-3">Apellidos:</dt>
-          <dd class="col-sm-9">{{ alumno.apellidos }}</dd>
-
-          <dt class="col-sm-3">Documento:</dt>
-          <dd class="col-sm-9">{{ alumno.documento }}</dd>
-
-          <dt class="col-sm-3">Sede:</dt>
-          <dd class="col-sm-9">{{ alumno.sede }}</dd>
-
-          <dt class="col-sm-3">Grado:</dt>
-          <dd class="col-sm-9">{{ alumno.grado }}</dd>
-
-          <dt class="col-sm-3">Grupo:</dt>
-          <dd class="col-sm-9">{{ alumno.grupo }}</dd>
-        </dl>
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h4 class="mb-0">Eliminar Estudiantes</h4>
+        <a href="{% url 'dashboard_rector' %}" class="btn btn-outline-secondary btn-sm">Volver</a>
       </div>
+
+      {% if messages %}
+        <div class="mb-3">
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} mb-2" role="alert">{{ message }}</div>
+          {% endfor %}
+        </div>
       {% endif %}
 
-      <!-- Form POST “oculto” para ejecutar el borrado -->
-      <form id="frm-delete" action="{% url 'rector_estudiantes_eliminar_do' %}" method="post" class="d-none">
+      <form id="form-eliminar" method="post" action="{% url 'rector_eliminar_estudiante' %}">
         {% csrf_token %}
-        <input type="hidden" name="doc" id="doc-hidden" value="{{ alumno.documento|default:'' }}">
-      </form>
+        <div class="row g-3 align-items-end">
+          <div class="col-12 col-md-6">
+            <label class="form-label">Documento del estudiante</label>
+            <input type="text" inputmode="numeric" pattern="[0-9]{5,20}" minlength="5" maxlength="20"
+                   class="form-control" id="inp-doc" name="documento" placeholder="Solo dígitos (5–20)" required>
+            <div class="form-text">Escribe el documento y te mostraremos los datos antes de eliminar.</div>
+          </div>
 
-      <!-- Modal de confirmación -->
-      <div class="modal fade" id="modalConfirm" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content bg-dark text-light border-0">
-            <div class="modal-header border-0">
-              <h5 class="modal-title">Confirmar eliminación</h5>
-              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-              <p class="mb-2">
-                Al borrar este estudiante se eliminarán <strong>todas</strong> sus notas e historial de notas.
-              </p>
-              {% if alumno %}
-              <p class="mb-0">
-                ¿Seguro que deseas eliminar a
-                <strong id="alumno-nombre">{{ alumno.apellidos }} {{ alumno.nombres }}</strong>
-                (doc. <span id="alumno-doc">{{ alumno.documento }}</span>)?
-              </p>
-              {% endif %}
-            </div>
-            <div class="modal-footer border-0">
-              <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
-              <button id="btn-confirm-delete" type="button" class="btn btn-danger">Sí, eliminar</button>
+          <div class="col-12 col-md-6 d-flex gap-2">
+            <button id="btn-preview" type="button" class="btn btn-outline-primary">
+              Buscar
+            </button>
+            <button id="btn-limpiar" type="button" class="btn btn-outline-secondary">
+              Limpiar
+            </button>
+
+            <!-- Botón que dispara modal de confirmación -->
+            <button id="btn-eliminar" type="button" class="btn btn-danger ms-auto" disabled>
+              Eliminar Estudiante
+            </button>
+          </div>
+        </div>
+
+        <!-- Preview -->
+        <div id="preview" class="mt-4" style="display:none;">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              <h6 class="text-muted mb-3">Resumen del estudiante</h6>
+              <div class="row">
+                <div class="col-12 col-md-6">
+                  <div><strong>Nombres:</strong> <span id="pv-nombres">-</span></div>
+                  <div><strong>Apellidos:</strong> <span id="pv-apellidos">-</span></div>
+                  <div><strong>Documento:</strong> <span id="pv-doc">-</span></div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <div><strong>Sede:</strong> <span id="pv-sede">-</span></div>
+                  <div><strong>Grado:</strong> <span id="pv-grado">-</span></div>
+                  <div><strong>Grupo:</strong> <span id="pv-grupo">-</span></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
+        <!-- Modal confirmación -->
+        <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title text-danger">Confirmar eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+              </div>
+              <div class="modal-body">
+                <p class="mb-2">
+                  Al borrar este estudiante se eliminarán <strong>todas</strong> sus notas e historial de notas.
+                </p>
+                <p class="mb-0">¿Seguro que deseas continuar?</p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button id="btn-confirm-delete" type="submit" class="btn btn-danger">Sí, eliminar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </form>
     </div>
   </div>
 </div>
 
 <script>
-(function() {
-  const btnConfirm = document.getElementById('btn-confirm-delete');
-  if (btnConfirm) {
-    btnConfirm.addEventListener('click', function () {
-      document.getElementById('frm-delete').submit();
-    });
+(function () {
+  const inp = document.getElementById('inp-doc');
+  const btnPreview = document.getElementById('btn-preview');
+  const btnLimpiar = document.getElementById('btn-limpiar');
+  const btnEliminar = document.getElementById('btn-eliminar');
+
+  const pv = document.getElementById('preview');
+  const pvNom = document.getElementById('pv-nombres');
+  const pvApe = document.getElementById('pv-apellidos');
+  const pvDoc = document.getElementById('pv-doc');
+  const pvSede = document.getElementById('pv-sede');
+  const pvGrado = document.getElementById('pv-grado');
+  const pvGrupo = document.getElementById('pv-grupo');
+
+  let found = false;
+
+  function resetPreview() {
+    pvNom.textContent = '-';
+    pvApe.textContent = '-';
+    pvDoc.textContent = '-';
+    pvSede.textContent = '-';
+    pvGrado.textContent = '-';
+    pvGrupo.textContent = '-';
+    pv.style.display = 'none';
+    btnEliminar.disabled = true;
+    found = false;
   }
+
+  btnLimpiar.addEventListener('click', function () {
+    inp.value = '';
+    resetPreview();
+    inp.focus();
+  });
+
+  async function buscar() {
+    const doc = (inp.value || '').trim();
+    if (!/^\d{5,20}$/.test(doc)) {
+      resetPreview();
+      alert('Documento inválido. Usa solo dígitos (5–20).');
+      return;
+    }
+    try {
+      btnPreview.disabled = true;
+      const res = await fetch(`{% url 'api_estudiante_por_documento' %}?doc=${encodeURIComponent(doc)}`, {
+        credentials: 'same-origin'
+      });
+      const data = await res.json();
+      if (!data.ok || !data.found) {
+        resetPreview();
+        alert('No se encontró estudiante con ese documento.');
+        return;
+      }
+      const est = data.estudiante;
+      pvNom.textContent = est.nombre || '-';
+      pvApe.textContent = est.apellidos || '-';
+      pvDoc.textContent = est.documento || '-';
+      pvSede.textContent = est.sede || '-';
+      pvGrado.textContent = est.grado || '-';
+      pvGrupo.textContent = est.grupo || '-';
+      pv.style.display = '';
+      btnEliminar.disabled = false;
+      found = true;
+    } catch (e) {
+      resetPreview();
+      alert('Error consultando el estudiante.');
+    } finally {
+      btnPreview.disabled = false;
+    }
+  }
+
+  btnPreview.addEventListener('click', buscar);
+  inp.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      buscar();
+    }
+  });
+
+  // Modal de confirmación
+  btnEliminar.addEventListener('click', function () {
+    if (!found) return;
+    const modalEl = document.getElementById('confirmModal');
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+  });
 })();
 </script>
 {% endblock %}
-
