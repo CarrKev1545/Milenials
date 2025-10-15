@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
-
+from django.conf import settings
+from django.contrib.sessions.models import Session
 
 class UsuarioManager(BaseUserManager):
     def create_user(self, usuario, email, password=None, **extra_fields):
@@ -153,3 +154,4 @@ class Nota(models.Model):
 
     def __str__(self):
         return f"Nota {self.nota} (estudiante_id={self.estudiante_id}, periodo_id={self.periodo_id})"
+
