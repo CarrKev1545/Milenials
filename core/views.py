@@ -3651,7 +3651,7 @@ def api_grupos_por_sede_grado(request):
 
     data = [{"id": str(i), "full": f} for (i, f) in rows]
     return JsonResponse({"results": data})
-@login_required
+
 @rector_required
 @require_http_methods(["GET", "POST"])
 def rector_eliminar_estudiante(request):
