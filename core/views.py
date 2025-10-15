@@ -3600,57 +3600,69 @@ def planillas_export_pdf(request):
 @login_required
 @rector_required
 @require_GET
-def api_grados_por_sede(request):
+def api_grados_por_sede_simple(request: HttpRequest) -> JsonResponse:
     """
-    Devuelve los GRADOS que existen para la sede dada,
-    detectándolos según los grupos creados en esa sede.
+    Lista grados disponibles para una sede (versión SIMPLE).
+    Convive con api_grados_por_sede (no la reemplaza).
+    Respuesta: {"ok": true, "grados": [{"id":..., "nombre":"..."}, ...]}
     """
+    # Si tienes helper de seguridad por rol:
+    if (resp := _guard_rector(request)) is not None:
+        return JsonResponse({"detail": "No autorizado."}, status=403)
+
     sede_id = (request.GET.get("sede_id") or "").strip()
+    if sede_id and not re.fullmatch(r"\d{1,10}", sede_id):
+        return JsonResponse({"detail": "Parámetro inválido."}, status=400)
 
     with connection.cursor() as cur:
         if sede_id:
-            cur.execute("""
+            # Solo grados que tengan grupos en esa sede
+            cur.execute(
+                """
                 SELECT DISTINCT gr.id, gr.nombre
                 FROM public.grupos g
                 JOIN public.grados gr ON gr.id = g.grado_id
-                WHERE g.sede_id::text = %s
+                WHERE g.sede_id = %s
                 ORDER BY gr.nombre;
-            """, [sede_id])
+                """,
+                [sede_id],
+            )
         else:
-            # Si no hay sede, puedes devolver todos o ninguno.
-            # Aquí devolvemos todos (útil para pre-cargar).
+            # Si no se pasa sede, devolver todos (útil para precarga)
             cur.execute("SELECT id, nombre FROM public.grados ORDER BY nombre;")
-        rows = cur.fetchall()
 
-    data = [{"id": str(i), "nombre": n} for (i, n) in rows]
-    return JsonResponse({"results": data})
+        datos = [{"id": str(r[0]), "nombre": r[1]} for r in cur.fetchall()]
+
+    return JsonResponse({"ok": True, "grados": datos})
 
 
 @login_required
 @rector_required
 @require_GET
-def api_grupos_por_sede_grado(request):
+def api_grupos_por_sede_grado_simple(request: HttpRequest) -> JsonResponse:
     """
-    Devuelve los GRUPOS de una sede (opcionalmente filtrados por grado).
+    Lista grupos para sede_id + grado_id (versión SIMPLE).
+    Respuesta: {"ok": true, "grupos": [{"id":..., "nombre":"..."}, ...]}
+    No reemplaza a api_grupos_por_sede_grado; coexisten.
     """
+    if (resp := _guard_rector(request)) is not None:
+        return JsonResponse({"detail": "No autorizado."}, status=403)
+
     sede_id = (request.GET.get("sede_id") or "").strip()
     grado_id = (request.GET.get("grado_id") or "").strip()
 
-    with connection.cursor() as cur:
-        cur.execute("""
-            SELECT g.id,
-                   CONCAT(s.nombre, ' - ', gr.nombre, ' - ', g.nombre) AS full
-            FROM public.grupos g
-            JOIN public.sedes s  ON s.id  = g.sede_id
-            JOIN public.grados gr ON gr.id = g.grado_id
-            WHERE (%s = '' OR g.sede_id::text = %s)
-              AND (%s = '' OR g.grado_id::text = %s)
-            ORDER BY s.nombre, gr.nombre, g.nombre;
-        """, [sede_id, sede_id, grado_id, grado_id])
-        rows = cur.fetchall()
+    if not re.fullmatch(r"\d{1,10}", sede_id or "") or not re.fullmatch(r"\d{1,10}", grado_id or ""):
+        return JsonResponse({"detail": "Parámetros inválidos."}, status=400)
 
-    data = [{"id": str(i), "full": f} for (i, f) in rows]
-    return JsonResponse({"results": data})
+    with connection.cursor() as cur:
+        cur.execute(
+            "SELECT id, nombre FROM public.grupos WHERE sede_id=%s AND grado_id=%s ORDER BY nombre;",
+            [sede_id, grado_id],
+        )
+        datos = [{"id": r[0], "nombre": r[1]} for r in cur.fetchall()]
+
+    return JsonResponse({"ok": True, "grupos": datos})
+
 
 @rector_required
 @require_http_methods(["GET", "POST"])
