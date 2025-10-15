@@ -3667,6 +3667,14 @@ def rector_eliminar_estudiante(request):
             return redirect("rector_eliminar_estudiante")
 
         try:
+            # Identificador seguro del usuario actual (según tu modelo 'usuarios')
+            eliminado_por = (
+                getattr(request.user, "usuario", None)      # tu campo
+                or getattr(request.user, "username", None)  # por si existiera
+                or getattr(request.user, "email", None)     # alternativa
+                or str(request.user)                        # último recurso
+            )
+
             with transaction.atomic():
                 with connection.cursor() as cur:
                     # 1) Obtener estudiante por documento
@@ -3685,7 +3693,7 @@ def rector_eliminar_estudiante(request):
 
                     est_id, est_nombre, est_apellidos, est_sede_id, est_sede_nombre = row
 
-                    # 2) Obtener snapshot de su último grupo activo (si existe)
+                    # 2) Snapshot del grupo activo (si existe)
                     cur.execute("""
                         SELECT s.nombre AS sede, gr.nombre AS grado, g.nombre AS grupo
                         FROM public.estudiante_grupo eg
@@ -3703,7 +3711,7 @@ def rector_eliminar_estudiante(request):
                     grado_snap = (last_grp[1] if last_grp else None)
                     grupo_snap = (last_grp[2] if last_grp else None)
 
-                    # 3) Guardar respaldo en estudiantes_borrados (auditoría)
+                    # 3) Respaldo en estudiantes_borrados (auditoría)
                     cur.execute("""
                         INSERT INTO public.estudiantes_borrados
                           (estudiante_id, documento, nombre, apellidos, sede_id, sede,
@@ -3715,14 +3723,12 @@ def rector_eliminar_estudiante(request):
                     """, [
                         est_id, documento, est_nombre, est_apellidos,
                         est_sede_id, sede_snap, grado_snap, grupo_snap,
-                        request.user.username,
+                        eliminado_por,
                         request.META.get("REMOTE_ADDR"),
                         request.META.get("HTTP_USER_AGENT"),
                     ])
 
-                    # 4) Borrar datos dependientes y estudiante
-                    #    (historial primero; notas luego; estudiante al final.
-                    #     estudiante_grupo cae por CASCADE según tu esquema)
+                    # 4) Borrado de historial, notas y estudiante
                     cur.execute("DELETE FROM public.notas_historial WHERE estudiante_id=%s;", [est_id])
                     cur.execute("DELETE FROM public.notas           WHERE estudiante_id=%s;", [est_id])
                     cur.execute("DELETE FROM public.estudiantes     WHERE id=%s;", [est_id])
