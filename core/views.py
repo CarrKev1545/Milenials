@@ -3854,11 +3854,7 @@ def api_estudiante_por_documento_elim(request):
         }
     })
 
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.core.mail import send_mail
-from django.conf import settings
-from django.db import connection
+
 
 # Cambia a True SOLO si realmente guardas contraseña en texto claro (no recomendado)
 SHOW_PASSWORD_IN_EMAIL = False
@@ -3870,10 +3866,10 @@ def forgot_password_view(request):
             messages.error(request, "Ingresa el correo registrado.")
             return redirect("forgot_password")
 
-        # Consulta directa a tu tabla `usuarios` (sin tocar tu auth)
+        # Traemos la contraseña en texto desde password_plain
         with connection.cursor() as cur:
             cur.execute("""
-                SELECT nombre, apellidos, usuario, rol, email, password_hash
+                SELECT nombre, apellidos, usuario, rol, email, password_plain
                 FROM usuarios
                 WHERE LOWER(email) = %s AND activo = TRUE
                 LIMIT 1
@@ -3884,59 +3880,33 @@ def forgot_password_view(request):
             messages.error(request, "El correo ingresado no está registrado.")
             return redirect("forgot_password")
 
-        nombre, apellidos, usuario, rol, email_db, password_hash = row
+        nombre, apellidos, usuario, rol, email_db, password_plain = row
+        password_plain = password_plain or "(no disponible)"
 
-        # Cuerpo del correo
-        if SHOW_PASSWORD_IN_EMAIL:
-            # ⚠️ No recomendado: solo si guardas contraseña en claro
-            cuerpo_txt = f"""
+        # Cuerpo del correo (con contraseña en texto)
+        cuerpo_txt = f"""
 Estimado/a {nombre} {apellidos},
 
-Desde el Sistema Millennials le recordamos sus credenciales:
+Desde el Sistema Millennials le recordamos sus credenciales de acceso:
 
 Usuario: {usuario}
-Contraseña: {password_hash}
+Contraseña: {password_plain}
 Rol: {rol}
 
-Este mensaje es informativo. Si usted no solicitó esta notificación, ignore este correo.
+Este mensaje fue enviado al correo registrado: {email_db}.
+Si usted no solicitó esta notificación, por favor ignore este correo.
 """
-            cuerpo_html = f"""
+        cuerpo_html = f"""
 <h2>Sistema Millennials</h2>
 <p>Estimado/a <strong>{nombre} {apellidos}</strong>,</p>
-<p>Le recordamos sus credenciales:</p>
+<p>Le recordamos sus credenciales de acceso:</p>
 <ul>
   <li><strong>Usuario:</strong> {usuario}</li>
-  <li><strong>Contraseña:</strong> {password_hash}</li>
+  <li><strong>Contraseña:</strong> {password_plain}</li>
   <li><strong>Rol:</strong> {rol}</li>
 </ul>
-<p>Este mensaje es informativo. Si usted no solicitó esta notificación, ignore este correo.</p>
-"""
-        else:
-            # Seguro (no expone contraseña; si no la recuerdan, que la cambien)
-            cuerpo_txt = f"""
-Estimado/a {nombre} {apellidos},
-
-Desde el Sistema Millennials le recordamos sus datos de acceso:
-
-Usuario: {usuario}
-Rol: {rol}
-
-Por seguridad, la contraseña no se incluye en este mensaje.
-Si no la recuerda, solicite un cambio de contraseña desde el sistema.
-
-Este mensaje fue enviado a: {email_db}
-"""
-            cuerpo_html = f"""
-<h2>Sistema Millennials</h2>
-<p>Estimado/a <strong>{nombre} {apellidos}</strong>,</p>
-<p>Le recordamos sus datos de acceso:</p>
-<ul>
-  <li><strong>Usuario:</strong> {usuario}</li>
-  <li><strong>Rol:</strong> {rol}</li>
-</ul>
-<p><em>Por seguridad, la contraseña no se incluye en este mensaje.</em><br>
-Si no la recuerda, solicite un cambio de contraseña desde el sistema.</p>
-<p>Este mensaje fue enviado a: {email_db}</p>
+<p>Este mensaje fue enviado al correo registrado: {email_db}.</p>
+<p>Si usted no solicitó esta notificación, por favor ignore este correo.</p>
 """
 
         send_mail(
@@ -3949,7 +3919,6 @@ Si no la recuerda, solicite un cambio de contraseña desde el sistema.</p>
         )
 
         messages.success(request, "Hemos enviado un correo con tu información de acceso.")
-        # ajusta el nombre de tu ruta de login si es distinto
         return redirect("login")
 
     return render(request, "core/forgot_password.html")
