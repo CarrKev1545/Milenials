@@ -3964,6 +3964,7 @@ def api_estudiante_por_documento_elim(request):
 # Cambia a True SOLO si realmente guardas contraseña en texto claro (no recomendado)
 SHOW_PASSWORD_IN_EMAIL = False
 
+@never_cache
 def forgot_password_view(request):
     if request.method == "POST":
         email = (request.POST.get("email") or "").strip().lower()
@@ -3971,60 +3972,63 @@ def forgot_password_view(request):
             messages.error(request, "Ingresa el correo registrado.")
             return redirect("forgot_password")
 
-        # Traemos la contraseña en texto desde password_plain
         with connection.cursor() as cur:
             cur.execute("""
-                SELECT nombre, apellidos, usuario, rol, email, password_plain
-                FROM usuarios
-                WHERE LOWER(email) = %s AND activo = TRUE
-                LIMIT 1
+                SELECT u.nombre, u.apellidos, u.usuario, u.rol, u.email,
+                       COALESCE(s.nombre, '—') AS sede,
+                       COALESCE(u.password_plain, '') AS password_plain,
+                       u.password_hash
+                FROM public.usuarios u
+                LEFT JOIN public.sedes s ON s.id = u.sede_id
+                WHERE LOWER(u.email) = %s AND u.activo = TRUE
+                ORDER BY u.apellidos, u.nombre, u.usuario
             """, [email])
-            row = cur.fetchone()
+            rows = cur.fetchall()
 
-        if not row:
+        if not rows:
             messages.error(request, "El correo ingresado no está registrado.")
             return redirect("forgot_password")
 
-        nombre, apellidos, usuario, rol, email_db, password_plain = row
-        password_plain = password_plain or "(no disponible)"
+        # Construir listado de cuentas
+        lineas_txt, lineas_html = [], []
+        for (nombre, apellidos, usuario, rol, email_db, sede, password_plain, password_hash) in rows:
+            clave = password_plain or password_hash  # ⚠️ enviarás texto si existe; si no, el hash
+            lineas_txt.append(
+                f"- Usuario: {usuario} | Rol: {rol} | Sede: {sede} | Contraseña: {clave}"
+            )
+            lineas_html.append(
+                f"<li><b>Usuario:</b> {usuario} &nbsp; <b>Rol:</b> {rol} &nbsp; "
+                f"<b>Sede:</b> {sede} &nbsp; <b>Contraseña:</b> {clave}</li>"
+            )
 
-        # Cuerpo del correo (con contraseña en texto)
         cuerpo_txt = f"""
-Estimado/a {nombre} {apellidos},
+Estimado/a {rows[0][0]} {rows[0][1]},
 
-Desde el Sistema Millennials le recordamos sus credenciales de acceso:
+Encontramos {len(rows)} cuenta(s) asociada(s) a este correo. Detalle:
 
-Usuario: {usuario}
-Contraseña: {password_plain}
-Rol: {rol}
+{chr(10).join(lineas_txt)}
 
-Este mensaje fue enviado al correo registrado: {email_db}.
-Si usted no solicitó esta notificación, por favor ignore este correo.
+Este mensaje fue enviado a: {email}.
 """
         cuerpo_html = f"""
 <h2>Sistema Millennials</h2>
-<p>Estimado/a <strong>{nombre} {apellidos}</strong>,</p>
-<p>Le recordamos sus credenciales de acceso:</p>
+<p>Estimado/a <strong>{rows[0][0]} {rows[0][1]}</strong>,</p>
+<p>Encontramos <strong>{len(rows)}</strong> cuenta(s) asociada(s) a este correo. Detalle:</p>
 <ul>
-  <li><strong>Usuario:</strong> {usuario}</li>
-  <li><strong>Contraseña:</strong> {password_plain}</li>
-  <li><strong>Rol:</strong> {rol}</li>
+  {''.join(lineas_html)}
 </ul>
-<p>Este mensaje fue enviado al correo registrado: {email_db}.</p>
-<p>Si usted no solicitó esta notificación, por favor ignore este correo.</p>
+<p>Este mensaje fue enviado a: {email}.</p>
 """
 
         send_mail(
             subject="Recordatorio de acceso — Sistema Millennials",
             message=cuerpo_txt,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[email_db],
+            recipient_list=[email],
             fail_silently=False,
             html_message=cuerpo_html,
         )
-
-        messages.success(request, "Hemos enviado un correo con tu información de acceso.")
+        messages.success(request, "Enviamos un correo con las cuentas asociadas a ese email.")
         return redirect("login")
 
     return render(request, "core/forgot_password.html")
-
