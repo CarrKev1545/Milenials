@@ -92,10 +92,47 @@ def login_view(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         usuario = (request.POST.get("usuario") or "").strip()
         password = request.POST.get("password") or ""
+
+        # 1) Intento normal con Django (usuarios del auth)
         user = authenticate(request, username=usuario, password=password)
+
+        if user is None:
+            # 2) Fallback contra public.usuarios (bcrypt/texto/password_plain)
+            row = autenticar_usuario_tabla_usuarios(usuario, password)
+            if row:
+                u_id, nombre, apellidos, rol, usuario_db, email_db = row
+
+                # Sincroniza/crea usuario Django para sesión
+                User = get_user_model()
+                user, _created = User.objects.get_or_create(
+                    username=usuario_db,
+                    defaults={
+                        "first_name": nombre,
+                        "last_name": apellidos,
+                        "email": email_db,
+                        "is_active": True,
+                    },
+                )
+
+                # Guarda el rol para redirección
+                user.rol = str(rol)                     # atributo en runtime
+                request.session["rol"] = str(rol)       # respaldo en sesión
+                request.session["usuario_custom_id"] = int(u_id)
+
+                # Marca backend y loguea
+                user.backend = "django.contrib.auth.backends.ModelBackend"
+                login(request, user)
+
+                if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+                    return redirect(next_url)
+                return _redir_por_rol(user)
+
+        # 3) Flujo original si Django sí autenticó
         if user is None:
             error = "Usuario o contraseña incorrectos"
         else:
+            # si vienes por Django auth, intenta setear rol desde sesión previa si existe
+            user.rol = request.session.get("rol", getattr(user, "rol", ""))
             login(request, user)
             if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
                 return redirect(next_url)
@@ -103,17 +140,32 @@ def login_view(request: HttpRequest) -> HttpResponse:
 
     return render(request, "core/login.html", {"error": error, "next": next_url})
 
+
 def logout_view(request: HttpRequest) -> HttpResponse:
     logout(request)
     return redirect("login")
 
+
 def _redir_por_rol(user) -> HttpResponse:
-    rol = (getattr(user, "rol", "") or "").upper()
+    # lee rol del objeto o de la sesión (por si no existe como atributo del User)
+    try:
+        request = user._wrapped_request  # por si usas algo custom; normalmente no existe
+    except Exception:
+        request = None
+
+    rol = (getattr(user, "rol", "") or
+           (request.session.get("rol") if request and hasattr(request, "session") else "") or
+           "").upper()
+
     if rol == "RECTOR":
         return redirect("dashboard_rector")
     if rol == "DOCENTE":
         return redirect("dashboard_docente")
+    if rol == "ADMINISTRATIVO":
+        return redirect("dashboard_admin")
+    # fallback si no hay rol:
     return redirect("dashboard_admin")
+
 
 # =========================================================
 # Dashboards
