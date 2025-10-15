@@ -122,7 +122,8 @@
     }
     try {
       btnPreview.disabled = true;
-      const res = await fetch(`{% url 'api_estudiante_por_documento_simple' %}?doc=${encodeURIComponent(doc)}`, {
+      // Usa la API de este módulo
+      const res = await fetch(`{% url 'api_estudiante_por_documento' %}?doc=${encodeURIComponent(doc)}`, {
         credentials: 'same-origin'
       });
       const data = await res.json();
@@ -158,6 +159,5 @@
 })();
 </script>
 {% endblock %}
-
 
 
