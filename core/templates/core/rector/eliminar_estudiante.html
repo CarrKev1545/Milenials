@@ -48,14 +48,14 @@
               Limpiar
             </button>
 
-            <!-- Abre el modal de confirmación -->
-            <button id="btn-eliminar" type="button" class="btn btn-danger ms-auto" disabled>
+            <!-- ÚNICO botón: envía el formulario cuando hay alumno -->
+            <button id="btn-eliminar" type="submit" class="btn btn-danger ms-auto" disabled>
               Eliminar Estudiante
             </button>
           </div>
         </div>
 
-        <!-- Resumen del estudiante (se muestra solo si existe) -->
+        <!-- Resumen del estudiante -->
         <div id="preview" class="mt-4" style="display:none;">
           <div class="card border-0 shadow-sm">
             <div class="card-body">
@@ -71,28 +71,6 @@
                   <div><strong>Grado:</strong> <span id="pv-grado">-</span></div>
                   <div><strong>Grupo:</strong> <span id="pv-grupo">-</span></div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Modal de confirmación (solo aparece al pulsar Eliminar) -->
-        <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
-          <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title text-danger">Confirmar eliminación</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-              </div>
-              <div class="modal-body">
-                <p class="mb-2">
-                  Al borrar este estudiante se eliminarán <strong>todas</strong> sus notas e historial de notas.
-                </p>
-                <p class="mb-0">¿Seguro que deseas continuar?</p>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button id="btn-confirm-delete" type="submit" class="btn btn-danger">Sí, eliminar</button>
               </div>
             </div>
           </div>
@@ -118,8 +96,6 @@
   const pvGrado = document.getElementById('pv-grado');
   const pvGrupo = document.getElementById('pv-grupo');
 
-  let found = false;
-
   function resetPreview() {
     pvNom.textContent = '-';
     pvApe.textContent = '-';
@@ -129,7 +105,6 @@
     pvGrupo.textContent = '-';
     pv.style.display = 'none';
     btnEliminar.disabled = true;
-    found = false;
   }
 
   btnLimpiar.addEventListener('click', function () {
@@ -164,8 +139,7 @@
       pvGrado.textContent = est.grado || '-';
       pvGrupo.textContent = est.grupo || '-';
       pv.style.display = '';
-      btnEliminar.disabled = false;
-      found = true;
+      btnEliminar.disabled = false;  // habilita envío directo
     } catch (e) {
       resetPreview();
       alert('Error consultando el estudiante.');
@@ -181,16 +155,9 @@
       buscar();
     }
   });
-
-  // Mostrar modal SOLO cuando se pulsa "Eliminar Estudiante"
-  btnEliminar.addEventListener('click', function () {
-    if (!found) return;
-    const modalEl = document.getElementById('confirmModal');
-    const modal = new bootstrap.Modal(modalEl);
-    modal.show();
-  });
 })();
 </script>
 {% endblock %}
+
 
 
