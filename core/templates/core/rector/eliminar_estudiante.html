@@ -35,7 +35,9 @@
               placeholder="Solo dígitos (5–20)"
               required
             >
-            <div class="form-text">Escribe el documento y te mostraremos los datos antes de eliminar.</div>
+            <div class="form-text">
+              Escribe el documento y te mostraremos los datos antes de eliminar.
+            </div>
           </div>
 
           <div class="col-12 col-md-6 d-flex gap-2">
@@ -46,14 +48,14 @@
               Limpiar
             </button>
 
-            <!-- Botón que abre el modal de confirmación -->
+            <!-- Abre el modal de confirmación -->
             <button id="btn-eliminar" type="button" class="btn btn-danger ms-auto" disabled>
               Eliminar Estudiante
             </button>
           </div>
         </div>
 
-        <!-- Tarjeta de resumen (preview) -->
+        <!-- Resumen del estudiante (se muestra solo si existe) -->
         <div id="preview" class="mt-4" style="display:none;">
           <div class="card border-0 shadow-sm">
             <div class="card-body">
@@ -74,7 +76,7 @@
           </div>
         </div>
 
-        <!-- Modal de confirmación -->
+        <!-- Modal de confirmación (solo aparece al pulsar Eliminar) -->
         <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
           <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -90,7 +92,6 @@
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <!-- Este botón envía el formulario principal -->
                 <button id="btn-confirm-delete" type="submit" class="btn btn-danger">Sí, eliminar</button>
               </div>
             </div>
@@ -139,7 +140,7 @@
 
   async function buscar() {
     const doc = (inp.value || '').trim();
-    if (!/^\\d{5,20}$/.test(doc)) {
+    if (!/^\d{5,20}$/.test(doc)) {
       resetPreview();
       alert('Documento inválido. Usa solo dígitos (5–20).');
       return;
@@ -181,7 +182,7 @@
     }
   });
 
-  // Abrir modal de confirmación
+  // Mostrar modal SOLO cuando se pulsa "Eliminar Estudiante"
   btnEliminar.addEventListener('click', function () {
     if (!found) return;
     const modalEl = document.getElementById('confirmModal');
@@ -191,3 +192,5 @@
 })();
 </script>
 {% endblock %}
+
+
