@@ -122,8 +122,7 @@
     }
     try {
       btnPreview.disabled = true;
-      // Usa la NUEVA API renombrada para esta pantalla:
-      const res = await fetch(`{% url 'api_estudiante_por_documento_elim' %}?doc=${encodeURIComponent(doc)}`, {
+      const res = await fetch(`{% url 'api_estudiante_por_documento_simple' %}?doc=${encodeURIComponent(doc)}`, {
         credentials: 'same-origin'
       });
       const data = await res.json();
@@ -159,7 +158,6 @@
 })();
 </script>
 {% endblock %}
-
 
 
 
