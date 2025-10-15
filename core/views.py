@@ -55,29 +55,26 @@ from django.core.mail import send_mail
 # =========================================================
 # Login / Logout
 # =========================================================
-def autenticar_usuario_tabla_usuarios(usuario_o_email: str, password_clara: str):
-    usuario_o_email = (usuario_o_email or "").strip()
+def autenticar_usuario_tabla_usuarios(usuario: str, password_clara: str):
+    usuario = (usuario or "").strip()
     password_clara  = (password_clara  or "").strip()
-    if not usuario_o_email or not password_clara:
+    if not usuario or not password_clara:
         return None
 
     with connection.cursor() as cur:
         cur.execute("""
             SELECT id, nombre, apellidos, rol, usuario, email
             FROM public.usuarios
-            WHERE (LOWER(usuario)=LOWER(%s) OR LOWER(email)=LOWER(%s))
+            WHERE LOWER(usuario)=LOWER(%s)
               AND activo = TRUE
               AND (
                     password_hash = crypt(%s, password_hash)   -- bcrypt
-                 OR password_hash = %s                         -- compat: texto plano si existiera
-                 OR (COALESCE(password_plain, '') <> '' AND password_plain = %s) -- si agregaste esta col
+                 OR password_hash = %s                         -- compat texto plano
+                 OR (COALESCE(password_plain, '') <> '' AND password_plain = %s)
               )
             LIMIT 1
-        """, [usuario_o_email, usuario_o_email,
-              password_clara, password_clara, password_clara])
-        row = cur.fetchone()
-    # row = (id, nombre, apellidos, rol, usuario, email)
-    return row
+        """, [usuario, password_clara, password_clara, password_clara])
+        return cur.fetchone()
 
 
 @never_cache
