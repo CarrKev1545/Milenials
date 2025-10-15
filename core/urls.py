@@ -267,6 +267,7 @@ urlpatterns = [
 
     path("rector/estudiantes/eliminar/", views.rector_eliminar_estudiante, name="rector_eliminar_estudiante"),
     path("api/estudiante-por-documento/", views.api_estudiante_por_documento, name="api_estudiante_por_documento"),
+     path("api/estudiante-por-documento-simple/", views.api_estudiante_por_documento_simple, name="api_estudiante_por_documento_simple"),
 ]
 
 

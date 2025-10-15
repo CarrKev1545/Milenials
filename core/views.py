@@ -3751,57 +3751,35 @@ def rector_eliminar_estudiante(request):
     return render(request, "core/rector/eliminar_estudiante.html")
 
 
-@login_required
+@login_required(login_url="login")
 @rector_required
 @require_GET
-def api_estudiante_por_documento(request):
+def api_estudiante_por_documento_simple(request: HttpRequest) -> JsonResponse:
     """
-    Devuelve datos del estudiante y su grupo ACTUAL (si tiene) por documento.
-    Respuesta JSON para el preview en la vista.
+    Variante simple: busca estudiante por documento y devuelve
+    {id, documento, nombre, apellidos, nombre_completo}.
+    NO reemplaza a `api_estudiante_por_documento`; evita colisiones.
     """
-    documento = (request.GET.get("doc") or "").strip()
-    if not documento:
-        return JsonResponse({"ok": False, "error": "Falta parámetro doc"}, status=400)
-
-    if not re.fullmatch(r"\d{5,20}", documento):
-        return JsonResponse({"ok": False, "error": "Documento inválido"}, status=400)
+    doc = (request.GET.get("doc") or "").strip()
+    if not re.fullmatch(r"\d{5,20}", doc or ""):
+        return JsonResponse({"detail": "Parámetro 'doc' inválido."}, status=400)
 
     with connection.cursor() as cur:
-        cur.execute("""
-            SELECT
-                e.id,
-                e.documento,
-                e.nombre,
-                e.apellidos,
-                s.nombre AS sede,
-                gr.nombre AS grado,
-                g.nombre  AS grupo
-            FROM public.estudiantes e
-            LEFT JOIN public.estudiante_grupo eg
-                   ON eg.estudiante_id = e.id
-                  AND eg.fecha_fin IS NULL
-            LEFT JOIN public.grupos g ON g.id = eg.grupo_id
-            LEFT JOIN public.grados gr ON gr.id = g.grado_id
-            LEFT JOIN public.sedes  s  ON s.id  = g.sede_id
-            WHERE e.documento = %s
-            LIMIT 1;
-        """, [documento])
-        row = cur.fetchone()
+        cur.execute(
+            "SELECT id, documento, nombre, apellidos "
+            "FROM public.estudiantes WHERE documento=%s LIMIT 1;",
+            [doc],
+        )
+        r = cur.fetchone()
 
-    if not row:
-        return JsonResponse({"ok": False, "found": False})
+    if not r:
+        # Si te conviene que esta variante NO rompa el flujo del cliente, puedes devolver 200 con found=False
+        return JsonResponse({"detail": "No encontrado"}, status=404)
 
-    est_id, doc, nombre, apellidos, sede, grado, grupo = row
     return JsonResponse({
-        "ok": True,
-        "found": True,
-        "estudiante": {
-            "id": est_id,
-            "documento": doc,
-            "nombre": nombre,
-            "apellidos": apellidos,
-            "sede": sede or "-",
-            "grado": grado or "-",
-            "grupo": grupo or "-",
-        }
+        "id": r[0],
+        "documento": r[1],
+        "nombre": r[2],
+        "apellidos": r[3],
+        "nombre_completo": f"{r[2]} {r[3]}".strip(),
     })
