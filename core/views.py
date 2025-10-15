@@ -3693,8 +3693,8 @@ def rector_eliminar_estudiante(request):
             if est_borrados:
                 messages.success(
                     request,
-                    f"Estudiante {est_apellidos} {est_nombre} (doc: {documento}) eliminado. "
-                    f"Notas: {notas_borradas}, Historial: {hist_borradas}."
+                    f"Estudiante {est_apellidos} {est_nombre} (doc: {documento}) eliminado correctamente."
+                   
                 )
             else:
                 messages.warning(request, "No se pudo eliminar el estudiante (ya no existía).")
