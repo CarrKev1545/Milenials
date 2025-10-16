@@ -4100,15 +4100,17 @@ def docente_planillas_index(request):
         """, [user_id])
         grados = cur.fetchall()
 
-        # Grupos del docente
+        # Grupos del docente (FIX: ORDER BY 2)
         cur.execute("""
-            SELECT DISTINCT g.id, CONCAT(s.nombre, ' - ', gr.nombre, ' - ', g.nombre)
+            SELECT DISTINCT
+                g.id,
+                CONCAT(s.nombre, ' - ', gr.nombre, ' - ', g.nombre) AS label
             FROM public.docente_grupo dg
             JOIN public.grupos g   ON g.id  = dg.grupo_id
             JOIN public.sedes s    ON s.id  = g.sede_id
             JOIN public.grados gr  ON gr.id = g.grado_id
             WHERE dg.docente_id = (SELECT id FROM public.docentes WHERE usuario_id = %s)
-            ORDER BY s.nombre, gr.nombre, g.nombre;
+            ORDER BY 2;
         """, [user_id])
         grupos = cur.fetchall()
 
@@ -4120,6 +4122,7 @@ def docente_planillas_index(request):
             "sel_sede": sede, "sel_grado": grado, "sel_grupo": grupo,
         },
     )
+
 
 # ======================================
 #  LANDING DE EXPORTACIÓN (REDIRECCIÓN)
