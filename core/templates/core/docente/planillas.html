@@ -5,10 +5,10 @@
 <main class="main">
   <h1 class="mb-3">Planillas</h1>
 
-  <form method="get" action="{% url 'docente_planillas_export_landing' %}" class="row g-2">
+  <form method="get" action="{% url 'docente_planillas_export_landing' %}" class="row g-2" autocomplete="off" novalidate>
     <div class="col-md-3">
-      <label class="form-label">Sede</label>
-      <select name="sede" class="form-select">
+      <label class="form-label" for="f_sede">Sede</label>
+      <select id="f_sede" name="sede" class="form-select">
         <option value="">Todas</option>
         {% for id, nombre in sedes %}
           <option value="{{ id }}" {% if sel_sede == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
@@ -17,8 +17,8 @@
     </div>
 
     <div class="col-md-3">
-      <label class="form-label">Grado</label>
-      <select name="grado" class="form-select">
+      <label class="form-label" for="f_grado">Grado</label>
+      <select id="f_grado" name="grado" class="form-select">
         <option value="">Todos</option>
         {% for id, nombre in grados %}
           <option value="{{ id }}" {% if sel_grado == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
@@ -27,8 +27,8 @@
     </div>
 
     <div class="col-md-3">
-      <label class="form-label">Grupo</label>
-      <select name="grupo" class="form-select">
+      <label class="form-label" for="f_grupo">Grupo</label>
+      <select id="f_grupo" name="grupo" class="form-select">
         <option value="">Todos</option>
         {% for id, label in grupos %}
           <option value="{{ id }}" {% if sel_grupo == id|stringformat:'s' %}selected{% endif %}>{{ label }}</option>
@@ -37,10 +37,22 @@
     </div>
 
     <div class="col-md-3 d-flex align-items-end gap-2">
-      <button class="btn btn-outline-danger" name="formato" value="pdf"   formtarget="_blank" rel="noopener">PDF</button>
-      <button class="btn btn-outline-success" name="formato" value="excel" formtarget="_blank" rel="noopener">Excel</button>
+      <button class="btn btn-outline-danger" name="formato" value="pdf"   formtarget="_blank">PDF</button>
+      <button class="btn btn-outline-success" name="formato" value="excel" formtarget="_blank">Excel</button>
     </div>
   </form>
 </main>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+  // (Opcional) auto-submit al cambiar filtros para que queden fijados en la URL
+  const form = document.querySelector('form[action$="docente/planillas/export/landing/"]') || document.querySelector('form[action*="docente_planillas_export_landing"]');
+  ['f_sede','f_grado','f_grupo'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', ()=> form && form.submit());
+  });
+</script>
+{% endblock %}
+
 

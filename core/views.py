@@ -55,7 +55,7 @@ from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment
 from .decorators import docente_required
-
+from django.contrib.auth.decorators import login_required, user_passes_test
 
 
 # =========================================================
@@ -4036,12 +4036,34 @@ Este mensaje fue enviado a: {email}.
 
     return render(request, "core/forgot_password.html")
 
+# === IMPORTS NECESARIOS (si no los tienes ya en la cabecera) ===
+
+
+
+
+
+# ---------- Decorador de rol Docente (rápido y seguro) ----------
+def _es_docente(user):
+    # Ajusta a tu regla real: por grupo "Docente" o por campo perfil. Dejo ambas.
+    return (
+        user.is_authenticated and (
+            user.groups.filter(name__iexact="Docente").exists()
+            or getattr(user, "rol", "").upper() == "DOCENTE"
+        )
+    )
+
+def docente_required(view_func):
+    return user_passes_test(_es_docente, login_url="login")(view_func)
+
+# =========================
+#  LISTADO / FILTROS (UI)
+# =========================
 @login_required
 @docente_required
 def docente_planillas_index(request):
     """
     Pantalla con filtros (sede, grado, grupo) y botones de descarga.
-    Los catálogos están restringidos a los grupos del docente.
+    Catálogos restringidos a los grupos asignados al docente.
     """
     sede  = (request.GET.get("sede") or "").strip()
     grado = (request.GET.get("grado") or "").strip()
@@ -4049,7 +4071,7 @@ def docente_planillas_index(request):
     user_id = request.user.id
 
     with connection.cursor() as cur:
-        # Sedes/grados/grupos SOLO de los grupos asignados al docente
+        # Sedes del docente
         cur.execute("""
             SELECT DISTINCT s.id, s.nombre
             FROM public.docente_grupo dg
@@ -4060,6 +4082,7 @@ def docente_planillas_index(request):
         """, [user_id])
         sedes = cur.fetchall()
 
+        # Grados del docente
         cur.execute("""
             SELECT DISTINCT gr.id, gr.nombre
             FROM public.docente_grupo dg
@@ -4070,6 +4093,7 @@ def docente_planillas_index(request):
         """, [user_id])
         grados = cur.fetchall()
 
+        # Grupos del docente
         cur.execute("""
             SELECT DISTINCT g.id, CONCAT(s.nombre, ' - ', gr.nombre, ' - ', g.nombre)
             FROM public.docente_grupo dg
@@ -4083,7 +4107,7 @@ def docente_planillas_index(request):
 
     return render(
         request,
-        "core/docente/planillas.html",     # crea este template (ver abajo)
+        "core/docente/planillas.html",
         {
             "sedes": sedes, "grados": grados, "grupos": grupos,
             "sel_sede": sede, "sel_grado": grado, "sel_grupo": grupo,
@@ -4099,7 +4123,7 @@ def docente_planillas_index(request):
 def docente_planillas_export_landing(request):
     """
     Recibe ?formato=pdf|excel + filtros y redirige a la URL concreta
-    de exportación manteniendo los parámetros. (sin namespace en reverse).
+    de exportación manteniendo los parámetros.
     """
     formato = (request.GET.get("formato") or "pdf").lower()
     sede    = (request.GET.get("sede") or "").strip()
@@ -4132,7 +4156,6 @@ def docente_planillas_export_excel(request):
             return HttpResponse("Parámetros inválidos.", status=400)
 
     with connection.cursor() as cur:
-        # Misma consulta que Rector pero restringida a los grupos del docente
         cur.execute("""
             SELECT e.apellidos, e.nombre, e.documento,
                    gr.nombre AS grado, g.nombre AS grupo
@@ -4153,27 +4176,15 @@ def docente_planillas_export_excel(request):
         """, [user_id, sede, sede, grado, grado, grupo, grupo])
         filas = cur.fetchall()
 
-        cur.execute(
-            "SELECT COALESCE((SELECT nombre FROM public.sedes WHERE id::text=%s), 'Todas');",
-            [sede or ""],
-        )
+        cur.execute("SELECT COALESCE((SELECT nombre FROM public.sedes  WHERE id::text=%s), 'Todas');", [sede or ""])
         header_sede = cur.fetchone()[0]
-
-        cur.execute(
-            "SELECT COALESCE((SELECT nombre FROM public.grados WHERE id::text=%s), 'Todos');",
-            [grado or ""],
-        )
+        cur.execute("SELECT COALESCE((SELECT nombre FROM public.grados WHERE id::text=%s), 'Todos');", [grado or ""])
         header_grado = cur.fetchone()[0]
-
-        cur.execute(
-            "SELECT COALESCE((SELECT nombre FROM public.grupos WHERE id::text=%s), 'Todos');",
-            [grupo or ""],
-        )
+        cur.execute("SELECT COALESCE((SELECT nombre FROM public.grupos WHERE id::text=%s), 'Todos');", [grupo or ""])
         header_grupo = cur.fetchone()[0]
 
     titulo = f"Planilla - Sede: {header_sede} | Grado: {header_grado} | Grupo: {header_grupo}"
 
-    # ======= Excel (openpyxl) — IGUAL QUE RECTOR =======
     wb = Workbook()
     ws = wb.active
     ws.title = "Estudiantes activos"
@@ -4184,7 +4195,7 @@ def docente_planillas_export_excel(request):
     cell_title.font = Font(size=14, bold=True)
     cell_title.alignment = Alignment(horizontal="center")
 
-    ws.append([])  # fila en blanco
+    ws.append([])
     headers = ["Apellidos", "Nombres", "Documento", "Grado", "Grupo"]
     ws.append(headers)
     for col_idx in range(1, len(headers) + 1):
@@ -4257,10 +4268,10 @@ def docente_planillas_export_pdf(request):
         cur.execute("SELECT COALESCE((SELECT nombre FROM public.grupos WHERE id::text=%s), 'Todos');", [grupo or ""])
         header_grupo = cur.fetchone()[0]
 
-    # Render HTML (puedes reutilizar el mismo template del Rector cambiando ruta si es genérico)
+    # Reutiliza el mismo HTML que Rector si quieres (ajusta ruta); aquí uso uno en /core/docente/pdf.html
     html = render(
         request,
-        "core/docente/pdf.html",  # crea este template gemelo al del rector
+        "core/docente/pdf.html",
         {
             "filas": filas,
             "header_sede": header_sede,
