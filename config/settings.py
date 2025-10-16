@@ -55,7 +55,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Nuestras apps
-    'core',
+   
     'academico',
     'reportes',
     'core.apps.CoreConfig',
