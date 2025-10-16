@@ -155,3 +155,17 @@ class Nota(models.Model):
     def __str__(self):
         return f"Nota {self.nota} (estudiante_id={self.estudiante_id}, periodo_id={self.periodo_id})"
 
+class UserActiveSession(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="active_session"
+    )
+    session_key = models.CharField(max_length=40, unique=True)
+    user_agent = models.TextField(blank=True, default="")
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user_id} -> {self.session_key}"

@@ -27,7 +27,8 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-%a&9qy-#v_^6y)*0-%6)u
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["millennials.onrender.com"]
+CSRF_TRUSTED_ORIGINS = ["https://millennials.onrender.com"]
 
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
@@ -75,6 +76,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     'core.middleware.NoCacheForAuthenticatedHTMLMiddleware',
+    'core.middleware.SingleSessionEnforceMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -199,3 +201,4 @@ SECURE_HSTS_PRELOAD = not DEBUG
 SECURE_SSL_REDIRECT = not DEBUG
 SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 X_FRAME_OPTIONS = "DENY"
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
