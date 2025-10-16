@@ -44,7 +44,6 @@ from django.views.decorators.cache import never_cache  # <-- importa esto
 
 # imports de modelos (deben estar juntos)
 from .models import Sede, Grupo, Estudiante, EstudianteGrupo
-from .models import Docente, Grupo, Grado
 from django.utils import timezone
 from django.db import connection, transaction
 from django.contrib import messages
