@@ -4035,25 +4035,33 @@ Este mensaje fue enviado a: {email}.
 
     return render(request, "core/forgot_password.html")
 
-# === IMPORTS NECESARIOS (si no los tienes ya en la cabecera) ===
-
-
-
-
-
-# ---------- Decorador de rol Docente (rápido y seguro) ----------
 def _es_docente(user):
-    # Ajusta a tu regla real: por grupo "Docente" o por campo perfil. Dejo ambas.
-    return (
-        user.is_authenticated and (
-            user.groups.filter(name__iexact="Docente").exists()
-            or getattr(user, "rol", "").upper() == "DOCENTE"
-        )
-    )
+    if not getattr(user, "is_authenticated", False):
+        return False
+
+    # 1) Si el modelo tiene groups, úsalo
+    groups = getattr(user, "groups", None)
+    try:
+        if groups is not None and groups.filter(name__iexact="Docente").exists():
+            return True
+    except Exception:
+        pass  # por si el backend de auth no soporta .groups
+
+    # 2) Si el modelo tiene un campo rol/role
+    rol = (getattr(user, "rol", "") or getattr(user, "role", "") or "").strip().lower()
+    if rol == "docente":
+        return True
+
+    # 3) Fallback: si el usuario está en la tabla docentes
+    with connection.cursor() as cur:
+        cur.execute("SELECT 1 FROM public.docentes WHERE usuario_id = %s LIMIT 1;", [user.id])
+        if cur.fetchone():
+            return True
+
+    return False
 
 def docente_required(view_func):
     return user_passes_test(_es_docente, login_url="login")(view_func)
-
 # =========================
 #  LISTADO / FILTROS (UI)
 # =========================
