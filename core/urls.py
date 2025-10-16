@@ -271,6 +271,10 @@ urlpatterns = [
     path("api/grados-por-sede-simple/",views.api_grados_por_sede_simple,name="api_grados_por_sede_simple",),
     path("api/estudiante-por-documento-elim/",views.api_estudiante_por_documento_elim,name="api_estudiante_por_documento_elim",),
     path("forgot-password/", views.forgot_password_view, name="forgot_password"),
+
+    path("docente/planillas/", views.docente_planillas, name="docente_planillas"),
+    path("docente/planillas/export/pdf/", views.docente_planillas_export_pdf, name="docente_planillas_export_pdf"),
+    path("docente/planillas/export/xlsx/", views.docente_planillas_export_xlsx, name="docente_planillas_export_xlsx"),
 ]
 
 

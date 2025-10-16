@@ -37,7 +37,7 @@
 
 {% block extra_js %}
 <script>
-  // Toda la tarjeta es clickeable (como en Rector)
+  // Toda la tarjeta es clickeable
   document.addEventListener('click', (ev) => {
     const card = ev.target.closest('.card[data-link]');
     if (!card) return;

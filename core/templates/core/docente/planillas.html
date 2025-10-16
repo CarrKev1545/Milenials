@@ -1,0 +1,46 @@
+{% extends "core/base_dashboard_docente.html" %}
+{% block title %}Planillas - Docente{% endblock %}
+
+{% block content %}
+<main class="main">
+  <h1 class="mb-3">Planillas</h1>
+
+  <form method="get" action="{% url 'docente_planillas_export_landing' %}" class="row g-2">
+    <div class="col-md-3">
+      <label class="form-label">Sede</label>
+      <select name="sede" class="form-select">
+        <option value="">Todas</option>
+        {% for id, nombre in sedes %}
+          <option value="{{ id }}" {% if sel_sede == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Grado</label>
+      <select name="grado" class="form-select">
+        <option value="">Todos</option>
+        {% for id, nombre in grados %}
+          <option value="{{ id }}" {% if sel_grado == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Grupo</label>
+      <select name="grupo" class="form-select">
+        <option value="">Todos</option>
+        {% for id, label in grupos %}
+          <option value="{{ id }}" {% if sel_grupo == id|stringformat:'s' %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-3 d-flex align-items-end gap-2">
+      <button class="btn btn-outline-danger" name="formato" value="pdf"   formtarget="_blank" rel="noopener">PDF</button>
+      <button class="btn btn-outline-success" name="formato" value="excel" formtarget="_blank" rel="noopener">Excel</button>
+    </div>
+  </form>
+</main>
+{% endblock %}
+
