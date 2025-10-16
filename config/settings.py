@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'core',
     'academico',
     'reportes',
+    'core.apps.CoreConfig',
 ]
 
 AUTH_USER_MODEL = 'core.Usuario'
