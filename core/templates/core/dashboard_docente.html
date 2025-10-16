@@ -31,6 +31,16 @@
         Reportes académicos
       </a>
     </article>
+    <article class="card home-card" role="button" tabindex="0" aria-labelledby="label-planillas" data-link="{% url 'docente_planillas_index' %}">
+        <div class="card-header"><h2>Planillas</h2></div>
+         <div class="card-box">
+          <i class="fa-solid fa-table" aria-hidden="true"></i>
+          </div>
+            <a id="label-planillas" class="label btn btn--danger"
+              href="{% url 'docente_planillas_index' %}">
+                Planillas
+            </a>
+      </article>
   </div>
 </main>
 {% endblock %}
