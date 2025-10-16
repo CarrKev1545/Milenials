@@ -4068,50 +4068,50 @@ def docente_required(view_func):
 @login_required
 @docente_required
 def docente_planillas_index(request):
-    """
-    Pantalla con filtros (sede, grado, grupo) y botones de descarga.
-    Catálogos restringidos a los grupos asignados al docente.
-    """
     sede  = (request.GET.get("sede") or "").strip()
     grado = (request.GET.get("grado") or "").strip()
-    grupo = (request.GET.get("grupo") or "").strip()
+    grupo = (request.GET.get("grupo") or "").strip()  # se mantiene por si ya viene seleccionado
     user_id = request.user.id
 
     with connection.cursor() as cur:
-        # Sedes del docente
+        # SEDES del docente (igual)
         cur.execute("""
             SELECT DISTINCT s.id, s.nombre
             FROM public.docente_grupo dg
-            JOIN public.grupos g  ON g.id  = dg.grupo_id
-            JOIN public.sedes  s  ON s.id  = g.sede_id
+            JOIN public.grupos g  ON g.id = dg.grupo_id
+            JOIN public.sedes  s  ON s.id = g.sede_id
             WHERE dg.docente_id = (SELECT id FROM public.docentes WHERE usuario_id = %s)
             ORDER BY s.nombre;
         """, [user_id])
         sedes = cur.fetchall()
 
-        # Grados del docente
+        # GRADOS del docente, opcionalmente restringidos por SEDE
         cur.execute("""
             SELECT DISTINCT gr.id, gr.nombre
             FROM public.docente_grupo dg
-            JOIN public.grupos g   ON g.id   = dg.grupo_id
-            JOIN public.grados gr  ON gr.id  = g.grado_id
+            JOIN public.grupos g   ON g.id = dg.grupo_id
+            JOIN public.grados gr  ON gr.id = g.grado_id
+            JOIN public.sedes  s   ON s.id = g.sede_id
             WHERE dg.docente_id = (SELECT id FROM public.docentes WHERE usuario_id = %s)
+              AND (%s = '' OR s.id::text = %s)
             ORDER BY gr.nombre;
-        """, [user_id])
+        """, [user_id, sede, sede])
         grados = cur.fetchall()
 
-        # Grupos del docente (FIX: ORDER BY 2)
+        # GRUPOS del docente, restringidos por SEDE (y GRADO si se eligió)
         cur.execute("""
             SELECT DISTINCT
                 g.id,
                 CONCAT(s.nombre, ' - ', gr.nombre, ' - ', g.nombre) AS label
             FROM public.docente_grupo dg
-            JOIN public.grupos g   ON g.id  = dg.grupo_id
-            JOIN public.sedes s    ON s.id  = g.sede_id
+            JOIN public.grupos g   ON g.id = dg.grupo_id
             JOIN public.grados gr  ON gr.id = g.grado_id
+            JOIN public.sedes  s   ON s.id = g.sede_id
             WHERE dg.docente_id = (SELECT id FROM public.docentes WHERE usuario_id = %s)
-            ORDER BY 2;
-        """, [user_id])
+              AND (%s = '' OR s.id::text  = %s)
+              AND (%s = '' OR gr.id::text = %s)
+            ORDER BY 2;  -- por la etiqueta
+        """, [user_id, sede, sede, grado, grado])
         grupos = cur.fetchall()
 
     return render(

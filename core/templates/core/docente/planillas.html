@@ -5,10 +5,11 @@
 <main class="main">
   <h1 class="mb-3">Planillas</h1>
 
-  <form method="get" action="{% url 'docente_planillas_export_landing' %}" class="row g-2" autocomplete="off" novalidate>
+  {# 👉 El form ahora apunta al INDEX, NO al landing #}
+  <form method="get" action="{% url 'docente_planillas_index' %}" class="row g-2" autocomplete="off" novalidate>
     <div class="col-md-3">
       <label class="form-label" for="f_sede">Sede</label>
-      <select id="f_sede" name="sede" class="form-select">
+      <select id="f_sede" name="sede" class="form-select" onchange="this.form.submit()">
         <option value="">Todas</option>
         {% for id, nombre in sedes %}
           <option value="{{ id }}" {% if sel_sede == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
@@ -18,7 +19,7 @@
 
     <div class="col-md-3">
       <label class="form-label" for="f_grado">Grado</label>
-      <select id="f_grado" name="grado" class="form-select">
+      <select id="f_grado" name="grado" class="form-select" onchange="this.form.submit()">
         <option value="">Todos</option>
         {% for id, nombre in grados %}
           <option value="{{ id }}" {% if sel_grado == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
@@ -37,22 +38,24 @@
     </div>
 
     <div class="col-md-3 d-flex align-items-end gap-2">
-      <button class="btn btn-outline-danger" name="formato" value="pdf"   formtarget="_blank">PDF</button>
-      <button class="btn btn-outline-success" name="formato" value="excel" formtarget="_blank">Excel</button>
+      {# 👉 Los botones sí van al landing y abren en otra pestaña #}
+      <button class="btn btn-outline-danger"
+              type="submit"
+              name="formato" value="pdf"
+              formaction="{% url 'docente_planillas_export_landing' %}"
+              formtarget="_blank">
+        PDF
+      </button>
+
+      <button class="btn btn-outline-success"
+              type="submit"
+              name="formato" value="excel"
+              formaction="{% url 'docente_planillas_export_landing' %}"
+              formtarget="_blank">
+        Excel
+      </button>
     </div>
   </form>
 </main>
 {% endblock %}
-
-{% block extra_js %}
-<script>
-  // (Opcional) auto-submit al cambiar filtros para que queden fijados en la URL
-  const form = document.querySelector('form[action$="docente/planillas/export/landing/"]') || document.querySelector('form[action*="docente_planillas_export_landing"]');
-  ['f_sede','f_grado','f_grupo'].forEach(id=>{
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('change', ()=> form && form.submit());
-  });
-</script>
-{% endblock %}
-
 
