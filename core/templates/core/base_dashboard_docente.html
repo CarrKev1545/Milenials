@@ -24,7 +24,14 @@
       <img src="{% static 'img/logo2.jpeg' %}" alt="Logo colegio" class="logo" />
       <div class="nav-title">
         <h3>MILLENNIALS</h3>
-        <span class="user-name">{{ request.user.usuario }} · DOCENTE</span>
+        <span class="user-name">
+          {% if request.user.first_name or request.user.last_name %}
+            {{ request.user.first_name }} {{ request.user.last_name }}
+          {% else %}
+            {{ request.user.username }}
+          {% endif %}
+          · DOCENTE
+        </span>
       </div>
     </div>
     <nav class="nav-menu" aria-label="Menú principal">
