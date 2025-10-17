@@ -58,7 +58,7 @@
     </nav>
 
     <div class="nav-right">
-      <a class="btn-logout" href="{% url 'logout' %}">Salir</a>
+      <a class="btn-logout" href="{% url 'logout' %}">Cerrar sesión</a>
     </div>
   </header>
 
@@ -86,9 +86,13 @@
         </div>
       </div>
 
-      <div class="footer-center">© {% now "Y" %} — Todos los derechos reservados</div>
+      <div class="footer-center">
+        <div>Dirección: Cl. 14 Sur #12-00, Granada, Cundinamarca</div>
+        <div>Tel: (+57) 312 4825634 · Email: secgranada@iedgur.edu.co.</div>
+      </div>
 
       <div class="footer-right">
+        <div class="copyright">© {% now "Y" %} — Todos los derechos reservados</div>
         <div class="copyright">v1.0</div>
       </div>
     </div>
