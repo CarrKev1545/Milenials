@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
   <link rel="stylesheet" href="{% static 'css/responsive.patch.css' %}">
 
+
   <!-- CSS extra por página -->
   {% block extra_css %}{% endblock %}
 </head>
@@ -27,13 +28,7 @@
       <div class="brand" style="font-weight:800;">Millennials</div>
       <div class="spacer" style="flex:1;"></div>
       <div class="user-name text-muted" aria-live="polite">
-        Usuario: 
-        {% if request.user.first_name or request.user.last_name %}
-          {{ request.user.first_name }} {{ request.user.last_name }}
-        {% else %}
-          {{ request.user.username }}
-        {% endif %}
-        · Rol: {{ request.user.rol }}
+        Usuario: {{ request.user.usuario }} · Rol: {{ request.user.rol }}
       </div>
       <a class="btn btn--ghost" href="{% url 'logout' %}">Cerrar sesión</a>
     </div>
