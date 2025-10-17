@@ -11,98 +11,46 @@
   @media (max-width: 48em) { :root { font-size: 13px; } }
   @media (max-width: 36em) { :root { font-size: 12px; } }
 
-  .page-title{position:sticky; top:var(--navbar-height); z-index:40;
-    background:var(--accent); color:#fff; font-weight:800; letter-spacing:.0125em;
-    text-align:center; padding:.625rem .75rem; box-shadow:0 .25rem .75rem rgba(0,0,0,.35)}
-
+  .page-title{position:sticky; top:var(--navbar-height); z-index:40;background:var(--accent); color:#fff; font-weight:800; letter-spacing:.0125em;text-align:center; padding:.625rem .75rem; box-shadow:0 .25rem .75rem rgba(0,0,0,.35)}
   .rg{width:100%;max-width:73.75rem;margin:0 auto;padding:0 1.25rem}
   .rg-wrap{position:relative;margin-top:.875rem}
-  .rg-wrap::before{
-    content:""; position:absolute; inset:-1.125rem -1.375rem; border-radius:1.125rem;
-    background:radial-gradient(140% 160% at 10% 0%, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 45%),
-               linear-gradient(135deg, rgba(22,22,24,.88) 0%, rgba(16,16,18,.86) 100%);
-    border:1px solid rgba(255,255,255,.10); backdrop-filter: blur(.375rem) saturate(115%);
-    box-shadow:0 1.375rem 2.75rem rgba(0,0,0,.50); z-index:0
-  }
+  .rg-wrap::before{content:""; position:absolute; inset:-1.125rem -1.375rem; border-radius:1.125rem;background:radial-gradient(140% 160% at 10% 0%, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 45%),linear-gradient(135deg, rgba(22,22,24,.88) 0%, rgba(16,16,18,.86) 100%);border:1px solid rgba(255,255,255,.10); backdrop-filter: blur(.375rem) saturate(115%);box-shadow:0 1.375rem 2.75rem rgba(0,0,0,.50); z-index:0}
   .rg-inner{position:relative;z-index:1;padding:1.75rem 1.5rem 1.5rem}
-  .rg-badge{width:23.125rem;max-width:90vw;margin:0 auto;margin-top:-1.375rem;background:#0c0c0c;border-radius:1rem;
-    box-shadow:0 1rem 1.875rem rgba(0,0,0,.55), inset 0 -.5rem 1.375rem rgba(0,0,0,.22);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.125rem 1rem .75rem}
+  .rg-badge{width:23.125rem;max-width:90vw;margin:0 auto;margin-top:-1.375rem;background:#0c0c0c;border-radius:1rem;box-shadow:0 1rem 1.875rem rgba(0,0,0,.55), inset 0 -.5rem 1.375rem rgba(0,0,0,.22);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.125rem 1rem .75rem}
   .rg-badge i{font-size:5.125rem;color:#fff;filter:drop-shadow(0 .625rem 1.875rem rgba(0,0,0,.6))}
   .rg-chip{margin-top:.75rem;background:var(--accent);color:#fff;padding:.5rem 1.125rem;border-radius:999px;font-weight:800;letter-spacing:.0125em}
-
   :root{ --panel-dark:#0f172a; --panel-darker:#0b1220; }
   .meta-tags{display:flex;flex-wrap:wrap;gap:.625rem;margin:1rem .125rem .625rem}
-  .meta-tag{
-    background:linear-gradient(180deg,var(--panel-dark),var(--panel-darker));
-    color:#fff;border:1px solid rgba(255,255,255,.08);
-    padding:.5rem .75rem;border-radius:.75rem;font-weight:900;letter-spacing:.0125em;
-    box-shadow:0 .5rem 1rem rgba(0,0,0,.28)
-  }
-
-  .table-card{background:#fff;border-radius:1rem;box-shadow:0 .75rem 1.875rem rgba(0,0,0,.18);
-    border:1px solid #e5e9f2; overflow:hidden}
+  .meta-tag{background:linear-gradient(180deg,var(--panel-dark),var(--panel-darker));color:#fff;border:1px solid rgba(255,255,255,.08);padding:.5rem .75rem;border-radius:.75rem;font-weight:900;letter-spacing:.0125em;box-shadow:0 .5rem 1rem rgba(0,0,0,.28)}
+  .table-card{background:#fff;border-radius:1rem;box-shadow:0 .75rem 1.875rem rgba(0,0,0,.18);border:1px solid #e5e9f2; overflow:hidden}
   .table-responsive{width:100%;max-height:28.75rem;overflow:auto;background:#eef2f6}
   .table-responsive::-webkit-scrollbar{height:.625rem;width:.625rem}
   .table-responsive::-webkit-scrollbar-thumb{background:#9aa4b2;border-radius:999px}
   .table-responsive::-webkit-scrollbar-track{background:#e6ebf3;border-radius:999px}
-
   table.tabla{width:100%;border-collapse:separate;border-spacing:0 .625rem}
-  .tabla thead th{
-    position:sticky; top:0; z-index:4;
-    background:linear-gradient(180deg,var(--panel-dark),var(--panel-darker));
-    color:#fff;font-weight:900;text-transform:uppercase;letter-spacing:.02em;
-    text-align:left;padding:.875rem 1rem; box-shadow:0 .25rem 0 rgba(255,255,255,.04)
-  }
-  .tabla th:nth-child(1){width:42%}
-  .tabla th:nth-child(2){width:16%}
-  .tabla th:nth-child(3){width:16%}
-  .tabla th:nth-child(4){width:10%}
-  .tabla th:nth-child(5){width:16%}
-
-  .tabla tbody td{background:#fff; color:#0b1220; border:1px solid #e6ebf3;
-    padding:.875rem 1rem; vertical-align:middle; transition:filter .12s, box-shadow .12s, background .12s}
+  .tabla thead th{position:sticky; top:0; z-index:4;background:linear-gradient(180deg,var(--panel-dark),var(--panel-darker));color:#fff;font-weight:900;text-transform:uppercase;letter-spacing:.02em;text-align:left;padding:.875rem 1rem; box-shadow:0 .25rem 0 rgba(255,255,255,.04)}
+  .tabla th:nth-child(1){width:42%}.tabla th:nth-child(2){width:16%}.tabla th:nth-child(3){width:16%}.tabla th:nth-child(4){width:10%}.tabla th:nth-child(5){width:16%}
+  .tabla tbody td{background:#fff; color:#0b1220; border:1px solid #e6ebf3;padding:.875rem 1rem; vertical-align:middle;transition:filter .12s, box-shadow .12s, background .12s}
   .tabla tbody tr td:first-child{border-top-left-radius:.75rem;border-bottom-left-radius:.75rem;border-left-width:1px}
   .tabla tbody tr td:last-child {border-top-right-radius:.75rem;border-bottom-right-radius:.75rem;border-right-width:1px}
   .tabla tbody tr:hover td{filter:saturate(110%); box-shadow:0 .5rem 1.125rem rgba(2,6,23,.08); background:#fff}
-
   .tabla thead th:first-child{left:0; z-index:5}
   .tabla tbody td:first-child{position:sticky; left:0; z-index:3; background:#fff; box-shadow:.0625rem 0 0 #e6ebf3}
-
   .alum{font-weight:900;letter-spacing:.0125em}
-  .doc{opacity:.9;font-weight:800;font-variant-numeric:tabular-nums;
-       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
-
-  .inp-nota, .inp-fallas{
-    width:7.375rem; height:2.5rem; border:1px solid #cfd8dc; border-radius:.625rem; background:#f8fafc;
-    padding:0 .625rem; font-weight:800; text-align:center; font-variant-numeric:tabular-nums; letter-spacing:.0125em;
-    transition:border-color .12s ease, box-shadow .12s ease, background .12s ease
-  }
+  .doc{opacity:.9;font-weight:800;font-variant-numeric:tabular-nums;font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+  .inp-nota, .inp-fallas{width:7.375rem; height:2.5rem; border:1px solid #cfd8dc; border-radius:.625rem; background:#f8fafc;padding:0 .625rem; font-weight:800; text-align:center; font-variant-numeric:tabular-nums; letter-spacing:.0125em;transition:border-color .12s ease, box-shadow .12s ease, background .12s ease}
   .inp-fallas{width:6rem}
-  .inp-nota:focus, .inp-fallas:focus{outline:none; border-color: var(--accent);
-    box-shadow:0 0 0 .1875rem color-mix(in srgb, var(--accent) 25%, transparent); background:#fff}
-  .inp-nota::-webkit-outer-spin-button,
-  .inp-nota::-webkit-inner-spin-button,
-  .inp-fallas::-webkit-outer-spin-button,
-  .inp-fallas::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0 }
-
-  .rg-btn{height:2.5rem; min-width:8.25rem; border-radius:.625rem;
-    background:var(--accent); color:#fff; border:0;
-    box-shadow:0 .75rem 1.375rem color-mix(in srgb, var(--accent) 28%, transparent);
-    font-weight:900; letter-spacing:.0125em; padding:0 1rem; cursor:pointer}
+  .inp-nota:focus, .inp-fallas:focus{outline:none; border-color: var(--accent);box-shadow:0 0 0 .1875rem color-mix(in srgb, var(--accent) 25%, transparent); background:#fff}
+  .inp-nota::-webkit-outer-spin-button,.inp-nota::-webkit-inner-spin-button,.inp-fallas::-webkit-outer-spin-button,.inp-fallas::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0 }
+  .rg-btn{height:2.5rem; min-width:8.25rem; border-radius:.625rem;background:var(--accent); color:#fff; border:0;box-shadow:0 .75rem 1.375rem color-mix(in srgb, var(--accent) 28%, transparent);font-weight:900; letter-spacing:.0125em; padding:0 1rem; cursor:pointer}
   .rg-btn:hover{transform:translateY(-.0625rem)}
   .rg-btn:disabled{opacity:.55;box-shadow:none;cursor:not-allowed}
   .rg-btn--ghost{background:transparent; color:var(--accent); border:1px solid var(--accent)}
-
   .tabla td.actions{position:relative}
   .tabla .save-status{position:absolute; right:.625rem; top:50%; transform:translateY(-50%); font-size:.86rem; font-weight:800; color:#059669}
-
   .msg{display:grid; place-items:center; height:5.125rem; color:#334155; font-weight:800}
   .dirty{outline:2px solid color-mix(in srgb, var(--accent) 45%, transparent)}
-  @media (max-width: 56.25em){
-    .tabla th:nth-child(2), .tabla td:nth-child(2){display:none}
-    .tabla th:nth-child(1){width:auto}
-  }
+  @media (max-width: 56.25em){.tabla th:nth-child(2), .tabla td:nth-child(2){display:none}.tabla th:nth-child(1){width:auto}}
 </style>
 {% endblock %}
 
@@ -144,7 +92,7 @@
             <span id="progreso" class="doc" style="opacity:.8"></span>
             <a href="{% url 'docente_registro_notas_filtro' %}" class="rg-btn rg-btn--ghost">Volver a filtros</a>
 
-            <!-- Fuente fiable del CSRF (evita 403 por verificación) -->
+            <!-- Fuente fiable del CSRF (obliga a emitir cookie y provee el valor correcto) -->
             <form id="csrf-source" style="display:none">{% csrf_token %}</form>
           </div>
         </div>
@@ -156,7 +104,7 @@
 {% block extra_js %}
 {{ block.super }}
 <script>
-  /* ========= LECTURA DE PARÁMETROS ========= */
+  /* ========= Parámetros ========= */
   const qs = new URLSearchParams(window.location.search);
   const sede_id       = qs.get("sede_id");
   const grado_id      = qs.get("grado_id");
@@ -164,36 +112,29 @@
   const area_id       = qs.get("area_id");
   const asignatura_id = qs.get("asignatura_id");
   const periodo_id    = qs.get("periodo_id");
+  if (!grupo_id || !asignatura_id || !periodo_id) { window.location.href = "{% url 'docente_registro_notas_filtro' %}"; }
 
-  if (!grupo_id || !asignatura_id || !periodo_id) {
-    window.location.href = "{% url 'docente_registro_notas_filtro' %}";
-  }
-
-  /* ========= Helpers ========= */
+  /* ========= Helpers ajax ========= */
   async function j(url){
     try{
       const r = await fetch(url, {headers:{'Accept':'application/json'}});
       if (!r.ok) return {__error__: true, status: r.status, url};
       return await r.json();
-    }catch(e){
-      return {__error__: true, err: String(e), url};
-    }
+    }catch(e){ return {__error__: true, err: String(e), url}; }
   }
 
   const $tags = document.getElementById("resumen-tags");
-  function addTag(label, value){
+  const addTag = (label, value) => {
     const s = document.createElement("span");
     s.className = "meta-tag";
     s.textContent = `${label}: ${value}`;
     $tags.appendChild(s);
-  }
+  };
 
-  /* ========= Resumen (nombres) ========= */
   (async () => {
     const pj = await j("{% url 'api_docente_periodos_abiertos' %}");
     const per = (pj?.periodos || []).find(x => String(x.id) === String(periodo_id));
     addTag("Periodo", per?.nombre || periodo_id);
-
     if (sede_id){
       const sj = await j("{% url 'api_docente_sedes' %}");
       const sede = (sj?.sedes || []).find(x => String(x.id) === String(sede_id));
@@ -223,14 +164,20 @@
 
   /* ========= CSRF FIABLE ========= */
   function getCSRFToken(){
+    // 1) del input renderizado por {% csrf_token %}
     const input = document.querySelector('#csrf-source input[name="csrfmiddlewaretoken"]');
-    if (input && input.value) return input.value;
+    if (input && input.value && input.value.length >= 32) {
+      // Asegura que la cookie exista (por si el navegador no la tomó antes)
+      try { document.cookie = `csrftoken=${input.value}; path=/`; } catch {}
+      return input.value;
+    }
+    // 2) Fallback cookie
     const m = document.cookie.match(/(?:^|;)\s*csrftoken=([^;]+)/);
     return m ? decodeURIComponent(m[1]) : "";
   }
   const csrftoken = getCSRFToken();
 
-  /* ========= Tabla: estudiantes + notas ========= */
+  /* ========= Tabla ========= */
   const $tbody = document.querySelector("#tabla-estudiantes tbody");
   const $btnGuardarTodo = document.getElementById("btn-guardar-todo");
   const $progreso = document.getElementById("progreso");
@@ -238,7 +185,6 @@
   function putMsg(text){
     $tbody.innerHTML = `<tr><td colspan="5" style="padding:1.25rem"><div class="msg">${text}</div></td></tr>`;
   }
-
   function markDirty(input){
     const saved = input.getAttribute("data-saved-value") ?? "";
     if (String(saved) !== String(input.value)) input.classList.add("dirty");
@@ -247,7 +193,6 @@
 
   async function cargarTabla(){
     putMsg("Cargando…");
-
     const estResp = await j("{% url 'api_docente_estudiantes_por_grupo' %}?grupo_id=" + encodeURIComponent(grupo_id));
     if (estResp.__error__) { putMsg("No se pudieron cargar los estudiantes ("+(estResp.status||estResp.err||"")+")"); return; }
     const estudiantes = estResp.estudiantes || [];
@@ -263,10 +208,7 @@
     }
 
     $tbody.innerHTML = "";
-    if (!estudiantes.length){
-      putMsg("No hay estudiantes en este grupo.");
-      return;
-    }
+    if (!estudiantes.length){ putMsg("No hay estudiantes en este grupo."); return; }
 
     for (const e of estudiantes){
       const n = notasMap.get(String(e.id)) || {};
@@ -288,14 +230,11 @@
       $tbody.appendChild(tr);
     }
 
-    $tbody.querySelectorAll('.inp-nota, .inp-fallas').forEach(inp=>{
-      inp.addEventListener('input', ()=> markDirty(inp));
-    });
+    $tbody.querySelectorAll('.inp-nota, .inp-fallas').forEach(inp=> inp.addEventListener('input', ()=> markDirty(inp)));
   }
-
   document.addEventListener("DOMContentLoaded", cargarTabla);
 
-  /* ========= Guardar en lote (un solo click) ========= */
+  /* ========= Guardado ========= */
   async function guardarFila(tr){
     const estudiante_id = tr.getAttribute("data-row-estudiante");
     const asignatura_id = tr.getAttribute("data-asignatura-id");
@@ -304,40 +243,44 @@
     const inpFallas = tr.querySelector(".inp-fallas");
     const statusEl  = tr.querySelector(".save-status");
 
-    let nota   = (inpNota.value || "").trim();
-    nota = nota.replace(',', '.');  // normaliza coma a punto
+    let nota   = (inpNota.value || "").trim().replace(',', '.');
     const fallas = (inpFallas.value || "0").trim();
 
-    // Validación rápida cliente
     if (nota !== "") {
       const v = Number(nota);
       if (Number.isNaN(v) || v < 1 || v > 5) {
-        statusEl.style.color = "#dc2626";
-        statusEl.textContent = "Nota inválida (1–5)";
-        inpNota.classList.add("dirty");
-        return { ok:false };
+        statusEl.style.color = "#dc2626"; statusEl.textContent = "Nota inválida (1–5)";
+        inpNota.classList.add("dirty"); return { ok:false };
       }
     }
 
-    // Evitar request si no cambió nada
     const changed = (nota !== (inpNota.getAttribute("data-saved-value") ?? "")) ||
                     (fallas !== (inpFallas.getAttribute("data-saved-value") ?? "0"));
     if (!changed) return { ok:true, skipped:true };
+
+    // CSRF: si está vacío, abortar con mensaje claro
+    if (!csrftoken || csrftoken.length < 32) {
+      statusEl.style.color = "#dc2626";
+      statusEl.textContent = "CSRF ausente. Recarga la página.";
+      return { ok:false, msg:"csrf vacío" };
+    }
 
     statusEl.style.color = ""; statusEl.textContent = "Guardando…";
     inpNota.disabled = true; inpFallas.disabled = true;
 
     try{
+      const params = new URLSearchParams({ estudiante_id, asignatura_id, periodo_id, nota, fallas, csrfmiddlewaretoken: csrftoken });
+
       const resp = await fetch("{% url 'docente_registrar_nota' %}", {
         method: "POST",
-        credentials: "same-origin",       // importante para CSRF
+        credentials: "same-origin",
         headers: {
-          "X-CSRFToken": csrftoken,
+          "X-CSRFToken": csrftoken,       // header
           "Accept": "application/json",
           "X-Requested-With": "XMLHttpRequest",
           "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
         },
-        body: new URLSearchParams({ estudiante_id, asignatura_id, periodo_id, nota, fallas })
+        body: params                      // y también en el body
       });
 
       let data = null, text = "";
@@ -345,12 +288,10 @@
 
       if (!resp.ok || !data?.ok){
         const msg = data?.msg || (resp.status === 403 ? "No autorizado (403)" : `Error ${resp.status}`) || (text?.slice(0,120) || "Error");
-        statusEl.style.color = "#dc2626";
-        statusEl.textContent = msg;    // muestra motivo real
+        statusEl.style.color = "#dc2626"; statusEl.textContent = msg;
         return { ok:false, msg };
       }
 
-      // éxito
       inpNota.setAttribute("data-saved-value", nota);
       inpFallas.setAttribute("data-saved-value", fallas);
       inpNota.classList.remove("dirty"); inpFallas.classList.remove("dirty");
@@ -358,8 +299,7 @@
       return { ok:true };
 
     }catch(err){
-      statusEl.style.color = "#dc2626";
-      statusEl.textContent = String(err);
+      statusEl.style.color = "#dc2626"; statusEl.textContent = String(err);
       return { ok:false, err };
     }finally{
       inpNota.disabled = false; inpFallas.disabled = false;
@@ -375,7 +315,6 @@
     $progreso.textContent = `0 / ${filas.length}`;
 
     let ok = 0, skipped = 0, fail = 0;
-
     for (let i=0; i<filas.length; i++){
       const r = await guardarFila(filas[i]);
       if (r?.ok && r?.skipped) skipped++;
@@ -393,18 +332,12 @@
 
     $btnGuardarTodo.disabled = false;
   }
-
   document.getElementById("btn-guardar-todo").addEventListener('click', guardarTodo);
 
-  // Ctrl/Cmd + S => Guardar todo
   document.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-      e.preventDefault();
-      guardarTodo();
-    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); guardarTodo(); }
   });
 
-  // Aviso al salir si hay cambios sin guardar
   window.addEventListener('beforeunload', (e)=>{
     const dirty = document.querySelector('.inp-nota.dirty, .inp-fallas.dirty');
     if (dirty){ e.preventDefault(); e.returnValue = ''; }
