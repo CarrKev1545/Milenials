@@ -37,7 +37,14 @@
       <img class="logo" src="{% static 'img/logo2.jpeg' %}" alt="Logo">
       <div class="nav-title">
         <h3 class="nowrap">Millennials</h3>
-        <span class="user-name">{{ request.user.usuario }} · {{ request.user.rol }}</span>
+        <span class="user-name">
+          {% if request.user.first_name or request.user.last_name %}
+            {{ request.user.first_name }} {{ request.user.last_name }}
+          {% else %}
+            {{ request.user.username }}
+          {% endif %}
+          · {{ request.user.rol }}
+        </span>
       </div>
     </div>
 
