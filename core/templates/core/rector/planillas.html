@@ -1,192 +1,167 @@
-{% extends "core/base.html" %}
-{% block title %}Planillas{% endblock %}
+{% extends "core/base_dashboard_rector.html" %}
+{% load static %}
+
+{% block title %}Planillas — Estudiantes activos{% endblock %}
+
+{% block extra_css %}
+<style>
+  .box{max-width:980px;margin:1.25rem auto;background:#101826;border:1px solid rgba(255,255,255,.08);
+       border-radius:.75rem;padding:1.25rem;box-shadow:0 .75rem 1.5rem rgba(0,0,0,.35);color:#e9eef8}
+  .box h2{margin:.25rem 0 1rem;font-weight:800}
+  .f-row{display:grid;grid-template-columns:1fr;gap:.75rem}
+  @media (min-width:900px){.f-row{grid-template-columns:1fr 1fr}}
+  .form-line{display:grid;grid-template-columns:10rem 1fr;gap:.75rem;align-items:center}
+  .sel{height:2.75rem;background:#141e33;border:1px solid rgba(255,255,255,.08);color:#e9eef8;border-radius:.5rem;padding:0 .75rem}
+  .btns{display:flex;gap:.75rem;margin-top:1rem}
+  .btn{height:2.75rem;padding:0 1rem;border-radius:.5rem;border:0;font-weight:800;cursor:pointer}
+  .btn--pdf{background:#b11a1a;color:#fff}
+  .btn--xls{background:#136f36;color:#fff}
+  .help{opacity:.8;margin-top:1rem}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-  <div class="card card-dashboard shadow mx-auto" style="max-width:1080px;">
-    <div class="card-body">
-      <h4 class="mb-3">Planillas — Estudiantes activos</h4>
+<main class="box">
+  <h2>Planillas — Estudiantes activos</h2>
 
-      <form class="row g-3 mb-3" onsubmit="return false;">
-        <div class="col-12">
-          <small class="text-muted">Descarga por sede, grado y grupo</small>
-        </div>
+  <div class="f-row">
+    <div class="form-line">
+      <label for="pl-sede">Sede</label>
+      <select id="pl-sede" class="sel">
+        <option value="">Todas</option>
+      </select>
+    </div>
 
-        <!-- SEDE -->
-        <div class="col-12">
-          <label class="form-label">Sede</label>
-          <select id="selSede" name="sede" class="form-select">
-            <option value="">Todas</option>
-            {% for id,nombre in sedes %}
-              <option value="{{ id }}" {% if sel_sede|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
-            {% endfor %}
-          </select>
-        </div>
+    <div class="form-line">
+      <label for="pl-grado">Grado</label>
+      <select id="pl-grado" class="sel" disabled>
+        <option value="">Todos</option>
+      </select>
+    </div>
 
-        <!-- GRADO (se llena según sede) -->
-        <div class="col-12">
-          <label class="form-label">Grado</label>
-          <select id="selGrado" name="grado" class="form-select">
-            <option value="">Todos</option>
-            {% for id,nombre in grados %}
-              <option value="{{ id }}" {% if sel_grado|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <!-- GRUPO (se llena según sede y grado) -->
-        <div class="col-12">
-          <label class="form-label">Grupo</label>
-          <select id="selGrupo" name="grupo" class="form-select">
-            <option value="">Todos</option>
-            {% for id,full in grupos %}
-              <option value="{{ id }}" {% if sel_grupo|stringformat:'s' == id|stringformat:'s' %}selected{% endif %}>{{ full }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <a id="btnPdf"
-          class="btn btn-danger"
-           href="{% url 'planillas_export_pdf' %}"
-           target="_blank" rel="noopener">
-           Descargar PDF
-         </a>
-
-         <a id="btnExcel"
-           class="btn btn-danger"
-           href="{% url 'planillas_export_excel' %}"
-           target="_blank" rel="noopener">
-           Descargar Excel
-          </a>
-        </div>
-      </form>
-
-      <p class="text-muted small mb-0">
-        Selecciona filtros: los botones de descarga usan automáticamente la sede, el grado y el grupo elegidos.
-        La exportación se abre en otra pestaña.
-      </p>
+    <div class="form-line">
+      <label for="pl-grupo">Grupo</label>
+      <select id="pl-grupo" class="sel" disabled>
+        <option value="">Todos</option>
+      </select>
     </div>
   </div>
-</div>
+
+  <div class="btns">
+    <button type="button" id="btn-pdf"  class="btn btn--pdf">Descargar PDF</button>
+    <button type="button" id="btn-xls"  class="btn btn--xls">Descargar Excel</button>
+  </div>
+
+  <p class="help">
+    Selecciona filtros: los botones de descarga usan automáticamente la sede, el grado y el grupo elegidos.
+    La exportación se abre en otra pestaña.
+  </p>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+{% url 'api_sedes' as api_sedes_url %}
+{% url 'api_grados_por_sede' as api_grados_url %}
+{% url 'api_grupos_por_sede_grado' as api_grupos_url %}
+{% url 'planillas_export_pdf' as export_pdf_url %}
+{% url 'planillas_export_excel' as export_xls_url %}
 
 <script>
-(function () {
-  const sedeSel  = document.getElementById('selSede');
-  const gradoSel = document.getElementById('selGrado');
-  const grupoSel = document.getElementById('selGrupo');
+(() => {
+  // ---- Elementos (IDs únicos para evitar choques con otros módulos) ----
+  const selSede  = document.getElementById('pl-sede');
+  const selGrado = document.getElementById('pl-grado');
+  const selGrupo = document.getElementById('pl-grupo');
+  const btnPDF   = document.getElementById('btn-pdf');
+  const btnXLS   = document.getElementById('btn-xls');
 
-  const btnPdf   = document.getElementById('btnPdf');
-  const btnExcel = document.getElementById('btnExcel');
+  // ---- Endpoints inyectados desde Django ----
+  const URL_SEDES  = "{{ api_sedes_url|escapejs }}";
+  const URL_GRADOS = "{{ api_grados_url|escapejs }}";
+  const URL_GRUPOS = "{{ api_grupos_url|escapejs }}";
 
-  // Construye el query y lo aplica a los botones
-  function updateLinks() {
-    const sede  = sedeSel.value || '';
-    const grado = gradoSel.value || '';
-    const grupo = grupoSel.value || '';
+  const URL_PDF = "{{ export_pdf_url|escapejs }}";
+  const URL_XLS = "{{ export_xls_url|escapejs }}";
 
-    const qs = new URLSearchParams({sede, grado, grupo}).toString();
+  // ---- Util ----
+  async function j(url){
+    const r = await fetch(url, {credentials:'same-origin'});
+    if(!r.ok) throw new Error(r.status + ' ' + url);
+    return r.json();
+  }
+  function fill(select, placeholder, items, getValue, getText){
+    select.innerHTML = '';
+    const ph = document.createElement('option');
+    ph.value = ''; ph.textContent = placeholder;
+    select.appendChild(ph);
+    (items || []).forEach(it => {
+      const o = document.createElement('option');
+      o.value = getValue(it);
+      o.textContent = getText(it);
+      select.appendChild(o);
+    });
+  }
+  function enable(el, on){ el.disabled = !on; }
 
-   
-    const basePdf   = btnPdf.getAttribute('href').split('?')[0];
-    const baseExcel = btnExcel.getAttribute('href').split('?')[0];
-
-    btnPdf.href   = `${basePdf}?${qs}`;
-    btnExcel.href = `${baseExcel}?${qs}`;
+  // ---- Carga Sedes ----
+  async function loadSedes(){
+    try{
+      const data = await j(URL_SEDES);
+      fill(selSede, 'Todas', data.sedes || data || [], s => s.id, s => s.nombre);
+    }catch(e){ console.warn('Sedes:', e); }
   }
 
-  // Helpers para combos
-  function resetSelect(selectEl, placeholderText) {
-    selectEl.innerHTML = '';
-    const opt = document.createElement('option');
-    opt.value = '';
-    opt.textContent = placeholderText;
-    selectEl.appendChild(opt);
+  // ---- Carga Grados (depende de sede) ----
+  async function loadGrados(){
+    const sede = selSede.value;
+    enable(selGrado, false);
+    enable(selGrupo, false);
+    fill(selGrado, 'Todos', [], x=>x.id, x=>x.nombre);
+    fill(selGrupo, 'Todos', [], x=>x.id, x=>x.nombre);
+    if(!sede) return;
+
+    try{
+      const data = await j(`${URL_GRADOS}?sede_id=${encodeURIComponent(sede)}`);
+      fill(selGrado, 'Todos', data.grados || data || [], g => g.id, g => g.nombre);
+      enable(selGrado, true);
+    }catch(e){ console.warn('Grados:', e); }
   }
 
-  function fillSelect(selectEl, items, valueKey, labelKey) {
-    for (const item of items) {
-      const opt = document.createElement('option');
-      opt.value = item[valueKey];
-      opt.textContent = item[labelKey];
-      selectEl.appendChild(opt);
-    }
+  // ---- Carga Grupos (depende de sede+grado) ----
+  async function loadGrupos(){
+    const sede  = selSede.value;
+    const grado = selGrado.value;
+    enable(selGrupo, false);
+    fill(selGrupo, 'Todos', [], x=>x.id, x=>x.nombre);
+    if(!sede || !grado) return;
+
+    try{
+      const data = await j(`${URL_GRUPOS}?sede_id=${encodeURIComponent(sede)}&grado_id=${encodeURIComponent(grado)}`);
+      // el endpoint devuelve [id, "Sede - Grado - Grupo"] o {id, nombre}
+      const rows = (data.grupos || data || []).map(g => Array.isArray(g) ? {id:g[0], nombre:g[1]} : g);
+      fill(selGrupo, 'Todos', rows, g=>g.id, g=>g.nombre);
+      enable(selGrupo, true);
+    }catch(e){ console.warn('Grupos:', e); }
   }
 
-  async function loadGrados() {
-    // Vacía grado y grupo
-    resetSelect(gradoSel, 'Todos');
-    resetSelect(grupoSel, 'Todos');
-
-    const sedeId = sedeSel.value || '';
-    if (!sedeId) {
-      // Sin sede elegida, deja grados como “Todos” (opcional: podrías cargar todos)
-      updateLinks();
-      return;
-    }
-
-    gradoSel.disabled = true;
-    try {
-      const url = `/api/grados-por-sede/?sede_id=${encodeURIComponent(sedeId)}`;
-      const res = await fetch(url, {cache: 'no-store'});
-      const data = await res.json();
-      fillSelect(gradoSel, data.results, 'id', 'nombre');
-
-      // Si venías con un grado seleccionado (por GET), intenta mantenerlo
-      const pre = "{{ sel_grado|default_if_none:'' }}";
-      if (pre) { gradoSel.value = pre; }
-    } catch (e) {
-      console.error('Error cargando grados:', e);
-    } finally {
-      gradoSel.disabled = false;
-      updateLinks();
-      // al cambiar grados, también refrescamos grupos
-      loadGrupos();
-    }
+  // ---- Descargas ----
+  function openExport(baseUrl){
+    const p = new URLSearchParams();
+    if(selSede.value)  p.set('sede_id',  selSede.value);
+    if(selGrado.value) p.set('grado_id', selGrado.value);
+    if(selGrupo.value) p.set('grupo_id', selGrupo.value);
+    const url = baseUrl + (p.toString() ? `?${p}` : '');
+    window.open(url, '_blank', 'noopener');
   }
 
-  async function loadGrupos() {
-    resetSelect(grupoSel, 'Todos');
+  btnPDF.addEventListener('click', () => openExport(URL_PDF));
+  btnXLS.addEventListener('click', () => openExport(URL_XLS));
 
-    const sedeId  = sedeSel.value || '';
-    const gradoId = gradoSel.value || '';
+  selSede .addEventListener('change', loadGrados);
+  selGrado.addEventListener('change', loadGrupos);
 
-    grupoSel.disabled = true;
-    try {
-      const url = `/api/grupos-por-sede-grado/?sede_id=${encodeURIComponent(sedeId)}&grado_id=${encodeURIComponent(gradoId)}`;
-      const res = await fetch(url, {cache: 'no-store'});
-      const data = await res.json();
-      fillSelect(grupoSel, data.results, 'id', 'full');
-
-      const pre = "{{ sel_grupo|default_if_none:'' }}";
-      if (pre) { grupoSel.value = pre; }
-    } catch (e) {
-      console.error('Error cargando grupos:', e);
-    } finally {
-      grupoSel.disabled = false;
-      updateLinks();
-    }
-  }
-
-  // Eventos
-  sedeSel.addEventListener('change', () => {
-    // Si cambia sede, recarga grados y grupos
-    loadGrados();
-  });
-  gradoSel.addEventListener('change', () => {
-    // Si cambia grado, recarga grupos
-    loadGrupos();
-  });
-  grupoSel.addEventListener('change', updateLinks);
-
-  // Init en carga (poblar combos dependientes y armar links)
-  document.addEventListener('DOMContentLoaded', () => {
-    // Arrancamos poblando en cascada con lo que haya seleccionado por GET (si aplica)
-    if (sedeSel.value) {
-      loadGrados();
-    } else {
-      updateLinks();
-    }
-  });
+  // Init
+  loadSedes().then(loadGrados);
 })();
 </script>
 {% endblock %}
