@@ -3,60 +3,59 @@
 
 {% block title %}Planillas — Estudiantes activos{% endblock %}
 
-{% block extra_css %}
-<style>
-  .box{max-width:980px;margin:1.25rem auto;background:#101826;border:1px solid rgba(255,255,255,.08);
-       border-radius:.75rem;padding:1.25rem;box-shadow:0 .75rem 1.5rem rgba(0,0,0,.35);color:#e9eef8}
-  .box h2{margin:.25rem 0 1rem;font-weight:800}
-  .f-row{display:grid;grid-template-columns:1fr;gap:.75rem}
-  @media (min-width:900px){.f-row{grid-template-columns:1fr 1fr}}
-  .form-line{display:grid;grid-template-columns:10rem 1fr;gap:.75rem;align-items:center}
-  .sel{height:2.75rem;background:#141e33;border:1px solid rgba(255,255,255,.08);color:#e9eef8;border-radius:.5rem;padding:0 .75rem}
-  .btns{display:flex;gap:.75rem;margin-top:1rem}
-  .btn{height:2.75rem;padding:0 1rem;border-radius:.5rem;border:0;font-weight:800;cursor:pointer}
-  .btn--pdf{background:#b11a1a;color:#fff}
-  .btn--xls{background:#136f36;color:#fff}
-  .help{opacity:.8;margin-top:1rem}
-</style>
+{% block extra_css %}{% endblock %}
+
+{% block page_banner %}
+  <div class="page-banner page-banner--info">
+    <h1 class="page-title">Planillas — Estudiantes activos</h1>
+  </div>
 {% endblock %}
 
 {% block content %}
-<main class="box">
-  <h2>Planillas — Estudiantes activos</h2>
+  <div class="container">
+    <div class="row">
+      <!-- ancho contenido centrado, sin estilos inline ni CSS nuevo -->
+      <div class="col-12 col-lg-8 mx-auto">
 
-  <div class="f-row">
-    <div class="form-line">
-      <label for="pl-sede">Sede</label>
-      <select id="pl-sede" class="sel">
-        <option value="">Todas</option>
-      </select>
-    </div>
+        <div class="card shadow-sm">
+          <div class="card-header">
+            <strong>Filtros</strong>
+          </div>
 
-    <div class="form-line">
-      <label for="pl-grado">Grado</label>
-      <select id="pl-grado" class="sel" disabled>
-        <option value="">Todos</option>
-      </select>
-    </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label for="pl-sede" class="form-label">Sede</label>
+                <select id="pl-sede" class="form-select">
+                  <option value="">Todas</option>
+                </select>
+              </div>
 
-    <div class="form-line">
-      <label for="pl-grupo">Grupo</label>
-      <select id="pl-grupo" class="sel" disabled>
-        <option value="">Todos</option>
-      </select>
+              <div class="col-12 col-md-6">
+                <label for="pl-grado" class="form-label">Grado</label>
+                <select id="pl-grado" class="form-select" disabled>
+                  <option value="">Todos</option>
+                </select>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label for="pl-grupo" class="form-label">Grupo</label>
+                <select id="pl-grupo" class="form-select" disabled>
+                  <option value="">Todos</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 mt-3">
+              <button type="button" id="btn-pdf" class="btn btn-danger">Descargar PDF</button>
+              <button type="button" id="btn-xls" class="btn btn-success">Descargar Excel</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
   </div>
-
-  <div class="btns">
-    <button type="button" id="btn-pdf"  class="btn btn--pdf">Descargar PDF</button>
-    <button type="button" id="btn-xls"  class="btn btn--xls">Descargar Excel</button>
-  </div>
-
-  <p class="help">
-    Selecciona filtros: los botones de descarga usan automáticamente la sede, el grado y el grupo elegidos.
-    La exportación se abre en otra pestaña.
-  </p>
-</main>
 {% endblock %}
 
 {% block extra_js %}
@@ -68,7 +67,7 @@
 
 <script>
 (() => {
-  // ---- Elementos (IDs únicos para evitar choques con otros módulos) ----
+  // ---- Elementos (IDs se conservan) ----
   const selSede  = document.getElementById('pl-sede');
   const selGrado = document.getElementById('pl-grado');
   const selGrupo = document.getElementById('pl-grupo');
@@ -79,11 +78,10 @@
   const URL_SEDES  = "{{ api_sedes_url|escapejs }}";
   const URL_GRADOS = "{{ api_grados_url|escapejs }}";
   const URL_GRUPOS = "{{ api_grupos_url|escapejs }}";
+  const URL_PDF    = "{{ export_pdf_url|escapejs }}";
+  const URL_XLS    = "{{ export_xls_url|escapejs }}";
 
-  const URL_PDF = "{{ export_pdf_url|escapejs }}";
-  const URL_XLS = "{{ export_xls_url|escapejs }}";
-
-  // ---- Util ----
+  // ---- Utils ----
   async function j(url){
     const r = await fetch(url, {credentials:'same-origin'});
     if(!r.ok) throw new Error(r.status + ' ' + url);
@@ -137,7 +135,6 @@
 
     try{
       const data = await j(`${URL_GRUPOS}?sede_id=${encodeURIComponent(sede)}&grado_id=${encodeURIComponent(grado)}`);
-      // el endpoint devuelve [id, "Sede - Grado - Grupo"] o {id, nombre}
       const rows = (data.grupos || data || []).map(g => Array.isArray(g) ? {id:g[0], nombre:g[1]} : g);
       fill(selGrupo, 'Todos', rows, g=>g.id, g=>g.nombre);
       enable(selGrupo, true);
@@ -165,4 +162,3 @@
 })();
 </script>
 {% endblock %}
-
