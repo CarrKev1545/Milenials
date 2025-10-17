@@ -201,10 +201,14 @@
   // ---- Descargas ----
   function openExport(baseUrl){
     const p = new URLSearchParams();
-    if (selSede.value)  p.set('sede_id',  selSede.value);
-    if (selGrado.value) p.set('grado_id', selGrado.value);
-    if (selGrupo.value) p.set('grupo_id', selGrupo.value);
+    const add = (k,v) => { if (v) p.append(k, v); };
+
+    if (selSede.value)  { add('sede_id', selSede.value);  add('sede',  selSede.value); }
+    if (selGrado.value) { add('grado_id', selGrado.value); add('grado', selGrado.value); }
+    if (selGrupo.value) { add('grupo_id', selGrupo.value); add('grupo', selGrupo.value); }
+
     const url = baseUrl + (p.toString() ? `?${p}` : '');
+    console.debug('EXPORT URL ->', url);   // para verificar en consola
     window.open(url, '_blank', 'noopener');
   }
 

@@ -2754,8 +2754,6 @@ def rector_reportes_academicos_export(request):
     from django.http import HttpResponse
     from django.template.loader import render_to_string
     from django.conf import settings
-    # Import compat de WeasyPrint (no rompe en local sin DLLs)
-    from core.utils.weasy_compat import HTML, CSS, WEASY_AVAILABLE
 
     formato       = (request.GET.get('formato') or 'pdf').lower()
     grupo_id      = (request.GET.get('grupo_id') or '').strip()
@@ -3691,7 +3689,16 @@ def planillas_export_excel(request):
     wb.save(response)
     return response
 
-
+def _get_int_param(request, base: str) -> Optional[int]:
+    """
+    Lee ?base o ?base_id. Si viene vacío o no-dígitos -> None.
+    """
+    raw = (request.GET.get(base) or request.GET.get(f"{base}_id") or "").strip()
+    if not raw:
+        return None
+    if not re.fullmatch(r"\d{1,10}", raw):
+        return None  # invalido -> lo tratamos como None (o podrías devolver 400 si prefieres)
+    return int(raw)
 # =========================
 #  EXPORTACIÓN A PDF
 # =========================
@@ -3699,48 +3706,49 @@ def planillas_export_excel(request):
 @rector_required
 @require_GET
 def planillas_export_pdf(request):
-    sede  = (request.GET.get("sede") or "").strip()
-    grado = (request.GET.get("grado") or "").strip()
-    grupo = (request.GET.get("grupo") or "").strip()
-
-    for v in (sede, grado, grupo):
-        if v and not re.fullmatch(r"\d{1,10}", v):
-            return HttpResponse("Parámetros inválidos.", status=400)
+    # Acepta sede/sede_id, grado/grado_id, grupo/grupo_id
+    sede_id  = _get_int_param(request, "sede")
+    grado_id = _get_int_param(request, "grado")
+    grupo_id = _get_int_param(request, "grupo")
 
     with connection.cursor() as cur:
+        # === Datos de la tabla ===
         cur.execute("""
             SELECT e.apellidos, e.nombre, e.documento,
                    gr.nombre AS grado, g.nombre AS grupo
             FROM public.estudiante_grupo eg
             JOIN public.estudiantes e ON e.id = eg.estudiante_id
-            JOIN public.grupos g ON g.id = eg.grupo_id
-            JOIN public.grados gr ON gr.id = g.grado_id
-            LEFT JOIN public.sedes s ON s.id = g.sede_id
+            JOIN public.grupos g      ON g.id = eg.grupo_id
+            JOIN public.grados gr     ON gr.id = g.grado_id
+            LEFT JOIN public.sedes s  ON s.id = g.sede_id
             WHERE eg.fecha_fin IS NULL
-              AND (%s = '' OR s.id::text = %s)
-              AND (%s = '' OR gr.id::text = %s)
-              AND (%s = '' OR g.id::text = %s)
+              AND (%s IS NULL OR s.id  = %s)
+              AND (%s IS NULL OR gr.id = %s)
+              AND (%s IS NULL OR g.id  = %s)
             ORDER BY e.apellidos, e.nombre;
-        """, [sede, sede, grado, grado, grupo, grupo])
+        """, [sede_id, sede_id, grado_id, grado_id, grupo_id, grupo_id])
         filas = cur.fetchall()
 
+        # === Encabezados (labels) ===
         cur.execute(
-            "SELECT COALESCE((SELECT nombre FROM public.sedes WHERE id::text=%s), 'Todas');",
-            [sede or ""],
+            "SELECT COALESCE((SELECT nombre FROM public.sedes  WHERE id = %s), 'Todas');",
+            [sede_id],
         )
         header_sede = cur.fetchone()[0]
+
         cur.execute(
-            "SELECT COALESCE((SELECT nombre FROM public.grados WHERE id::text=%s), 'Todos');",
-            [grado or ""],
+            "SELECT COALESCE((SELECT nombre FROM public.grados WHERE id = %s), 'Todos');",
+            [grado_id],
         )
         header_grado = cur.fetchone()[0]
+
         cur.execute(
-            "SELECT COALESCE((SELECT nombre FROM public.grupos WHERE id::text=%s), 'Todos');",
-            [grupo or ""],
+            "SELECT COALESCE((SELECT nombre FROM public.grupos WHERE id = %s), 'Todos');",
+            [grupo_id],
         )
         header_grupo = cur.fetchone()[0]
 
-    # Render HTML para PDF
+    # === Render HTML para PDF ===
     html = render_to_string(
         "core/rector/pdf.html",
         {
