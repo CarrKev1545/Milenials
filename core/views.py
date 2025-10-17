@@ -343,7 +343,7 @@ def _docente_puede_ver_grupo(usuario_id: int, grupo_id: int) -> bool:
 
 def _docente_puede_editar_asignatura(user_id: int, grupo_id: int, asignatura_id: int) -> bool:
     with connection.cursor() as cur:
-        # 1) El usuario debe ser docente del grupo
+        # A) el usuario debe ser docente del grupo
         cur.execute("""
             SELECT 1
             FROM public.docente_grupo dg
@@ -354,12 +354,11 @@ def _docente_puede_editar_asignatura(user_id: int, grupo_id: int, asignatura_id:
         if cur.fetchone() is None:
             return False
 
-        # 2) ¿Existe tabla docente_asignatura?
+        # B) si existe tabla docente_asignatura, validamos asignación específica (docente-grupo-asignatura)
         cur.execute("SELECT to_regclass('public.docente_asignatura');")
         has_docente_asig = bool(cur.fetchone()[0])
 
         if has_docente_asig:
-            # Si existe, exigimos la asignación específica
             cur.execute("""
                 SELECT 1
                 FROM public.docente_asignatura da
@@ -371,7 +370,7 @@ def _docente_puede_editar_asignatura(user_id: int, grupo_id: int, asignatura_id:
             """, [user_id, grupo_id, asignatura_id])
             return cur.fetchone() is not None
 
-        # 3) Si NO existe docente_asignatura, validamos que esa asignatura pertenezca al grupo
+        # C) si NO existe docente_asignatura, alcanza con que la asignatura pertenezca al grupo
         cur.execute("""
             SELECT 1
             FROM public.grupo_asignatura ga

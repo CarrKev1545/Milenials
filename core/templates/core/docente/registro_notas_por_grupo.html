@@ -5,26 +5,22 @@
 
 {% block extra_css %}
 <style>
-  /* ===== Escala base rem + ajustes fluidos ===== */
-  :root { font-size: 16px; } /* 1rem = 16px */
+  :root { font-size: 16px; }
   @media (max-width: 75em) { :root { font-size: 15px; } }
   @media (max-width: 62em) { :root { font-size: 14px; } }
   @media (max-width: 48em) { :root { font-size: 13px; } }
   @media (max-width: 36em) { :root { font-size: 12px; } }
 
-  .page-title{
-    position:sticky; top:var(--navbar-height); z-index:40;
+  .page-title{position:sticky; top:var(--navbar-height); z-index:40;
     background:var(--accent); color:#fff; font-weight:800; letter-spacing:.0125em;
-    text-align:center; padding:.625rem .75rem; box-shadow:0 .25rem .75rem rgba(0,0,0,.35)
-  }
+    text-align:center; padding:.625rem .75rem; box-shadow:0 .25rem .75rem rgba(0,0,0,.35)}
 
   .rg{width:100%;max-width:73.75rem;margin:0 auto;padding:0 1.25rem}
   .rg-wrap{position:relative;margin-top:.875rem}
   .rg-wrap::before{
     content:""; position:absolute; inset:-1.125rem -1.375rem; border-radius:1.125rem;
-    background:
-      radial-gradient(140% 160% at 10% 0%, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 45%),
-      linear-gradient(135deg, rgba(22,22,24,.88) 0%, rgba(16,16,18,.86) 100%);
+    background:radial-gradient(140% 160% at 10% 0%, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 45%),
+               linear-gradient(135deg, rgba(22,22,24,.88) 0%, rgba(16,16,18,.86) 100%);
     border:1px solid rgba(255,255,255,.10); backdrop-filter: blur(.375rem) saturate(115%);
     box-shadow:0 1.375rem 2.75rem rgba(0,0,0,.50); z-index:0
   }
@@ -44,10 +40,8 @@
     box-shadow:0 .5rem 1rem rgba(0,0,0,.28)
   }
 
-  .table-card{
-    background:#fff;border-radius:1rem;box-shadow:0 .75rem 1.875rem rgba(0,0,0,.18);
-    border:1px solid #e5e9f2; overflow:hidden
-  }
+  .table-card{background:#fff;border-radius:1rem;box-shadow:0 .75rem 1.875rem rgba(0,0,0,.18);
+    border:1px solid #e5e9f2; overflow:hidden}
   .table-responsive{width:100%;max-height:28.75rem;overflow:auto;background:#eef2f6}
   .table-responsive::-webkit-scrollbar{height:.625rem;width:.625rem}
   .table-responsive::-webkit-scrollbar-thumb{background:#9aa4b2;border-radius:999px}
@@ -66,11 +60,8 @@
   .tabla th:nth-child(4){width:10%}
   .tabla th:nth-child(5){width:16%}
 
-  .tabla tbody td{
-    background:#fff; color:#0b1220; border:1px solid #e6ebf3;
-    padding:.875rem 1rem; vertical-align:middle;
-    transition: filter .12s ease, box-shadow .12s ease, background .12s ease
-  }
+  .tabla tbody td{background:#fff; color:#0b1220; border:1px solid #e6ebf3;
+    padding:.875rem 1rem; vertical-align:middle; transition:filter .12s, box-shadow .12s, background .12s}
   .tabla tbody tr td:first-child{border-top-left-radius:.75rem;border-bottom-left-radius:.75rem;border-left-width:1px}
   .tabla tbody tr td:last-child {border-top-right-radius:.75rem;border-bottom-right-radius:.75rem;border-right-width:1px}
   .tabla tbody tr:hover td{filter:saturate(110%); box-shadow:0 .5rem 1.125rem rgba(2,6,23,.08); background:#fff}
@@ -88,22 +79,17 @@
     transition:border-color .12s ease, box-shadow .12s ease, background .12s ease
   }
   .inp-fallas{width:6rem}
-  .inp-nota:focus, .inp-fallas:focus{
-    outline:none; border-color: var(--accent);
-    box-shadow:0 0 0 .1875rem color-mix(in srgb, var(--accent) 25%, transparent); background:#fff
-  }
+  .inp-nota:focus, .inp-fallas:focus{outline:none; border-color: var(--accent);
+    box-shadow:0 0 0 .1875rem color-mix(in srgb, var(--accent) 25%, transparent); background:#fff}
   .inp-nota::-webkit-outer-spin-button,
   .inp-nota::-webkit-inner-spin-button,
   .inp-fallas::-webkit-outer-spin-button,
   .inp-fallas::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0 }
 
-  /* Botón principal */
-  .rg-btn{
-    height:2.5rem; min-width:8.25rem; border-radius:.625rem;
+  .rg-btn{height:2.5rem; min-width:8.25rem; border-radius:.625rem;
     background:var(--accent); color:#fff; border:0;
     box-shadow:0 .75rem 1.375rem color-mix(in srgb, var(--accent) 28%, transparent);
-    font-weight:900; letter-spacing:.0125em; padding:0 1rem; cursor:pointer
-  }
+    font-weight:900; letter-spacing:.0125em; padding:0 1rem; cursor:pointer}
   .rg-btn:hover{transform:translateY(-.0625rem)}
   .rg-btn:disabled{opacity:.55;box-shadow:none;cursor:not-allowed}
   .rg-btn--ghost{background:transparent; color:var(--accent); border:1px solid var(--accent)}
@@ -132,7 +118,6 @@
             <div class="rg-chip">TABLA</div>
           </div>
 
-          <!-- Resumen como chips -->
           <div id="resumen-tags" class="meta-tags"></div>
 
           <div class="table-card">
@@ -158,6 +143,9 @@
             <button type="button" id="btn-guardar-todo" class="rg-btn">Guardar</button>
             <span id="progreso" class="doc" style="opacity:.8"></span>
             <a href="{% url 'docente_registro_notas_filtro' %}" class="rg-btn rg-btn--ghost">Volver a filtros</a>
+
+            <!-- Fuente fiable del CSRF (evita 403 por verificación) -->
+            <form id="csrf-source" style="display:none">{% csrf_token %}</form>
           </div>
         </div>
       </div>
@@ -233,11 +221,14 @@
     }
   })();
 
-  /* ========= CSRF ========= */
-  function getCookie(name){
-    const v = `; ${document.cookie}`.split(`; ${name}=`); if (v.length === 2) return v.pop().split(';').shift();
+  /* ========= CSRF FIABLE ========= */
+  function getCSRFToken(){
+    const input = document.querySelector('#csrf-source input[name="csrfmiddlewaretoken"]');
+    if (input && input.value) return input.value;
+    const m = document.cookie.match(/(?:^|;)\s*csrftoken=([^;]+)/);
+    return m ? decodeURIComponent(m[1]) : "";
   }
-  const csrftoken = getCookie('csrftoken');
+  const csrftoken = getCSRFToken();
 
   /* ========= Tabla: estudiantes + notas ========= */
   const $tbody = document.querySelector("#tabla-estudiantes tbody");
@@ -297,7 +288,6 @@
       $tbody.appendChild(tr);
     }
 
-    // Detectar cambios
     $tbody.querySelectorAll('.inp-nota, .inp-fallas').forEach(inp=>{
       inp.addEventListener('input', ()=> markDirty(inp));
     });
@@ -306,81 +296,76 @@
   document.addEventListener("DOMContentLoaded", cargarTabla);
 
   /* ========= Guardar en lote (un solo click) ========= */
- async function guardarFila(tr){
-  const estudiante_id = tr.getAttribute("data-row-estudiante");
-  const asignatura_id = tr.getAttribute("data-asignatura-id");
-  const periodo_id    = tr.getAttribute("data-periodo-id");
-  const inpNota   = tr.querySelector(".inp-nota");
-  const inpFallas = tr.querySelector(".inp-fallas");
-  const statusEl  = tr.querySelector(".save-status");
+  async function guardarFila(tr){
+    const estudiante_id = tr.getAttribute("data-row-estudiante");
+    const asignatura_id = tr.getAttribute("data-asignatura-id");
+    const periodo_id    = tr.getAttribute("data-periodo-id");
+    const inpNota   = tr.querySelector(".inp-nota");
+    const inpFallas = tr.querySelector(".inp-fallas");
+    const statusEl  = tr.querySelector(".save-status");
 
-  let nota   = (inpNota.value || "").trim();
-  nota = nota.replace(',', '.'); // <-- normaliza coma a punto
-  const fallas = (inpFallas.value || "0").trim();
+    let nota   = (inpNota.value || "").trim();
+    nota = nota.replace(',', '.');  // normaliza coma a punto
+    const fallas = (inpFallas.value || "0").trim();
 
-  // Validación rápida cliente
-  if (nota !== "") {
-    const v = Number(nota);
-    if (Number.isNaN(v) || v < 1 || v > 5) {
-      statusEl.style.color = "#dc2626";
-      statusEl.textContent = "Nota inválida (1–5)";
-      inpNota.classList.add("dirty");
-      return { ok:false };
-    }
-  }
-
-  // Evitar requests si no hubo cambios
-  const changed = (nota !== (inpNota.getAttribute("data-saved-value") ?? "")) ||
-                  (fallas !== (inpFallas.getAttribute("data-saved-value") ?? "0"));
-  if (!changed) return { ok:true, skipped:true };
-
-  statusEl.style.color = "";
-  statusEl.textContent = "Guardando…";
-  inpNota.disabled = true; inpFallas.disabled = true;
-
-  try{
-    const resp = await fetch("{% url 'docente_registrar_nota' %}", {
-      method: "POST",
-      headers: {
-        "X-CSRFToken": csrftoken,
-        "Accept": "application/json",
-        "X-Requested-With": "XMLHttpRequest",
-        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-      },
-      body: new URLSearchParams({ estudiante_id, asignatura_id, periodo_id, nota, fallas })
-    });
-
-    // Intenta leer el JSON; si no es JSON, arma uno básico con el status
-    let data = {};
-    try { data = await resp.json(); } catch { data = {}; }
-
-    if (!resp.ok || !data.ok){
-      const msg = (data && data.msg) ? data.msg : `Error ${resp.status}`;
-      statusEl.style.color = "#dc2626";
-      statusEl.textContent = msg;        // <-- AHORA SE VE EL MOTIVO
-      inpNota.classList.add("dirty");    // borde para llamar la atención
-      return { ok:false, msg };
+    // Validación rápida cliente
+    if (nota !== "") {
+      const v = Number(nota);
+      if (Number.isNaN(v) || v < 1 || v > 5) {
+        statusEl.style.color = "#dc2626";
+        statusEl.textContent = "Nota inválida (1–5)";
+        inpNota.classList.add("dirty");
+        return { ok:false };
+      }
     }
 
-    // Éxito
-    inpNota.setAttribute("data-saved-value", nota);
-    inpFallas.setAttribute("data-saved-value", fallas);
-    inpNota.classList.remove("dirty");
-    inpFallas.classList.remove("dirty");
-    statusEl.style.color = "#059669";
-    statusEl.textContent = "Guardado ✓";
-    return { ok:true };
+    // Evitar request si no cambió nada
+    const changed = (nota !== (inpNota.getAttribute("data-saved-value") ?? "")) ||
+                    (fallas !== (inpFallas.getAttribute("data-saved-value") ?? "0"));
+    if (!changed) return { ok:true, skipped:true };
 
-  }catch(err){
-    statusEl.style.color = "#dc2626";
-    statusEl.textContent = String(err);
-    return { ok:false, err };
-  }finally{
-    inpNota.disabled = false; inpFallas.disabled = false;
-    setTimeout(()=> { if (statusEl.textContent === "Guardado ✓") statusEl.textContent = ""; }, 2200);
+    statusEl.style.color = ""; statusEl.textContent = "Guardando…";
+    inpNota.disabled = true; inpFallas.disabled = true;
+
+    try{
+      const resp = await fetch("{% url 'docente_registrar_nota' %}", {
+        method: "POST",
+        credentials: "same-origin",       // importante para CSRF
+        headers: {
+          "X-CSRFToken": csrftoken,
+          "Accept": "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+        },
+        body: new URLSearchParams({ estudiante_id, asignatura_id, periodo_id, nota, fallas })
+      });
+
+      let data = null, text = "";
+      try { data = await resp.json(); } catch { text = await resp.text(); }
+
+      if (!resp.ok || !data?.ok){
+        const msg = data?.msg || (resp.status === 403 ? "No autorizado (403)" : `Error ${resp.status}`) || (text?.slice(0,120) || "Error");
+        statusEl.style.color = "#dc2626";
+        statusEl.textContent = msg;    // muestra motivo real
+        return { ok:false, msg };
+      }
+
+      // éxito
+      inpNota.setAttribute("data-saved-value", nota);
+      inpFallas.setAttribute("data-saved-value", fallas);
+      inpNota.classList.remove("dirty"); inpFallas.classList.remove("dirty");
+      statusEl.style.color = "#059669"; statusEl.textContent = "Guardado ✓";
+      return { ok:true };
+
+    }catch(err){
+      statusEl.style.color = "#dc2626";
+      statusEl.textContent = String(err);
+      return { ok:false, err };
+    }finally{
+      inpNota.disabled = false; inpFallas.disabled = false;
+      setTimeout(()=> { if (statusEl.textContent === "Guardado ✓") statusEl.textContent = ""; }, 2200);
+    }
   }
-}
-
 
   async function guardarTodo(){
     const filas = Array.from($tbody.querySelectorAll('tr[data-row-estudiante]'));
@@ -391,7 +376,6 @@
 
     let ok = 0, skipped = 0, fail = 0;
 
-    // Secuencial (evita saturar servidor; mantiene lógica actual)
     for (let i=0; i<filas.length; i++){
       const r = await guardarFila(filas[i]);
       if (r?.ok && r?.skipped) skipped++;
@@ -400,7 +384,6 @@
       $progreso.textContent = `${i+1} / ${filas.length}`;
     }
 
-    // Resumen
     if (fail === 0){
       $progreso.textContent = `Listo: ${ok} guardadas${skipped?` • ${skipped} sin cambios`:''}`;
       setTimeout(()=> $progreso.textContent = "", 2500);
@@ -411,7 +394,7 @@
     $btnGuardarTodo.disabled = false;
   }
 
-  $btnGuardarTodo.addEventListener('click', guardarTodo);
+  document.getElementById("btn-guardar-todo").addEventListener('click', guardarTodo);
 
   // Ctrl/Cmd + S => Guardar todo
   document.addEventListener('keydown', (e) => {
@@ -424,9 +407,7 @@
   // Aviso al salir si hay cambios sin guardar
   window.addEventListener('beforeunload', (e)=>{
     const dirty = document.querySelector('.inp-nota.dirty, .inp-fallas.dirty');
-    if (dirty){
-      e.preventDefault(); e.returnValue = '';
-    }
+    if (dirty){ e.preventDefault(); e.returnValue = ''; }
   });
 </script>
 {% endblock %}
