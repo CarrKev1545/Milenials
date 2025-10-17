@@ -341,22 +341,45 @@ def _docente_puede_ver_grupo(usuario_id: int, grupo_id: int) -> bool:
         """, [usuario_id, grupo_id])
         return cur.fetchone() is not None
 
-def _docente_puede_editar_asignatura(usuario_id: int, grupo_id: int, asignatura_id: int) -> bool:
-    """Valida si el docente tiene esa asignatura en ese grupo (docente_asignacion)."""
-    from django.db import connection
+def _docente_puede_editar_asignatura(user_id: int, grupo_id: int, asignatura_id: int) -> bool:
     with connection.cursor() as cur:
+        # 1) El usuario debe ser docente del grupo
         cur.execute("""
             SELECT 1
-              FROM public.docentes d
-              JOIN public.docente_asignacion da ON da.docente_id = d.id
-              JOIN public.grupo_asignatura ga ON ga.id = da.grupo_asignatura_id
-             WHERE d.usuario_id = %s
-               AND ga.grupo_id = %s
-               AND ga.asignatura_id = %s
-             LIMIT 1;
-        """, [usuario_id, grupo_id, asignatura_id])
-        return cur.fetchone() is not None
+            FROM public.docente_grupo dg
+            JOIN public.docentes d ON d.id = dg.docente_id
+            WHERE d.usuario_id = %s AND dg.grupo_id = %s
+            LIMIT 1;
+        """, [user_id, grupo_id])
+        if cur.fetchone() is None:
+            return False
 
+        # 2) ¿Existe tabla docente_asignatura?
+        cur.execute("SELECT to_regclass('public.docente_asignatura');")
+        has_docente_asig = bool(cur.fetchone()[0])
+
+        if has_docente_asig:
+            # Si existe, exigimos la asignación específica
+            cur.execute("""
+                SELECT 1
+                FROM public.docente_asignatura da
+                JOIN public.docentes d ON d.id = da.docente_id
+                WHERE d.usuario_id = %s
+                  AND da.grupo_id = %s
+                  AND da.asignatura_id = %s
+                LIMIT 1;
+            """, [user_id, grupo_id, asignatura_id])
+            return cur.fetchone() is not None
+
+        # 3) Si NO existe docente_asignatura, validamos que esa asignatura pertenezca al grupo
+        cur.execute("""
+            SELECT 1
+            FROM public.grupo_asignatura ga
+            WHERE ga.grupo_id = %s AND ga.asignatura_id = %s
+            LIMIT 1;
+        """, [grupo_id, asignatura_id])
+        return cur.fetchone() is not None
+    
 _ID = re.compile(r"^\d{1,10}$")
 def _ok(x: str) -> bool: return bool(_ID.fullmatch((x or "").strip()))
 

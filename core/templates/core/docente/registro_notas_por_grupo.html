@@ -314,7 +314,8 @@
   const inpFallas = tr.querySelector(".inp-fallas");
   const statusEl  = tr.querySelector(".save-status");
 
-  const nota   = (inpNota.value || "").trim();
+  let nota   = (inpNota.value || "").trim();
+  nota = nota.replace(',', '.'); // <-- normaliza coma a punto
   const fallas = (inpFallas.value || "0").trim();
 
   // Validación rápida cliente
