@@ -2,7 +2,7 @@ from __future__ import annotations  # ← Debe ser la PRIMERA línea del archivo
 
 # Autenticación y permisos
 from django.contrib.auth import authenticate, login, logout, get_user_model
-from django.contrib.auth.decorators import login_required
+
 from urllib.parse import urlencode
 # HTTP y respuestas
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
@@ -55,6 +55,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment
 from .decorators import docente_required
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.http import JsonResponse, HttpRequest
 
 
 # =========================================================
@@ -600,6 +601,7 @@ def docente_reportes_academicos_por_grupo(request: HttpRequest) -> HttpResponse:
 
 
 @login_required(login_url="login")
+@require_POST
 def docente_registrar_nota(request: HttpRequest) -> JsonResponse:
     # Solo docente
     if (resp := _guard_docente(request)) is not None:
@@ -616,7 +618,7 @@ def docente_registrar_nota(request: HttpRequest) -> JsonResponse:
     if not all(re.fullmatch(r"\d{1,10}", x or "") for x in (estudiante_id, asignatura_id, periodo_id)):
         return JsonResponse({"ok": False, "msg": "Parámetros inválidos."}, status=400)
 
-    # fallas entero >= 0
+    # fallas entero ≥ 0
     try:
         fallas = int(fallas_str)
         if fallas < 0:
@@ -624,13 +626,16 @@ def docente_registrar_nota(request: HttpRequest) -> JsonResponse:
     except ValueError:
         return JsonResponse({"ok": False, "msg": "Las fallas deben ser un número entero ≥ 0."}, status=400)
 
-    # nota Decimal 1.00..5.00
-    try:
-        nota = Decimal(nota_str).quantize(Decimal("0.01"))
-        if nota < Decimal("1.00") or nota > Decimal("5.00"):
-            raise InvalidOperation()
-    except (InvalidOperation, ValueError):
-        return JsonResponse({"ok": False, "msg": "La nota debe estar entre 1.00 y 5.00 con dos decimales."}, status=400)
+    # --------- NOTA (permitir vacío -> None) ---------
+    # Si viene vacía, se guarda NULL. Si viene valor, debe ser Decimal entre 1.00 y 5.00 con 2 decimales.
+    nota = None
+    if nota_str != "":
+        try:
+            nota = Decimal(nota_str).quantize(Decimal("0.01"))
+            if nota < Decimal("1.00") or nota > Decimal("5.00"):
+                raise InvalidOperation()
+        except (InvalidOperation, ValueError):
+            return JsonResponse({"ok": False, "msg": "La nota debe estar entre 1.00 y 5.00 con dos decimales."}, status=400)
 
     user_id = request.user.id
     fuente_rol = "DOCENTE"
@@ -687,7 +692,11 @@ def docente_registrar_nota(request: HttpRequest) -> JsonResponse:
                                                   nota, fallas, actualizado_por_usuario, fuente_rol, actualizado_en)
                         VALUES (%s, %s, %s, %s, %s, %s, %s, now())
                         RETURNING id;
-                    """, [estudiante_id, asignatura_id, periodo_id, str(nota), fallas, user_id, fuente_rol])
+                    """, [
+                        estudiante_id, asignatura_id, periodo_id,
+                        (None if nota is None else str(nota)),  # <- permitir NULL
+                        fallas, user_id, fuente_rol
+                    ])
                     nota_id = cur.fetchone()[0]
                     accion = "INSERT"
 
@@ -698,7 +707,10 @@ def docente_registrar_nota(request: HttpRequest) -> JsonResponse:
                              nota_nueva, fallas_nuevas,
                              accion, realizado_por_usuario, realizado_en)
                         VALUES (%s,%s,%s,%s, NULL, NULL, %s, %s, 'INSERT', %s, now());
-                    """, [nota_id, estudiante_id, asignatura_id, periodo_id, str(nota), fallas, user_id])
+                    """, [
+                        nota_id, estudiante_id, asignatura_id, periodo_id,
+                        (None if nota is None else str(nota)), fallas, user_id
+                    ])
 
                 else:
                     # UPDATE
@@ -709,7 +721,10 @@ def docente_registrar_nota(request: HttpRequest) -> JsonResponse:
                                actualizado_por_usuario=%s, fuente_rol=%s, actualizado_en=now()
                          WHERE id=%s
                          RETURNING id;
-                    """, [str(nota), fallas, user_id, fuente_rol, nota_id_ant])
+                    """, [
+                        (None if nota is None else str(nota)),  # <- permitir NULL
+                        fallas, user_id, fuente_rol, nota_id_ant
+                    ])
                     nota_id = cur.fetchone()[0]
                     accion = "UPDATE"
 
@@ -720,13 +735,17 @@ def docente_registrar_nota(request: HttpRequest) -> JsonResponse:
                              nota_nueva, fallas_nuevas,
                              accion, realizado_por_usuario, realizado_en)
                         VALUES (%s,%s,%s,%s, %s, %s, %s, %s, 'UPDATE', %s, now());
-                    """, [nota_id, estudiante_id, asignatura_id, periodo_id,
-                          nota_ant, fallas_ant, str(nota), fallas, user_id])
+                    """, [
+                        nota_id, estudiante_id, asignatura_id, periodo_id,
+                        nota_ant, fallas_ant,
+                        (None if nota is None else str(nota)), fallas,
+                        user_id
+                    ])
 
         return JsonResponse({"ok": True, "accion": accion, "nota_id": nota_id})
     except Exception as e:
-        return JsonResponse({"ok": False, "msg": f"Error al guardar: {e}"},
-                            status=500)
+        return JsonResponse({"ok": False, "msg": f"Error al guardar: {e}"}, status=500)
+    
     
 
 @login_required(login_url="login")
