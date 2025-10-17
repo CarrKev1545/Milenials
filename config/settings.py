@@ -34,12 +34,20 @@ RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "https://millennials.onrender.com",  # backend (o frontend) en Render
+]
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^capacitor://localhost$",
+    r"^ionic://localhost$",
+]
+
 # --- Archivos estáticos: manifest + compresión + cache busting ---
 STATICFILES_DIRS = [ BASE_DIR / 'static' ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-if not DEBUG:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 
 
 MEDIA_URL = '/media/'
@@ -55,8 +63,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Nuestras apps
-   
+    'rest_framework',
+    'corsheaders',
+    'django_filters',
     'academico',
     'reportes',
     'core.apps.CoreConfig',
@@ -69,12 +78,12 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.gzip.GZipMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
     'core.middleware.NoCacheForAuthenticatedHTMLMiddleware',
     'core.middleware.SingleSessionEnforceMiddleware',
 ]
@@ -97,7 +106,14 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
-
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+    "DEFAULT_FILTER_BACKENDS": (
+        "django_filters.rest_framework.DjangoFilterBackend",
+    ),
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -191,8 +207,11 @@ SESSION_COOKIE_AGE = 30 * 60          # 30 min
 SESSION_SAVE_EVERY_REQUEST = True     # renueva expiración si hay actividad
 
 # --- Hosts y CSRF (tómalos de .env) ---
-ALLOWED_HOSTS = [*ALLOWED_HOSTS, *os.getenv("ALLOWED_HOSTS", "").split(",")] if os.getenv("ALLOWED_HOSTS") else ALLOWED_HOSTS
-CSRF_TRUSTED_ORIGINS = [u for u in os.getenv("CSRF_TRUSTED_ORIGINS","").split(",") if u]
+if os.getenv("ALLOWED_HOSTS"):
+    ALLOWED_HOSTS = [*ALLOWED_HOSTS, *[h for h in os.getenv("ALLOWED_HOSTS","").split(",") if h]]
+
+if os.getenv("CSRF_TRUSTED_ORIGINS"):
+    CSRF_TRUSTED_ORIGINS = [*CSRF_TRUSTED_ORIGINS, *[u for u in os.getenv("CSRF_TRUSTED_ORIGINS","").split(",") if u]]
 
 # --- Cabeceras y HTTPS ---
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
