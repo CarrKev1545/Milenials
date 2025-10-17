@@ -27,13 +27,16 @@
       <div class="brand" style="font-weight:800;">Millennials</div>
       <div class="spacer" style="flex:1;"></div>
       <div class="user-name text-muted" aria-live="polite">
-        Usuario: 
-        {% if request.user.first_name or request.user.last_name %}
-          {{ request.user.first_name }} {{ request.user.last_name }}
-        {% else %}
-          {{ request.user.username }}
-        {% endif %}
-        · Rol: {{ request.user.rol }}
+        {% with nn=request.user.nombre ap=request.user.apellidos uu=request.user.usuario un=request.user.username %}
+            {% if nn or ap %}
+              {{ nn }} {{ ap }}
+            {% elif uu %}
+              {{ uu }}
+            {% else %}
+              {{ un }}
+            {% endif %}
+          {% endwith %}
+          · {{ request.user.rol }}
       </div>
       <a class="btn btn--ghost" href="{% url 'logout' %}">Cerrar sesión</a>
     </div>

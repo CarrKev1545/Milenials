@@ -25,11 +25,15 @@
       <div class="nav-title">
         <h3>MILLENNIALS</h3>
         <span class="user-name">
-          {% if request.user.first_name or request.user.last_name %}
-            {{ request.user.first_name }} {{ request.user.last_name }}
-          {% else %}
-            {{ request.user.username }}
-          {% endif %}
+          {% with nn=request.user.nombre ap=request.user.apellidos uu=request.user.usuario un=request.user.username %}
+            {% if nn or ap %}
+              {{ nn }} {{ ap }}
+            {% elif uu %}
+              {{ uu }}
+            {% else %}
+              {{ un }}
+            {% endif %}
+          {% endwith %}
           · DOCENTE
         </span>
       </div>

@@ -14,7 +14,6 @@
   <link rel="stylesheet" href="{% static 'css/dashboard.patch.css' %}">
   <link rel="stylesheet" href="{% static 'css/responsive.patch.css' %}">
 
-
   <!-- Iconos (Font Awesome) -->
   <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -38,11 +37,15 @@
       <div class="nav-title">
         <h3 class="nowrap">Millennials</h3>
         <span class="user-name">
-          {% if request.user.first_name or request.user.last_name %}
-            {{ request.user.first_name }} {{ request.user.last_name }}
-          {% else %}
-            {{ request.user.username }}
-          {% endif %}
+          {% with nn=request.user.nombre ap=request.user.apellidos uu=request.user.usuario un=request.user.username %}
+            {% if nn or ap %}
+              {{ nn }} {{ ap }}
+            {% elif uu %}
+              {{ uu }}
+            {% else %}
+              {{ un }}
+            {% endif %}
+          {% endwith %}
           · {{ request.user.rol }}
         </span>
       </div>
