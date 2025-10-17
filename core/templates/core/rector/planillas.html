@@ -3,8 +3,58 @@
 
 {% block title %}Planillas — Estudiantes activos{% endblock %}
 
-{# No añadimos CSS: heredamos los estilos globales del proyecto #}
-{% block extra_css %}{% endblock %}
+{% block extra_css %}
+<style>
+  /* Escala consistente */
+  :root{font-size:16px}
+  @media (max-width:75em){:root{font-size:15px}}
+  @media (max-width:62em){:root{font-size:14px}}
+  @media (max-width:48em){:root{font-size:13px}}
+  @media (max-width:36em){:root{font-size:12px}}
+
+  /* Tarjeta centrada */
+  .pl { width:100%; max-width:52rem; margin:0 auto; padding:1rem; }
+  .pl-card{
+    background:#0b1220; color:#e5ecf6;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:1rem; box-shadow:0 .75rem 1.5rem rgba(0,0,0,.35);
+    padding:1.25rem;
+  }
+
+  /* Grid del formulario */
+  .pl-form{ display:grid; gap:1rem; grid-template-columns:1fr; }
+  @media (min-width:56.25em){ .pl-form{ grid-template-columns:repeat(2,1fr); } }
+
+  /* Campo tipo input blanco con icono a la izquierda */
+  .pl-field{
+    position:relative; display:flex; align-items:center;
+    height:3.75rem; border-radius:.875rem;
+    background:#fff; border:1px solid rgba(0,0,0,.08);
+    box-shadow:0 .625rem 1.25rem rgba(0,0,0,.22);
+    padding:0 .875rem 0 2.75rem;
+  }
+  .pl-ico{
+    position:absolute; left:.875rem; top:50%; transform:translateY(-50%);
+    color:#111; opacity:.9;
+  }
+  .pl-field select{
+    width:100%; border:none; outline:none; background:transparent;
+    font-weight:700; color:#111; font-size:1rem; appearance:none;
+  }
+  .pl-field select:disabled{ opacity:.6; }
+
+  /* Botones pill */
+  .pl-actions{ display:grid; gap:.75rem; grid-template-columns:1fr; margin-top:.5rem; }
+  @media (min-width:33.75em){ .pl-actions{ grid-template-columns:repeat(2,1fr); } }
+  .pl-actions .btn{
+    height:2.75rem; border-radius:999rem; border:none; cursor:pointer;
+    font-weight:800; color:#fff; transition:.15s transform ease, .15s box-shadow ease;
+  }
+  .btn-pdf{ background:#b11a1a; box-shadow:0 .75rem 1.5rem rgba(156,15,16,.35); }
+  .btn-xls{ background:#136f36; box-shadow:0 .75rem 1.5rem rgba(19,111,54,.35); }
+  .pl-actions .btn:hover{ transform:translateY(-.125rem); box-shadow:0 1rem 2rem rgba(0,0,0,.45); }
+</style>
+{% endblock %}
 
 {% block page_banner %}
   <div class="page-banner page-banner--info">
@@ -13,56 +63,40 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
-  <div class="row">
-    <div class="col-12 col-xl-9 mx-auto">
+<section class="pl" aria-labelledby="titulo-pl">
+  <div class="pl-card" role="group" aria-label="Filtros de exportación">
+    <form class="pl-form" onsubmit="return false;" autocomplete="off">
+      <!-- Sede -->
+      <label class="pl-field" for="pl-sede">
+        <span class="pl-ico"><i class="fa-solid fa-building-columns"></i></span>
+        <select id="pl-sede">
+          <option value="">Todas</option>
+        </select>
+      </label>
 
-      <div class="card shadow-sm">
-        <div class="card-header">
-          <strong>Filtros</strong>
-        </div>
+      <!-- Grado -->
+      <label class="pl-field" for="pl-grado">
+        <span class="pl-ico"><i class="fa-solid fa-layer-group"></i></span>
+        <select id="pl-grado" disabled>
+          <option value="">Todos</option>
+        </select>
+      </label>
 
-        <div class="card-body">
-          <div class="row g-3">
+      <!-- Grupo -->
+      <label class="pl-field" for="pl-grupo">
+        <span class="pl-ico"><i class="fa-solid fa-people-group"></i></span>
+        <select id="pl-grupo" disabled>
+          <option value="">Todos</option>
+        </select>
+      </label>
+    </form>
 
-            <div class="col-12 col-md-6">
-              <label for="pl-sede" class="form-label">Sede</label>
-              <select id="pl-sede" class="form-select">
-                <option value="">Todas</option>
-              </select>
-            </div>
-
-            <div class="col-12 col-md-6">
-              <label for="pl-grado" class="form-label">Grado</label>
-              <select id="pl-grado" class="form-select" disabled>
-                <option value="">Todos</option>
-              </select>
-            </div>
-
-            <div class="col-12 col-md-6">
-              <label for="pl-grupo" class="form-label">Grupo</label>
-              <select id="pl-grupo" class="form-select" disabled>
-                <option value="">Todos</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="d-flex flex-wrap gap-2 mt-3">
-            <button type="button" id="btn-pdf" class="btn btn-danger">
-              Descargar PDF
-            </button>
-            <button type="button" id="btn-xls" class="btn btn-success">
-              Descargar Excel
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {# Si había un párrafo de ayuda, lo omitimos para mantener limpieza visual #}
-
+    <div class="pl-actions">
+      <button type="button" id="btn-pdf" class="btn btn-pdf">Descargar PDF</button>
+      <button type="button" id="btn-xls" class="btn btn-xls">Descargar Excel</button>
     </div>
   </div>
-</div>
+</section>
 {% endblock %}
 
 {% block extra_js %}
