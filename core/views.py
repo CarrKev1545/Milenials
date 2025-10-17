@@ -1052,11 +1052,13 @@ def rector_registro_estudiantes(request: HttpRequest) -> HttpResponse:
     return render(request, "core/rector/registro_estudiantes.html")
 
 
+
 @login_required(login_url="login")
 @require_POST
 def rector_registro_estudiantes_crear(request: HttpRequest) -> JsonResponse:
     """
     Crea un estudiante con (nombre, apellidos, documento) en public.estudiantes.
+    Fuerza NOMBRE y APELLIDOS a MAYÚSCULAS (colapsando espacios).
     """
     if (resp := _guard_rector(request)) is not None:
         return JsonResponse(
@@ -1064,7 +1066,7 @@ def rector_registro_estudiantes_crear(request: HttpRequest) -> JsonResponse:
             status=403,
         )
 
-    # JSON o form-data
+    # --- Entrada: JSON o form-data
     if request.content_type and "application/json" in request.content_type:
         try:
             payload = json.loads(request.body.decode("utf-8"))
@@ -1073,10 +1075,21 @@ def rector_registro_estudiantes_crear(request: HttpRequest) -> JsonResponse:
     else:
         payload = request.POST
 
-    nombre = (payload.get("nombre") or "").strip()
-    apellidos = (payload.get("apellidos") or "").strip()
-    documento = (payload.get("documento") or "").strip()
+    # --- Normalización: trim + colapsar espacios + MAYÚSCULAS
+    def _norm_upper(s: str) -> str:
+        # quita espacios extremos, colapsa múltiples a uno y convierte a MAYÚSCULAS
+        s = (s or "").strip()
+        s = re.sub(r"\s+", " ", s)
+        return s.upper()
 
+    nombre_raw    = (payload.get("nombre") or "")
+    apellidos_raw = (payload.get("apellidos") or "")
+    documento     = (payload.get("documento") or "").strip()
+
+    nombre    = _norm_upper(nombre_raw)
+    apellidos = _norm_upper(apellidos_raw)
+
+    # --- Validaciones (se mantienen)
     if not nombre or not apellidos or not documento:
         return JsonResponse({"ok": False, "msg": "Todos los campos son obligatorios."}, status=400)
 
@@ -1088,6 +1101,7 @@ def rector_registro_estudiantes_crear(request: HttpRequest) -> JsonResponse:
     if not re.fullmatch(r"\d{5,20}", documento):
         return JsonResponse({"ok": False, "msg": "El documento debe tener entre 5 y 20 dígitos."}, status=400)
 
+    # --- Insert (misma lógica; ya enviamos normalizado)
     sql = """
         INSERT INTO public.estudiantes (documento, nombre, apellidos)
         VALUES (%s, %s, %s)
