@@ -28,20 +28,18 @@
   .np-inner{
     position:relative; z-index:1;
     padding:28px 24px 24px;
-    text-align: initial; /* evita alineaciones heredadas */
+    text-align: initial;
   }
 
-  /* ===== Badge centrado ===== */
-  /* En móvil/tablet usamos % del contenedor (no vw) para evitar “corrimiento” */
+  /* ===== Badge ===== */
   .np-badge{
     width: clamp(240px, 92%, 360px);
-    margin: -22px auto 0;        /* centrado por márgenes */
+    margin: -22px auto 0;
     background:#0c0c0c; border-radius:16px;
     box-shadow:0 16px 30px rgba(0,0,0,.55), inset 0 -8px 22px rgba(0,0,0,.22);
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     padding:18px 16px 12px; position:relative;
   }
-  /* En escritorio anclamos al centro con left:50% (sin doble centrado) */
   @media (min-width:900px){
     .np-badge{
       width: clamp(260px, 28vw, 420px);
@@ -55,19 +53,40 @@
     border-radius:999px; font-weight:800; letter-spacing:.2px; box-shadow:0 12px 24px rgba(0,0,0,.45);
   }
 
-  /* ===== Grid de campos ===== */
+  /* ===== Grid ===== */
   .np-grid{ margin-top:18px; display:grid; grid-template-columns:1fr 1fr; gap:14px 20px; align-items:center; }
   @media (max-width:1020px){ .np-grid{ grid-template-columns:1fr; } }
 
   /* ===== Campos ===== */
   .np-field{
-    position:relative; display:flex; align-items:center; gap:10px; height:48px; padding:0 14px 0 50px;
-    background:#fff; border-radius:14px; border:1px solid rgba(0,0,0,.06); box-shadow:0 10px 20px rgba(0,0,0,.22); width:100%;
+    position: relative;
+    display: flex; align-items: center;
+    height: 48px;
+    padding: 0;
+    background:#fff; border-radius:14px; border:1px solid rgba(0,0,0,.06);
+    box-shadow:0 10px 20px rgba(0,0,0,.22);
+    width:100%;
+    cursor: pointer;
   }
-  .np-field input, .np-field select{ appearance:none; width:100%; border:none; outline:none; background:transparent; color:#111; font-weight:600; }
+  .np-field select{
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    appearance: none;
+    border: 0; outline: none; background: transparent;
+    color:#111; font-weight:600; cursor: pointer;
+    padding-left: 50px; padding-right: 36px;
+  }
+  .np-field input{
+    width: 100%;
+    border: 0; outline: none; background: transparent;
+    color:#111; font-weight:600; padding-left: 50px;
+  }
   .np-field input[readonly]{ background:#f7f7f7; cursor:not-allowed; }
   .np-ico{ position:absolute; left:14px; top:50%; transform:translateY(-50%); width:26px; display:grid; place-items:center; color:#111; opacity:.95; }
-  .np-caret{ position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#111; opacity:.85; }
+  .np-caret{
+    position:absolute; right:10px; top:50%; transform:translateY(-50%);
+    color:#111; opacity:.85; pointer-events: none;
+  }
 
   /* ===== Acciones ===== */
   .np-actions{ margin-top:6px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
@@ -80,7 +99,7 @@
   .np-btn:active{ transform: translateY(0) scale(.985); }
   .np-btn--ghost{ background:#b51415; }
 
-  /* ===== Estilo oscuro para el selector PDF/Excel ===== */
+  /* Selector PDF/Excel */
   #formato{
     height:48px; border-radius:12px; padding:0 12px;
     background:#222; color:#fff; border:1px solid rgba(255,255,255,.18);
@@ -88,54 +107,11 @@
     min-width:130px; font-weight:700;
   }
   #formato:focus{ outline:none; box-shadow:0 0 0 3px rgba(255,255,255,.18), 0 12px 22px rgba(0,0,0,.35); }
-  /* Nota: los <option> se renderizan nativamente; color puede variar según SO */
 
-  /* Micro-ajuste ≤360px */
   @media (max-width:360px){
     .np-badge i{ font-size:68px; }
     .np-chip{ padding:6px 14px; }
   }
-  
-  /* --- Hacer que TODO el cuadro sea clic/touch para abrir el <select> --- */
-.np-field{
-  position: relative;
-  display: flex; align-items: center;
-  height: 48px;
-  padding: 0;                       /* quitamos padding del contenedor */
-  background:#fff; border-radius:14px; border:1px solid rgba(0,0,0,.06);
-  box-shadow:0 10px 20px rgba(0,0,0,.22);
-  width:100%;
-  cursor: pointer;                  /* feedback de clic */
-}
-
-/* El <select> cubre el 100% del cuadro: cualquier toque lo abre */
-.np-field select{
-  position: absolute; inset: 0;     /* top/right/bottom/left: 0 */
-  width: 100%; height: 100%;
-  appearance: none;
-  border: 0; outline: none; background: transparent;
-  color:#111; font-weight:600; cursor: pointer;
-
-  /* Espacios internos para icono y caret (mantiene el diseño actual) */
-  padding-left: 50px;               /* deja sitio al icono de la izquierda */
-  padding-right: 36px;              /* deja sitio a la flecha (caret) */
-}
-
-/* Los inputs siguen viéndose bien con icono: solo les damos padding interno */
-.np-field input{
-  width: 100%;
-  border: 0; outline: none; background: transparent;
-  color:#111; font-weight:600;
-  padding-left: 50px;               /* mismo offset que los selects */
-}
-
-/* La flecha es decorativa y no bloquea el clic */
-.np-caret{
-  position:absolute; right:10px; top:50%; transform:translateY(-50%);
-  color:#111; opacity:.85;
-  pointer-events: none;             /* el clic atraviesa hacia el select */
-}
-
 </style>
 {% endblock %}
 
@@ -153,8 +129,8 @@
           <div class="np-chip">POR ESTUDIANTE</div>
         </div>
 
-        <!-- IMPORTANTE: action correcto -->
-        <form class="np-grid" method="get" action="{% url 'rector_reportes_academicos_tabla' %}">
+        <!-- Filtrado -->
+        <form id="filtros-form" class="np-grid" method="get" action="{% url 'rector_reportes_academicos_tabla' %}">
           <!-- Sede -->
           <label class="np-field">
             <span class="np-ico"><i class="fa-solid fa-building-columns"></i></span>
@@ -214,7 +190,7 @@
             <button type="reset" class="np-btn np-btn--ghost">Limpiar</button>
           </div>
 
-          <!-- TEXTOS legibles para el chip {{ filtros }} -->
+          <!-- TEXTOS legibles para chip -->
           <input type="hidden" name="sede">
           <input type="hidden" name="grado">
           <input type="hidden" name="grupo">
@@ -246,9 +222,8 @@
   const periodoSel = $('#periodo_id');
   const estSel     = $('#estudiante_id');
   const estNombre  = $('#estudiante_nombre');
-  const btnBuscar  = $('#btnBuscar');   // si no existe, evitamos error más abajo
 
-  // Hidden (textos legibles)
+  // Hidden (textos)
   const hSede  = document.querySelector('input[name="sede"]');
   const hGrado = document.querySelector('input[name="grado"]');
   const hGrupo = document.querySelector('input[name="grupo"]');
@@ -267,7 +242,6 @@
       const pers  = await fetch("{% url 'api_periodos_abiertos' %}").then(r=>r.json());
       setSelect(periodoSel, pers.periodos, "Periodo (opcional)"); enable(periodoSel, true);
     }catch(e){ console.error(e); }
-    validate();
   })();
 
   // Sede -> grados
@@ -280,13 +254,12 @@
     setSelect(estSel,   [], "Seleccione estudiante"); enable(estSel, false);
     estNombre.value = ""; st.estudiante_id = "";
 
-    if(!st.sede_id){ validate(); return; }
+    if(!st.sede_id) return;
 
     try{
       const g = await fetch("{% url 'api_grados_por_sede' %}?sede_id="+st.sede_id).then(r=>r.json());
       setSelect(gradoSel, g.grados, "Grado"); enable(gradoSel, true);
     }catch(e){ console.error(e); }
-    validate();
   });
 
   // Grado -> grupos
@@ -298,14 +271,13 @@
     setSelect(estSel,   [], "Seleccione estudiante"); enable(estSel, false);
     estNombre.value = ""; st.estudiante_id = "";
 
-    if(!st.grado_id || !st.sede_id){ validate(); return; }
+    if(!st.grado_id || !st.sede_id) return;
 
     try{
       const url = "{% url 'api_grupos_por_sede_grado' %}?sede_id="+st.sede_id+"&grado_id="+st.grado_id;
       const g = await fetch(url).then(r=>r.json());
       setSelect(grupoSel, g.grupos, "Grupo"); enable(grupoSel, true);
     }catch(e){ console.error(e); }
-    validate();
   });
 
   // Grupo -> estudiantes
@@ -316,21 +288,19 @@
     setSelect(estSel, [], "Seleccione estudiante"); enable(estSel, false);
     estNombre.value = ""; st.estudiante_id = "";
 
-    if(!st.grupo_id){ validate(); return; }
+    if(!st.grupo_id) return;
 
     try{
       const eg = await fetch("{% url 'api_estudiantes_por_grupo' %}?grupo_id="+st.grupo_id).then(r=>r.json());
       const opts = (eg.estudiantes || []).map(e => ({ id: e.id, nombre: `${e.apellidos} ${e.nombre}`.trim() }));
       setSelect(estSel, opts, "Seleccione estudiante"); enable(estSel, true);
     }catch(e){ console.error(e); }
-    validate();
   });
 
   // Periodo (opcional)
   periodoSel.addEventListener('change', e=>{
     st.periodo_id = e.target.value || "";
     hPer.value = periodoSel.options[periodoSel.selectedIndex]?.text || "";
-    validate();
   });
 
   // Estudiante -> nombre readonly + hidden
@@ -339,31 +309,29 @@
     const nombre = estSel.options[estSel.selectedIndex]?.text || "";
     estNombre.value = nombre;
     hEst.value = nombre;
-    validate();
   });
 
-  function validate(){
-    const ok = !!(st.sede_id && st.grado_id && st.grupo_id && st.estudiante_id);
-    if (btnBuscar) btnBuscar.disabled = !ok; // guard opcional por si no existe
-  }
-
-  /* ====== Descarga ====== */
+  /* ====== Descarga (en otra pestaña) ====== */
   document.getElementById('btn-descargar').addEventListener('click', ()=>{
     const grupo   = document.getElementById('grupo_id').value;
-    const periodo = document.getElementById('periodo_id').value;
+    const periodo = document.getElementById('periodo_id').value; // opcional
     const est     = document.getElementById('estudiante_id').value;
     const formato = document.getElementById('formato').value || 'pdf';
 
-    if(!grupo || !periodo || !est){
-      alert('Seleccione grupo, periodo y estudiante');
+    // Requisitos: grupo y estudiante; periodo es opcional
+    if(!grupo || !est){
+      alert('Seleccione grupo y estudiante');
       return;
     }
-    const q = new URLSearchParams({ grupo_id: grupo, periodo_id: periodo, estudiante_id: est, formato });
-    window.location.href = "{% url 'rector_reportes_academicos_export' %}?"+q.toString();
+    const q = new URLSearchParams({ grupo_id: grupo, estudiante_id: est, formato });
+    if (periodo) q.set('periodo_id', periodo);
+
+    const url = "{% url 'rector_reportes_academicos_export' %}?"+q.toString();
+    window.open(url, '_blank', 'noopener'); // 👉 abre en otra pestaña
   });
 
   // Reset visual + hidden
-  document.querySelector('form').addEventListener('reset', ()=>{
+  document.querySelector('#filtros-form').addEventListener('reset', ()=>{
     setTimeout(()=>{
       hSede.value = hGrado.value = hGrupo.value = hEst.value = hPer.value = "";
       estNombre.value = "";
@@ -371,7 +339,6 @@
       setSelect(gradoSel, [], "Grado"); enable(gradoSel, false);
       setSelect(grupoSel, [], "Grupo"); enable(grupoSel, false);
       setSelect(estSel,   [], "Seleccione estudiante"); enable(estSel, false);
-      validate();
     },0);
   });
 </script>
