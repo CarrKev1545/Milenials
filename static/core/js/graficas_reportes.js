@@ -1,56 +1,45 @@
-// graficas_reportes.js  — ADMIN / (compatible con RECTOR si GR_URLS apunta a sus APIs)
+// graficas_reportes.js  (ADMIN)
 (function () {
   const $ = (s) => document.querySelector(s);
 
-  // --- Selectores de filtros (algunos pueden no existir y el código lo tolera)
-  const selSede      = $("#f-sede");
-  const selGrado     = $("#f-grado");
-  const selGrupo     = $("#f-grupo");
-  const selPeriodo   = $("#f-periodo");   // opcional
+  // --- Selectores
+  const selSede   = $("#f-sede");
+  const selGrado  = $("#f-grado");
+  const selGrupo  = $("#f-grupo");
+  const selPeriodo   = $("#f-periodo");   // opcional (si no existe, no pasa nada)
   const selThreshold = $("#f-threshold"); // opcional
-
-  // --- ECharts
-  const ECH = window.echarts;
-  if (!ECH) {
-    console.warn("ECharts no encontrado. Revisa la inclusión del script en el template.");
-  }
 
   // --- Utilidades
   async function fetchJSON(url) {
     const r = await fetch(url, { credentials: "same-origin" });
-    if (!r.ok) throw new Error(r.status + " " + url);
+    if (!r.ok) throw new Error(`${r.status} ${url}`);
     return r.json();
   }
   function clearSelect(sel, ph) {
     if (!sel) return;
     sel.innerHTML = `<option value="">${ph}</option>`;
   }
-  function disable(sel, on) {
-    if (!sel) return;
-    sel.disabled = !!on;
-  }
+  function enable(sel, on=true){ if(sel){ sel.disabled = !on; } }
 
   // --- URLs inyectadas desde el template
-  const URLS = window.GR_URLS || {};
-  const URL_API_SEDES   = URLS.api_sedes;
-  const URL_API_GRADOS  = URLS.api_grados_por_sede;
-  const URL_API_GRUPOS  = URLS.api_grupos_por_sede_grado;
-  const URL_API_ACTIVOS = URLS.api_metrics_activos;       // /api/metrics/activos
-  const URL_API_REPROB  = URLS.api_metrics_reprobados || "/api/metrics/reprobados";
-  const URL_API_HISTO   = URLS.api_metrics_histograma || "/api/metrics/histograma";
+  const URLS = (typeof window !== "undefined" && window.GR_URLS) || {};
+  const URL_API_SEDES  = URLS.api_sedes;
+  const URL_API_GRADOS = URLS.api_grados_por_sede;
+  const URL_API_GRUPOS = URLS.api_grupos_por_sede_grado;
+  const URL_API_ACTIVOS = URLS.api_metrics_activos;
+  const URL_API_REPROB  = "/api/metrics/reprobados"; // común
+  const URL_API_HIST    = URLS.api_metrics_histograma || "/api/metrics/histograma";
 
   if (!URL_API_SEDES || !URL_API_GRADOS || !URL_API_GRUPOS || !URL_API_ACTIVOS) {
     console.warn("Faltan URLs en window.GR_URLS. Revisa el bloque extra_js del template.");
   }
 
-  // --- Mapa id -> nombre de sede (backend de /metrics/activos y /metrics/histograma reciben nombre)
-  const SEDE_NAME_BY_ID = {};
+  // --- Mapa id -> nombre de sede (el backend de 'activos' espera nombre)
+  const SEDE_NAME_BY_ID = Object.create(null);
 
-  // ---------- CARGA DE DATOS DE FILTROS ----------
+  // ---------- CARGA DE FILTROS ----------
   async function loadSedes() {
     clearSelect(selSede, "Todas las sedes");
-    if (!URL_API_SEDES || !selSede) return;
-
     try {
       const data = await fetchJSON(URL_API_SEDES);
       (data.sedes || []).forEach((s) => {
@@ -65,14 +54,11 @@
     }
   }
 
+  // ADMIN: grados SIEMPRE habilitado y cargan todos si sede=''
   async function loadGrados() {
     const sede_id = selSede?.value || "";
     clearSelect(selGrado, "Todos los grados");
-    clearSelect(selGrupo, "Todos los grupos");
-    disable(selGrado, !sede_id);
-    disable(selGrupo, true);
-
-    if (!sede_id || !URL_API_GRADOS || !selGrado) return;
+    enable(selGrado, true);
 
     try {
       const data = await fetchJSON(`${URL_API_GRADOS}?sede_id=${encodeURIComponent(sede_id)}`);
@@ -87,13 +73,14 @@
     }
   }
 
+  // ADMIN: grupos si hay sede O grado (si ambos vacíos, no cargamos para no traer todo)
   async function loadGrupos() {
     const sede_id  = selSede?.value || "";
     const grado_id = selGrado?.value || "";
     clearSelect(selGrupo, "Todos los grupos");
-    disable(selGrupo, !grado_id);
 
-    if (!grado_id || !URL_API_GRUPOS || !selGrupo) return;
+    if (!sede_id && !grado_id) { enable(selGrupo, false); return; }
+    enable(selGrupo, true);
 
     try {
       const data = await fetchJSON(
@@ -110,8 +97,37 @@
     }
   }
 
-  // ---------- CHART: ACTIVOS POR SEDE ----------
+  // Periodos (si existe el select; si no, lo ignoramos)
+  async function loadPeriodos() {
+    if (!selPeriodo) return;
+    clearSelect(selPeriodo, "Todos los periodos");
+
+    try {
+      const res = await fetch("/api/docente/periodos-abiertos", { credentials: "same-origin" });
+      if (res.ok) {
+        const data = await res.json();
+        (data.periodos || []).forEach((p) => {
+          const o = document.createElement("option");
+          o.value = p.id;
+          o.textContent = p.nombre;
+          selPeriodo.appendChild(o);
+        });
+        return;
+      }
+    } catch(e){ /* fallback */ }
+
+    [1,2,3,4].forEach(pid=>{
+      const o = document.createElement("option");
+      o.value = String(pid);
+      o.textContent = `Periodo ${pid}`;
+      selPeriodo.appendChild(o);
+    });
+  }
+
+  // ---------- GRÁFICO: ACTIVOS POR SEDE ----------
+  const ECH = typeof window !== "undefined" ? window.echarts : null;
   let chartActivos = null;
+
   function ensureChartActivos() {
     if (!ECH) return null;
     if (!chartActivos) {
@@ -124,19 +140,19 @@
   }
 
   async function renderActivos() {
-    const sede_id  = selSede?.value || "";
+    const sede_id = selSede?.value || "";
     const grupo_id = selGrupo?.value || "";
 
     const params = new URLSearchParams();
     if (sede_id) {
-      const sedeNombre = SEDE_NAME_BY_ID[sede_id] || selSede?.options[selSede.selectedIndex]?.text || "";
+      const sedeNombre = SEDE_NAME_BY_ID[sede_id] || selSede.options[selSede.selectedIndex]?.text || "";
       if (sedeNombre) params.append("sede", sedeNombre);
     }
     if (grupo_id) params.append("grupo_id", grupo_id);
 
     try {
-      const url   = URL_API_ACTIVOS + (params.toString() ? "?" + params.toString() : "");
-      const data  = await fetchJSON(url);
+      const url = URL_API_ACTIVOS + (params.toString() ? "?" + params.toString() : "");
+      const data = await fetchJSON(url);
       const series = data.series || [];
       const names  = series.map((s) => s.name);
       const values = series.map((s) => s.value);
@@ -156,34 +172,23 @@
             type: "bar",
             data: values,
             barMaxWidth: 36,
-            itemStyle: { borderRadius: [6, 6, 0, 0] },
+            itemStyle: { color: "#3b82f6", borderRadius: [6, 6, 0, 0] }, // AZUL
           },
         ],
       });
     } catch (e) {
-      console.error("[activos] error:", e);
+      console.error(e);
       const chart = ensureChartActivos();
       chart && chart.setOption({ title: { text: "No se pudo cargar", left: "center" } });
     }
 
-    // tras dibujar activos, refrescamos reprobados con los mismos filtros
+    // Al cambiar activos, refrescamos también reprobados
     refreshReprobados();
-    // si hay histograma, también
-    refreshHistograma();
   }
 
-  // ---------- CHART: REPROBADOS POR ASIGNATURA ----------
-  let chartReprob = null;
-  function ensureChartReprob() {
-    if (!ECH) return null;
-    if (!chartReprob) {
-      const el = document.getElementById("chart-reprobados");
-      if (!el) return null;
-      chartReprob = ECH.init(el, null, { renderer: "canvas" });
-      window.addEventListener("resize", () => chartReprob && chartReprob.resize());
-    }
-    return chartReprob;
-  }
+  // ---------- GRÁFICO: REPROBADOS POR ASIGNATURA ----------
+  const elChartReprob = document.getElementById("chart-reprobados");
+  let chartReprob = ECH && elChartReprob ? ECH.init(elChartReprob) : null;
 
   async function fetchReprobados(params) {
     const qs = new URLSearchParams();
@@ -198,14 +203,12 @@
   }
 
   function renderReprobadosChart(data) {
-    const chart = ensureChartReprob();
-    if (!chart) return;
-
+    if (!chartReprob) return;
     const series = data.series || [];
     const names  = series.map((s) => s.name);
     const values = series.map((s) => s.value);
 
-    chart.setOption({
+    chartReprob.setOption({
       backgroundColor: "transparent",
       tooltip: { trigger: "axis" },
       grid: { left: 40, right: 20, top: 30, bottom: 50 },
@@ -217,121 +220,127 @@
           type: "bar",
           data: values,
           barWidth: "60%",
-          itemStyle: { borderRadius: [6, 6, 0, 0] },
+          itemStyle: { color: "#ef4444", borderRadius: [6, 6, 0, 0] }, // ROJO
         },
       ],
     });
   }
 
   async function refreshReprobados() {
-    const el = document.getElementById("chart-reprobados");
-    if (!el) return; // si la tarjeta no existe, salimos
-
-    const chart = ensureChartReprob();
-    chart && chart.showLoading("default", { text: "Cargando..." });
-
+    if (!chartReprob) return;
+    chartReprob.showLoading("default", { text: "Cargando..." });
     try {
-      const sede_id    = selSede?.value || "";
-      const grado_id   = selGrado?.value || "";
-      const grupo_id   = selGrupo?.value || "";
-      const periodo_id = selPeriodo?.value || "";     // opcional
-      const threshold  = selThreshold?.value || "3.0"; // opcional
+      const sede_id   = selSede?.value || "";
+      const grado_id  = selGrado?.value || "";
+      const grupo_id  = selGrupo?.value || "";
+      const periodo_id = selPeriodo?.value || "";
+      const threshold  = selThreshold?.value || "3.0";
 
       const sedeNombre = sede_id
-        ? (SEDE_NAME_BY_ID[sede_id] || selSede?.options[selSede.selectedIndex]?.text || "")
+        ? (SEDE_NAME_BY_ID[sede_id] || selSede.options[selSede.selectedIndex]?.text || "")
         : "";
 
       const data = await fetchReprobados({
-        sede: sedeNombre, grado_id, grupo_id, periodo_id, threshold,
+        sede: sedeNombre,
+        grado_id,
+        grupo_id,
+        periodo_id,
+        threshold,
       });
       renderReprobadosChart(data);
     } catch (err) {
-      console.error("[reprobados] error:", err);
+      console.error(err);
       renderReprobadosChart({ series: [] });
     } finally {
-      chart && chart.hideLoading();
+      chartReprob.hideLoading();
     }
   }
 
-  // ---------- CHART: HISTOGRAMA DE NOTAS (opcional) ----------
-  let chartHist = null;
-  function ensureChartHist() {
-    if (!ECH) return null;
-    if (!chartHist) {
-      const el = document.getElementById("chart-histograma-notas");
-      if (!el) return null;
-      chartHist = ECH.init(el, null, { renderer: "canvas" });
-      window.addEventListener("resize", () => chartHist && chartHist.resize());
-    }
-    return chartHist;
-  }
-
-  async function refreshHistograma() {
+  // ---------- HISTOGRAMA (si existe en la página) ----------
+  (function () {
     const el = document.getElementById("chart-histograma-notas");
-    if (!el) return; // no hay histograma en esta vista
+    if (!ECH || !el) return;
 
-    const chart = ensureChartHist();
-    chart && chart.showLoading("default", { text: "Cargando..." });
+    const chart = ECH.init(el, null, { renderer: "canvas" });
+    window.addEventListener("resize", () => chart.resize());
 
-    try {
-      const sede_id    = selSede?.value || "";
-      const grupo_id   = selGrupo?.value || "";
-      const periodo_id = selPeriodo?.value || ""; // opcional
-
-      const sedeNombre = sede_id
-        ? (SEDE_NAME_BY_ID[sede_id] || selSede?.options[selSede.selectedIndex]?.text || "")
-        : "";
-
-      const res = await fetch(`${URL_API_HISTO}?${new URLSearchParams({
-        sede: sedeNombre, grupo_id, periodo_id
-      })}`, { credentials: "same-origin" });
-
-      if (!res.ok) throw new Error("Error histograma");
-      const data = await res.json();
-
-      const series = Array.isArray(data?.series) ? data.series : [];
-      const labels = series.map((s) => s.name);
-      const values = series.map((s) => s.value);
-
-      const finalLabels = labels.length ? labels : ["1.0","1.5","2.0","2.5","3.0","3.5","4.0","4.5","5.0"];
-      const finalValues = labels.length ? values : new Array(finalLabels.length).fill(0);
-
-      chart.setOption({
-        backgroundColor: "transparent",
-        tooltip: { trigger: "axis" },
-        grid: { left: 40, right: 20, top: 30, bottom: 40 },
-        xAxis: { type: "category", data: finalLabels, name: "Nota" },
-        yAxis: { type: "value", name: "Cantidad" },
-        series: [
-          { name: "Estudiantes", type: "bar", data: finalValues, itemStyle: { color: "#26A69A", borderRadius: [6,6,0,0] } }
-        ],
-      });
-    } catch (err) {
-      console.error("[histograma] error:", err);
-    } finally {
-      chart && chart.hideLoading();
+    async function fetchJSON2(url, params={}) {
+      const qs = new URLSearchParams(params);
+      const full = url + (qs.toString() ? "?" + qs : "");
+      const res = await fetch(full, { credentials: "same-origin" });
+      if (!res.ok) throw new Error(`HTTP ${res.status} en ${full}`);
+      return res.json();
     }
-  }
 
-  // ---------- Eventos de filtros ----------
-  selSede  && selSede.addEventListener("change", async () => {
+    async function refresh() {
+      chart.showLoading("default", { text: "Cargando..." });
+      try {
+        const sede_id    = selSede?.value || "";
+        const grupo_id   = selGrupo?.value || "";
+        const periodo_id = selPeriodo?.value || "";
+        const sedeNombre = sede_id ? (SEDE_NAME_BY_ID[sede_id] || selSede?.options[selSede.selectedIndex]?.text || "") : "";
+
+        const data = await fetchJSON2(URL_API_HIST, { sede: sedeNombre, grupo_id, periodo_id });
+        const series = Array.isArray(data?.series) ? data.series : [];
+        const labels = series.map((s) => s.name);
+        const values = series.map((s) => s.value);
+
+        chart.setOption({
+          backgroundColor: "transparent",
+          tooltip: { trigger: "axis" },
+          grid: { left: 40, right: 20, top: 30, bottom: 40 },
+          xAxis: { type: "category", data: labels, name: "Nota" },
+          yAxis: { type: "value", name: "Cantidad" },
+          series: [{
+            name: "Estudiantes",
+            type: "bar",
+            data: values,
+            itemStyle: { color: "#22c55e", borderRadius: [6,6,0,0] } // verde suave
+          }]
+        });
+      } catch (err) {
+        console.error(err);
+        chart.setOption({ title: { text: "No se pudo cargar", left: "center" } });
+      } finally {
+        chart.hideLoading();
+      }
+    }
+
+    // Enlazar a filtros
+    selSede?.addEventListener("change", refresh);
+    selGrado?.addEventListener("change", refresh);
+    selGrupo?.addEventListener("change", refresh);
+    selPeriodo?.addEventListener("change", refresh);
+
+    refresh();
+  })();
+
+  // ---------- Eventos de filtros base ----------
+  selSede?.addEventListener("change", async () => {
     await loadGrados();
     await loadGrupos();
     renderActivos();
   });
-  selGrado && selGrado.addEventListener("change", async () => {
+  selGrado?.addEventListener("change", async () => {
     await loadGrupos();
     renderActivos();
   });
-  selGrupo   && selGrupo.addEventListener("change", renderActivos);
-  selPeriodo && selPeriodo.addEventListener("change", () => { refreshReprobados(); refreshHistograma(); });
-  selThreshold && selThreshold.addEventListener("change", refreshReprobados);
+  selGrupo?.addEventListener("change", renderActivos);
+
+  selPeriodo?.addEventListener("change", refreshReprobados);
+  selThreshold?.addEventListener("change", refreshReprobados);
 
   // ---------- Init ----------
   (async function init() {
     await loadSedes();
-    // Si en el futuro agregas periodos con /api/docente/periodos-abiertos, puedes cargarlo aquí.
-    renderActivos(); // esto refresca reprobados e histograma detrás
+    await loadGrados();   // 🔴 ahora siempre
+    await loadGrupos();   // 🔴 por si ya hay sede o grado
+    await loadPeriodos();
+    renderActivos();      // también refresca reprobados
+    if (chartReprob) {
+      window.addEventListener("resize", () => chartReprob && chartReprob.resize());
+    }
   })();
 })();
+
 
