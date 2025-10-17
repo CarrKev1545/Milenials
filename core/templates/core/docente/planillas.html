@@ -59,3 +59,22 @@
 </main>
 {% endblock %}
 
+{% block extra_js %}
+<script>
+  // Deja solo el número del grupo en el combo (p.ej. "1101")
+  (function () {
+    const sel = document.getElementById('f_grupo');
+    if (!sel) return;
+
+    Array.from(sel.options).forEach(opt => {
+      if (!opt.value) return;                 // deja "Todos"
+      const txt = (opt.textContent || '').trim();
+      const parts = txt.split(' - ');         // "Sede Secundaria - 11° - 1101"
+      const last = parts[parts.length - 1];   // "1101"
+      if (last) opt.textContent = last.trim();
+    });
+  })();
+</script>
+{% endblock %}
+
+
