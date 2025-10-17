@@ -1,4 +1,4 @@
-{% extends "core/base_dashboard_administrativo.html" %}
+{{% extends "core/base_dashboard_administrativo.html" %} 
 {% load static %}
 
 {% block title %}Reportes académicos — Filtros{% endblock %}
@@ -132,71 +132,84 @@
 {% block extra_js %}
 <script>
   // Helpers
-  const $ = s=>document.querySelector(s);
+  const $ = s => document.querySelector(s);
   const $sede = $('#sede');
   const $grado = $('#grado');
   const $grupo = $('#grupo');
   const $periodo = $('#periodo');
   const $buscar = $('#btn-buscar');
-  const disable = ($el, yes=true)=>{ $el.disabled = yes; if (yes) $el.value = ''; };
-  const enableBuscarIfReady = ()=>{
+
+  const disable = ($el, yes = true) => { $el.disabled = yes; if (yes) $el.value = ''; };
+  const enableBuscarIfReady = () => {
     const ok = $sede.value && $grado.value && $grupo.value && $periodo.value;
     $buscar.classList.toggle('disabled', !ok);
     $buscar.setAttribute('aria-disabled', String(!ok));
   };
 
+  // Normaliza items que vienen como tuplas [id, nombre] o como objetos {id, nombre}
+  const addOptions = (selectEl, items, placeholderText) => {
+    if (placeholderText) {
+      selectEl.innerHTML = `<option value="">${placeholderText}</option>`;
+    }
+    (items || []).forEach(it => {
+      // it puede ser [id, nombre] o {id, nombre}
+      const id  = Array.isArray(it) ? it[0] : (it.id ?? it.value ?? "");
+      const nom = Array.isArray(it) ? it[1] : (it.nombre ?? it.text ?? "");
+      if (id !== undefined && nom !== undefined) {
+        const o = document.createElement('option');
+        o.value = id;
+        o.textContent = nom;
+        selectEl.appendChild(o);
+      }
+    });
+  };
+
   // sedes
   fetch("{% url 'api_admin_sedes' %}")
-    .then(r=>r.json())
-    .then(({sedes=[]})=>{
-      sedes.forEach(s=>{
-        const o=document.createElement('option');
-        o.value=s.id; o.textContent=s.nombre;
-        $sede.appendChild(o);
-      });
-    });
+    .then(r => r.json())
+    .then(({ sedes = [] }) => {
+      addOptions($sede, sedes, "Seleccione la sede");
+    })
+    .catch(console.error);
 
   // sede -> grados + periodos
-  $sede.addEventListener('change', async ()=>{
+  $sede.addEventListener('change', async () => {
     disable($grado); disable($grupo); disable($periodo);
-    $grado.innerHTML = '<option value="">Seleccione el grado</option>';
-    $grupo.innerHTML = '<option value="">Seleccione el grupo</option>';
-    $periodo.innerHTML = '<option value="">Seleccione periodo</option>';
+    addOptions($grado, [], "Seleccione el grado");
+    addOptions($grupo, [], "Seleccione el grupo");
+    addOptions($periodo, [], "Seleccione periodo");
 
-    if(!$sede.value){ enableBuscarIfReady(); return; }
+    if (!$sede.value) { enableBuscarIfReady(); return; }
 
-    const g = await fetch("{% url 'api_admin_grados_por_sede' %}?sede_id="+encodeURIComponent($sede.value)).then(r=>r.json());
-    (g.grados||[]).forEach(it=>{
-      const o=document.createElement('option');
-      o.value=it.id; o.textContent=it.nombre;
-      $grado.appendChild(o);
-    });
-    disable($grado,false);
+    try {
+      const g = await fetch("{% url 'api_admin_grados_por_sede' %}?sede_id=" + encodeURIComponent($sede.value)).then(r => r.json());
+      addOptions($grado, g.grados || [], "Seleccione el grado");
+      disable($grado, false);
 
-    const p = await fetch("{% url 'api_admin_periodos_abiertos' %}").then(r=>r.json());
-    (p.periodos||[]).forEach(it=>{
-      const o=document.createElement('option');
-      o.value=it.id; o.textContent=it.nombre;
-      $periodo.appendChild(o);
-    });
-    disable($periodo,false);
+      const p = await fetch("{% url 'api_admin_periodos_abiertos' %}").then(r => r.json());
+      // periodos ya vienen como objetos {id, nombre}
+      addOptions($periodo, p.periodos || [], "Seleccione periodo");
+      disable($periodo, false);
+    } catch (e) {
+      console.error(e);
+    }
     enableBuscarIfReady();
   });
 
   // grado -> grupos
-  $grado.addEventListener('change', async ()=>{
+  $grado.addEventListener('change', async () => {
     disable($grupo);
-    $grupo.innerHTML = '<option value="">Seleccione el grupo</option>';
-    if(!$grado.value || !$sede.value){ enableBuscarIfReady(); return; }
+    addOptions($grupo, [], "Seleccione el grupo");
+    if (!$grado.value || !$sede.value) { enableBuscarIfReady(); return; }
 
-    const url = "{% url 'api_admin_grupos_por_sede_grado' %}?sede_id="+encodeURIComponent($sede.value)+"&grado_id="+encodeURIComponent($grado.value);
-    const r = await fetch(url).then(r=>r.json());
-    (r.grupos||[]).forEach(it=>{
-      const o=document.createElement('option');
-      o.value=it.id; o.textContent=it.nombre;
-      $grupo.appendChild(o);
-    });
-    disable($grupo,false);
+    try {
+      const url = "{% url 'api_admin_grupos_por_sede_grado' %}?sede_id=" + encodeURIComponent($sede.value) + "&grado_id=" + encodeURIComponent($grado.value);
+      const r = await fetch(url).then(r => r.json());
+      addOptions($grupo, r.grupos || [], "Seleccione el grupo");
+      disable($grupo, false);
+    } catch (e) {
+      console.error(e);
+    }
     enableBuscarIfReady();
   });
 
@@ -204,19 +217,19 @@
   $grupo.addEventListener('change', enableBuscarIfReady);
 
   // Buscar -> por_grupo
-  $buscar.addEventListener('click', ()=>{
+  $buscar.addEventListener('click', () => {
     if ($buscar.classList.contains('disabled')) return;
     const params = new URLSearchParams(new FormData(document.getElementById('form-reporte')));
     window.location.href = "{% url 'administrativo_reportes_academicos_por_grupo' %}?" + params.toString();
   });
 
   // Limpiar
-  document.getElementById('btn-limpiar').addEventListener('click', ()=>{
+  document.getElementById('btn-limpiar').addEventListener('click', () => {
     document.getElementById('form-reporte').reset();
-    [$grado,$grupo,$periodo].forEach(e=>{
-      e.innerHTML = e.querySelector('option').outerHTML;
-      disable(e,true);
-    });
+    // Restablece opciones a solo placeholder y deshabilita
+    addOptions($grado,  [], "Seleccione el grado");  disable($grado,  true);
+    addOptions($grupo,  [], "Seleccione el grupo");  disable($grupo,  true);
+    addOptions($periodo,[], "Seleccione periodo");   disable($periodo,true);
     enableBuscarIfReady();
   });
 </script>
