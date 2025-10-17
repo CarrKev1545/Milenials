@@ -68,7 +68,7 @@
 
 <script>
 (() => {
-  // ---- Elementos (IDs únicos para evitar choques con otros módulos) ----
+  // ---- Elementos (IDs se conservan) ----
   const selSede  = document.getElementById('pl-sede');
   const selGrado = document.getElementById('pl-grado');
   const selGrupo = document.getElementById('pl-grupo');
@@ -83,85 +83,142 @@
   const URL_PDF = "{{ export_pdf_url|escapejs }}";
   const URL_XLS = "{{ export_xls_url|escapejs }}";
 
-  // ---- Util ----
+  // ---- Helpers ----
   async function j(url){
-    const r = await fetch(url, {credentials:'same-origin'});
-    if(!r.ok) throw new Error(r.status + ' ' + url);
+    const r = await fetch(url, { credentials:'same-origin' });
+    if(!r.ok) throw new Error(`${r.status} ${url}`);
     return r.json();
   }
-  function fill(select, placeholder, items, getValue, getText){
+
+  // Normaliza arrays/objetos a [{id, nombre}]
+  function normalize(list) {
+    const arr = Array.isArray(list) ? list : [];
+    return arr.map(item => {
+      if (Array.isArray(item)) {
+        // [id, "Nombre"] o [id, "Sede - Grado - Grupo"]
+        return { id: item[0], nombre: String(item[1] ?? item[0]) };
+      }
+      if (item && typeof item === 'object') {
+        const id = item.id ?? item.value ?? item.pk ?? item.key ?? '';
+        const nombre = item.nombre ?? item.name ?? item.text ?? item.label ?? item.titulo ?? String(id);
+        return { id, nombre };
+      }
+      // Primitivos
+      return { id: item, nombre: String(item) };
+    });
+  }
+
+  // Extrae la lista de una respuesta flexible
+  function extractList(data) {
+    if (!data) return [];
+    // claves comunes
+    if (Array.isArray(data.sedes))  return normalize(data.sedes);
+    if (Array.isArray(data.grados)) return normalize(data.grados);
+    if (Array.isArray(data.grupos)) return normalize(data.grupos);
+    if (Array.isArray(data.results))return normalize(data.results);
+    if (Array.isArray(data))        return normalize(data);
+    // objeto con índices numéricos -> conviértelo
+    return normalize(Object.values(data));
+  }
+
+  function fill(select, placeholder, items) {
     select.innerHTML = '';
     const ph = document.createElement('option');
     ph.value = ''; ph.textContent = placeholder;
     select.appendChild(ph);
-    (items || []).forEach(it => {
+    items.forEach(({id, nombre}) => {
       const o = document.createElement('option');
-      o.value = getValue(it);
-      o.textContent = getText(it);
+      o.value = id; o.textContent = nombre;
       select.appendChild(o);
     });
   }
-  function enable(el, on){ el.disabled = !on; }
+
+  function resetSelect(select, placeholder) {
+    fill(select, placeholder, []);
+    select.disabled = true;
+  }
+
+  function enable(select, on=true) {
+    select.disabled = !on;
+  }
 
   // ---- Carga Sedes ----
-  async function loadSedes(){
+  async function loadSedes() {
     try{
       const data = await j(URL_SEDES);
-      fill(selSede, 'Todas', data.sedes || data || [], s => s.id, s => s.nombre);
-    }catch(e){ console.warn('Sedes:', e); }
+      const sedes = extractList(data);
+      console.debug('SEDES ->', sedes, data);
+      fill(selSede, 'Todas', sedes);
+      enable(selSede, true);
+    }catch(e){
+      console.warn('Sedes:', e);
+      resetSelect(selSede, 'Todas');
+    }
   }
 
   // ---- Carga Grados (depende de sede) ----
-  async function loadGrados(){
+  async function loadGrados() {
     const sede = selSede.value;
-    enable(selGrado, false);
-    enable(selGrupo, false);
-    fill(selGrado, 'Todos', [], x=>x.id, x=>x.nombre);
-    fill(selGrupo, 'Todos', [], x=>x.id, x=>x.nombre);
-    if(!sede) return;
+    // reset dependientes
+    resetSelect(selGrado, 'Todos');
+    resetSelect(selGrupo, 'Todos');
+    if (!sede) return;
 
     try{
-      const data = await j(`${URL_GRADOS}?sede_id=${encodeURIComponent(sede)}`);
-      fill(selGrado, 'Todos', data.grados || data || [], g => g.id, g => g.nombre);
-      enable(selGrado, true);
-    }catch(e){ console.warn('Grados:', e); }
+      const qs = new URLSearchParams({ sede_id: sede, sede: sede }); // enviamos ambos nombres
+      const data = await j(`${URL_GRADOS}?${qs.toString()}`);
+      const grados = extractList(data);
+      console.debug('GRADOS ->', grados, data);
+      fill(selGrado, 'Todos', grados);
+      enable(selGrado, grados.length > 0);
+    }catch(e){
+      console.warn('Grados:', e);
+    }
   }
 
   // ---- Carga Grupos (depende de sede+grado) ----
-  async function loadGrupos(){
+  async function loadGrupos() {
     const sede  = selSede.value;
     const grado = selGrado.value;
-    enable(selGrupo, false);
-    fill(selGrupo, 'Todos', [], x=>x.id, x=>x.nombre);
-    if(!sede || !grado) return;
+    resetSelect(selGrupo, 'Todos');
+    if (!sede || !grado) return;
 
     try{
-      const data = await j(`${URL_GRUPOS}?sede_id=${encodeURIComponent(sede)}&grado_id=${encodeURIComponent(grado)}`);
-      // el endpoint devuelve [id, "Sede - Grado - Grupo"] o {id, nombre}
-      const rows = (data.grupos || data || []).map(g => Array.isArray(g) ? {id:g[0], nombre:g[1]} : g);
-      fill(selGrupo, 'Todos', rows, g=>g.id, g=>g.nombre);
-      enable(selGrupo, true);
-    }catch(e){ console.warn('Grupos:', e); }
+      const qs = new URLSearchParams({
+        sede_id: sede, sede: sede,
+        grado_id: grado, grado: grado
+      });
+      const data = await j(`${URL_GRUPOS}?${qs.toString()}`);
+      const grupos = extractList(data);
+      console.debug('GRUPOS ->', grupos, data);
+      fill(selGrupo, 'Todos', grupos);
+      enable(selGrupo, grupos.length > 0);
+    }catch(e){
+      console.warn('Grupos:', e);
+    }
   }
 
   // ---- Descargas ----
   function openExport(baseUrl){
     const p = new URLSearchParams();
-    if(selSede.value)  p.set('sede_id',  selSede.value);
-    if(selGrado.value) p.set('grado_id', selGrado.value);
-    if(selGrupo.value) p.set('grupo_id', selGrupo.value);
+    if (selSede.value)  p.set('sede_id',  selSede.value);
+    if (selGrado.value) p.set('grado_id', selGrado.value);
+    if (selGrupo.value) p.set('grupo_id', selGrupo.value);
     const url = baseUrl + (p.toString() ? `?${p}` : '');
     window.open(url, '_blank', 'noopener');
   }
 
+  // Eventos
   btnPDF.addEventListener('click', () => openExport(URL_PDF));
   btnXLS.addEventListener('click', () => openExport(URL_XLS));
-
   selSede .addEventListener('change', loadGrados);
   selGrado.addEventListener('change', loadGrupos);
 
   // Init
+  resetSelect(selGrado, 'Todos');
+  resetSelect(selGrupo, 'Todos');
   loadSedes().then(loadGrados);
 })();
 </script>
+
 {% endblock %}
