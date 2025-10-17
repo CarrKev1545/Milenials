@@ -203,13 +203,26 @@
     if (!$grado.value || !$sede.value) { enableBuscarIfReady(); return; }
 
     try {
-      const url = "{% url 'api_admin_grupos_por_sede_grado' %}?sede_id=" + encodeURIComponent($sede.value) + "&grado_id=" + encodeURIComponent($grado.value);
+      const url = "{% url 'api_admin_grupos_por_sede_grado' %}?sede_id="
+        + encodeURIComponent($sede.value)
+        + "&grado_id=" + encodeURIComponent($grado.value);
+
       const r = await fetch(url).then(r => r.json());
-      addOptions($grupo, r.grupos || [], "Seleccione el grupo");
+
+      // 🔽🔽🔽 NUEVO: quedarnos solo con el nombre corto del grupo (última parte)
+      const gruposLimpios = (r.grupos || []).map(it => {
+        const id  = Array.isArray(it) ? it[0] : (it.id ?? "");
+        const nom = Array.isArray(it) ? it[1] : (it.nombre ?? "");
+        const corto = (nom || "").split(" - ").pop().trim();  // e.g. "601"
+        return [id, corto];
+      });
+
+      addOptions($grupo, gruposLimpios, "Seleccione el grupo");
       disable($grupo, false);
     } catch (e) {
       console.error(e);
     }
+
     enableBuscarIfReady();
   });
 
