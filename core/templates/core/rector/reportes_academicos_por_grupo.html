@@ -27,19 +27,18 @@
   }
   .rg-inner{
     position:relative; z-index:1;
-    padding:28px 24px max(96px, env(safe-area-inset-bottom, 24px)); /* acciones sticky */
+    padding:28px 24px max(96px, env(safe-area-inset-bottom, 24px));
   }
 
-  /* ===== Badge centrado (móvil + desktop) ===== */
+  /* ===== Badge ===== */
   .rg-badge{
     width:clamp(220px, 64vw, 340px);
-    margin:-22px auto 0;                 /* <-- centra en ambos ejes horizontales */
+    margin:-22px auto 0;
     background:#0c0c0c; border-radius:16px;
     box-shadow:0 16px 30px rgba(0,0,0,.55), inset 0 -8px 22px rgba(0,0,0,.22);
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     padding:18px 16px 12px; position:relative;
   }
-  /* Garantía extra para desktop: anula cualquier desplazamiento heredado */
   @media (min-width: 900px){
     .rg-badge{ left:auto; right:auto; transform:none; margin-left:auto !important; margin-right:auto !important; }
   }
@@ -55,14 +54,28 @@
 
   /* ===== Campos ===== */
   .rg-field{
-    position:relative; display:flex; align-items:center; gap:10px; height:48px; padding:0 14px 0 50px;
-    background:#fff; border-radius:14px; border:1px solid rgba(0,0,0,.06); box-shadow:0 10px 20px rgba(0,0,0,.22); width:100%;
+    position: relative;
+    display: flex; align-items: center;
+    height: 48px;
+    padding: 0;
+    background:#fff; border-radius:14px; border:1px solid rgba(0,0,0,.06);
+    box-shadow:0 10px 20px rgba(0,0,0,.22);
+    width:100%;
+    cursor: pointer;
   }
-  .rg-field select{ appearance:none; width:100%; border:none; outline:none; background:transparent; color:#111; font-weight:600; }
-  .rg-ico{ position:absolute; left:14px; top:50%; transform:translateY(-50%); width:26px; display:grid; place-items:center; color:#111; opacity:.95; }
-  .rg-caret{ position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#111; opacity:.85; }
+  .rg-field select{
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    appearance: none; border: 0; outline: none; background: transparent;
+    color:#111; font-weight:600; cursor: pointer;
+    padding-left: 16px; padding-right: 36px;
+  }
+  .rg-ico{ display:none !important; }
+  .rg-caret{
+    position:absolute; right:10px; top:50%; transform:translateY(-50%);
+    color:#111; opacity:.85; pointer-events: none; z-index: 1;
+  }
 
-  /* ===== Acciones (sticky) ===== */
+  /* ===== Acciones ===== */
   .rg-actions{
     position:sticky; bottom:calc(12px + env(safe-area-inset-bottom, 0px)); z-index:2;
     background:linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.12) 45%, rgba(0,0,0,.22));
@@ -79,46 +92,17 @@
   .rg-btn:active{ transform:translateY(0) scale(.985); }
   .rg-btn--ghost{ background:#b51415; }
 
-  /* Selector de formato oscuro (PDF/Excel) */
+  /* Selector de formato */
   #formato{
     height:48px; border-radius:12px; padding:0 12px;
     background:#1a1a1a; color:#fff; border:1px solid rgba(255,255,255,.15);
     box-shadow:0 8px 18px rgba(0,0,0,.35); outline:none;
   }
 
-  /* Nota */
   .rg-note{font-size:.9rem;color:#dde7ef;text-align:center;margin-top:4px}
-
-  /* Micro-ajuste pantallas muy angostas */
   @media (max-width:360px){
     .rg-badge i{ font-size:68px; }
     .rg-chip{ padding:6px 14px; }
-  }
-
-  /* --- Campos clicables en toda el área --- */
-  .rg-field{
-    position: relative;
-    display: flex; align-items: center;
-    height: 48px;
-    padding: 0;
-    background:#fff; border-radius:14px; border:1px solid rgba(0,0,0,.06);
-    box-shadow:0 10px 20px rgba(0,0,0,.22);
-    width:100%;
-    cursor: pointer;
-  }
-  /* El select ocupa el 100% del cuadro: cualquier clic abre el desplegable */
-  .rg-field select{
-    position: absolute; inset: 0; width: 100%; height: 100%;
-    appearance: none; border: 0; outline: none; background: transparent;
-    color:#111; font-weight:600; cursor: pointer;
-    padding-left: 16px; padding-right: 36px; /* deja espacio a la caret */
-  }
-  /* Ocultamos los iconos de la izquierda (siguen en el DOM) */
-  .rg-ico{ display:none !important; }
-  /* La caret es decorativa y no bloquea el clic: */
-  .rg-caret{
-    position:absolute; right:10px; top:50%; transform:translateY(-50%);
-    color:#111; opacity:.85; pointer-events: none; z-index: 1;
   }
 </style>
 {% endblock %}
@@ -201,6 +185,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Form oculto para exportar en OTRA pestaña -->
 <form id="exportForm" action="{% url 'rector_reportes_academicos_export' %}" method="GET" target="_blank" style="display:none">
   <input type="hidden" name="grupo_id">
   <input type="hidden" name="grado_id">
@@ -287,25 +272,55 @@
   function validate(){
     const okBuscar = !!(st.sede_id && st.grado_id && st.grupo_id && st.periodo_id);
     if (btnBuscar) btnBuscar.disabled = !okBuscar;
+
+    // Para descargar: requiere periodo y (grupo || (sede+grado))
     const okDesc = (!!st.periodo_id && ( !!st.grupo_id || (!!st.grado_id && !!st.sede_id) ));
     btnDesc.disabled = !okDesc;
   }
 
+  // ⭐ Descargar en OTRA pestaña usando el form oculto
   document.getElementById('btn-descargar').addEventListener('click', ()=>{
-    const grupo   = document.getElementById('grupo_id').value;
-    const grado   = document.getElementById('grado_id').value;
-    const sede    = document.getElementById('sede_id').value;
-    const periodo = document.getElementById('periodo_id').value;
-    const formato = document.getElementById('formato').value || 'pdf';
+    const grupo   = grupoSel.value;
+    const grado   = gradoSel.value;
+    const sede    = sedeSel.value;
+    const periodo = periodoSel.value;
+    const formato = (document.getElementById('formato').value || 'pdf').toLowerCase();
 
     if (!periodo) { alert('Seleccione periodo'); return; }
+    if (!grupo && !(sede && grado)) { alert('Seleccione Grupo, o Sede + Grado.'); return; }
 
-    const q = new URLSearchParams({ periodo_id: periodo, formato });
-    if (grupo) { q.set('grupo_id', grupo); }
-    else if (sede && grado) { q.set('sede_id', sede); q.set('grado_id', grado); }
-    else { alert('Seleccione Grupo, o Sede + Grado.'); return; }
+    const f = document.getElementById('exportForm');
+    f.querySelector('input[name="formato"]').value   = formato;
+    f.querySelector('input[name="periodo_id"]').value = periodo;
 
-    window.location.href = "{% url 'rector_reportes_academicos_export' %}?" + q.toString();
+    if (grupo) {
+      // Exportar un SOLO grupo (scope=grupo)
+      f.querySelector('input[name="scope"]').value   = 'grupo';
+      f.querySelector('input[name="grupo_id"]').value = grupo;
+      f.querySelector('input[name="grado_id"]').value = '';
+      f.querySelector('input[name="sede_id"]').value  = '';
+    } else {
+      // Exportar TODOS los grupos del grado (scope=grado)
+      f.querySelector('input[name="scope"]').value   = 'grado';
+      f.querySelector('input[name="grupo_id"]').value = '';
+      f.querySelector('input[name="grado_id"]').value = grado;
+      f.querySelector('input[name="sede_id"]').value  = sede;
+    }
+
+    // Abre en otra pestaña por target="_blank"
+    f.submit();
+  });
+
+  // Reset
+  document.getElementById('formReporte').addEventListener('reset', ()=>{
+    setTimeout(()=>{
+      hSede.value = hGrado.value = hGrupo.value = hPeriodo.value = "";
+      st.sede_id = st.grado_id = st.grupo_id = st.periodo_id = "";
+      setSelect(gradoSel, [], "Grado"); enable(gradoSel, false);
+      setSelect(grupoSel, [], "Grupo"); enable(grupoSel, false);
+      validate();
+    },0);
   });
 </script>
 {% endblock %}
+
