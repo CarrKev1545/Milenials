@@ -25,11 +25,15 @@
       <div class="nav-title">
         <h3>MILLENNIALS</h3>
         <span class="user-name">
-          {% if request.user.first_name or request.user.last_name %}
-            {{ request.user.first_name }} {{ request.user.last_name }}
-          {% else %}
-            {{ request.user.username }}
-          {% endif %}
+          {% with nn=request.user.nombre ap=request.user.apellidos uu=request.user.usuario un=request.user.username %}
+            {% if nn or ap %}
+              {{ nn }} {{ ap }}
+            {% elif uu %}
+              {{ uu }}
+            {% else %}
+              {{ un }}
+            {% endif %}
+          {% endwith %}
           · ADMINISTRATIVO
         </span>
       </div>
@@ -42,14 +46,14 @@
       <a href="{{ admin_home_url }}"
          class="{% if request.path == admin_home_url %}active{% endif %}"
          {% if request.path == admin_home_url %}aria-current="page"{% endif %}>
-        <i class="fa-solid fa-house" aria-hidden="true"></i> Inicio
+        Inicio
       </a>
 
       {% url 'administrativo_graficas_reportes' as admin_graficas_url %}
       <a href="{{ admin_graficas_url }}"
          class="{% if request.resolver_match.url_name == 'administrativo_graficas_reportes' %}active{% endif %}"
          {% if request.resolver_match.url_name == 'administrativo_graficas_reportes' %}aria-current="page"{% endif %}>
-        <i class="fa-solid fa-chart-column" aria-hidden="true"></i> Gráficas (BETA)
+         Gráficas (BETA)
       </a>
     </nav>
 
