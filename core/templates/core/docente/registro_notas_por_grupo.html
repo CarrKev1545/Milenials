@@ -306,71 +306,80 @@
   document.addEventListener("DOMContentLoaded", cargarTabla);
 
   /* ========= Guardar en lote (un solo click) ========= */
-  async function guardarFila(tr){
-    const estudiante_id = tr.getAttribute("data-row-estudiante");
-    const asignatura_id = tr.getAttribute("data-asignatura-id");
-    const periodo_id    = tr.getAttribute("data-periodo-id");
-    const inpNota   = tr.querySelector(".inp-nota");
-    const inpFallas = tr.querySelector(".inp-fallas");
-    const statusEl  = tr.querySelector(".save-status");
+ async function guardarFila(tr){
+  const estudiante_id = tr.getAttribute("data-row-estudiante");
+  const asignatura_id = tr.getAttribute("data-asignatura-id");
+  const periodo_id    = tr.getAttribute("data-periodo-id");
+  const inpNota   = tr.querySelector(".inp-nota");
+  const inpFallas = tr.querySelector(".inp-fallas");
+  const statusEl  = tr.querySelector(".save-status");
 
-    // Validación rápida cliente
-    const nota   = (inpNota.value || "").trim();
-    const fallas = (inpFallas.value || "0").trim();
-    if (nota !== "") {
-      const v = Number(nota);
-      if (Number.isNaN(v) || v < 1 || v > 5) {
-        statusEl.style.color = "#dc2626";
-        statusEl.textContent = "Nota inválida";
-        return { ok:false };
-      }
-    }
+  const nota   = (inpNota.value || "").trim();
+  const fallas = (inpFallas.value || "0").trim();
 
-    // Si no cambió nada, no disparamos request
-    const changed = (nota !== (inpNota.getAttribute("data-saved-value") ?? "")) ||
-                    (fallas !== (inpFallas.getAttribute("data-saved-value") ?? "0"));
-    if (!changed) return { ok:true, skipped:true };
-
-    statusEl.style.color = "";
-    statusEl.textContent = "Guardando…";
-    inpNota.disabled = true; inpFallas.disabled = true;
-
-    try{
-      const resp = await fetch("{% url 'docente_registrar_nota' %}", {
-        method: "POST",
-        headers: {
-          "X-CSRFToken": csrftoken,
-          "Accept": "application/json",
-          "X-Requested-With": "XMLHttpRequest",
-          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-        },
-        body: new URLSearchParams({ estudiante_id, asignatura_id, periodo_id, nota, fallas })
-      });
-
-      const data = await resp.json().catch(()=> ({}));
-      if (!resp.ok || !data.ok){
-        throw new Error(data?.msg || `Error ${resp.status}`);
-      }
-
-      // Persistimos los valores guardados
-      inpNota.setAttribute("data-saved-value", nota);
-      inpFallas.setAttribute("data-saved-value", fallas);
-      inpNota.classList.remove("dirty");
-      inpFallas.classList.remove("dirty");
-
-      statusEl.style.color = "#059669";
-      statusEl.textContent = "Guardado ✓";
-      return { ok:true };
-    }catch(err){
+  // Validación rápida cliente
+  if (nota !== "") {
+    const v = Number(nota);
+    if (Number.isNaN(v) || v < 1 || v > 5) {
       statusEl.style.color = "#dc2626";
-      statusEl.textContent = "Error";
-      console.error(err);
-      return { ok:false, err };
-    }finally{
-      inpNota.disabled = false; inpFallas.disabled = false;
-      setTimeout(()=> { if (statusEl.textContent === "Guardado ✓") statusEl.textContent = ""; }, 2200);
+      statusEl.textContent = "Nota inválida (1–5)";
+      inpNota.classList.add("dirty");
+      return { ok:false };
     }
   }
+
+  // Evitar requests si no hubo cambios
+  const changed = (nota !== (inpNota.getAttribute("data-saved-value") ?? "")) ||
+                  (fallas !== (inpFallas.getAttribute("data-saved-value") ?? "0"));
+  if (!changed) return { ok:true, skipped:true };
+
+  statusEl.style.color = "";
+  statusEl.textContent = "Guardando…";
+  inpNota.disabled = true; inpFallas.disabled = true;
+
+  try{
+    const resp = await fetch("{% url 'docente_registrar_nota' %}", {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": csrftoken,
+        "Accept": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+      },
+      body: new URLSearchParams({ estudiante_id, asignatura_id, periodo_id, nota, fallas })
+    });
+
+    // Intenta leer el JSON; si no es JSON, arma uno básico con el status
+    let data = {};
+    try { data = await resp.json(); } catch { data = {}; }
+
+    if (!resp.ok || !data.ok){
+      const msg = (data && data.msg) ? data.msg : `Error ${resp.status}`;
+      statusEl.style.color = "#dc2626";
+      statusEl.textContent = msg;        // <-- AHORA SE VE EL MOTIVO
+      inpNota.classList.add("dirty");    // borde para llamar la atención
+      return { ok:false, msg };
+    }
+
+    // Éxito
+    inpNota.setAttribute("data-saved-value", nota);
+    inpFallas.setAttribute("data-saved-value", fallas);
+    inpNota.classList.remove("dirty");
+    inpFallas.classList.remove("dirty");
+    statusEl.style.color = "#059669";
+    statusEl.textContent = "Guardado ✓";
+    return { ok:true };
+
+  }catch(err){
+    statusEl.style.color = "#dc2626";
+    statusEl.textContent = String(err);
+    return { ok:false, err };
+  }finally{
+    inpNota.disabled = false; inpFallas.disabled = false;
+    setTimeout(()=> { if (statusEl.textContent === "Guardado ✓") statusEl.textContent = ""; }, 2200);
+  }
+}
+
 
   async function guardarTodo(){
     const filas = Array.from($tbody.querySelectorAll('tr[data-row-estudiante]'));
