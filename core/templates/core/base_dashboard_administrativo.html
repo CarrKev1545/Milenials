@@ -27,13 +27,32 @@
         <span class="user-name">{{ request.user.usuario }} · ADMINISTRATIVO</span>
       </div>
     </div>
+
+    {% url 'dashboard_admin' as admin_home_url %}
+    {% url 'administrativo_graficas_reportes' as admin_graficas_url %}
+
     <nav class="nav-menu" aria-label="Menú principal">
-      <a href="{% url 'dashboard_admin' %}">Inicio</a>
+      <a href="{{ admin_home_url }}"
+         class="{% if request.path == admin_home_url %}active{% endif %}"
+         {% if request.path == admin_home_url %}aria-current="page"{% endif %}>
+        <i class="fa-solid fa-house" aria-hidden="true"></i> Inicio
+      </a>
+
+      <!-- NUEVO: botón de Gráficas (BETA) del rol Administrativo -->
+      <a href="{{ admin_graficas_url }}"
+         class="{% if request.path == admin_graficas_url %}active{% endif %}"
+         {% if request.path == admin_graficas_url %}aria-current="page"{% endif %}>
+        <i class="fa-solid fa-chart-column" aria-hidden="true"></i> Gráficas (BETA)
+      </a>
     </nav>
+
     <div class="nav-right">
       <a href="{% url 'logout' %}" class="btn-logout">Cerrar Sesión</a>
     </div>
   </header>
+
+  <!-- Banner/slot opcional por página (ej. “Gráficas (BETA)”) -->
+  {% block page_banner %}{% endblock %}
 
   <!-- === CONTENIDO === -->
   {% block content %}{% endblock %}
@@ -63,8 +82,9 @@
 
   <!-- === JS globales (mismos del Rector) === -->
   <script src="{% static 'js/dashboard.js' %}"></script>
-  <!-- Si tu módulo docente usa APIs para filtros/notas, deja este JS; si no existe, puedes omitirlo -->
+  <!-- Si algún módulo reutiliza este archivo, lo dejamos. Si no existe, puedes quitarlo. -->
   <script src="{% static 'core/js/registro_notas_docente_api.js' %}"></script>
   {% block extra_js %}{% endblock %}
 </body>
 </html>
+

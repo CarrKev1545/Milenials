@@ -109,7 +109,7 @@ urlpatterns = [
         views.api_estudiante_en_grupo_por_documento,
         name="api_estudiante_en_grupo_por_documento",
     ),
-    path("api/grados-por-sede/", views.api_grados_por_sede, name="api_grados_por_sede"),
+    
     path(
         "api/grupos-por-sede-grado/",
         views.api_grupos_por_sede_grado,
@@ -276,7 +276,12 @@ urlpatterns = [
     path("docente/planillas/export/landing/", views.docente_planillas_export_landing, name="docente_planillas_export_landing"),
     path("docente/planillas/export/excel/", views.docente_planillas_export_excel, name="docente_planillas_export_excel"),
     path("docente/planillas/export/pdf/", views.docente_planillas_export_pdf, name="docente_planillas_export_pdf"),
+    
+    path("administrativo/graficas-reportes/",views.administrativo_graficas_reportes,name="administrativo_graficas_reportes"),
+
+
 ]
+
 
 
 

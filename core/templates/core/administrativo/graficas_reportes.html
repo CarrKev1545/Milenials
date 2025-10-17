@@ -1,7 +1,6 @@
-{% extends "core/base_dashboard.html" %}
+{% extends "core/base_dashboard_administrativo.html" %}
 {% load static %}
-
-{% block title %}Gráficas y Reportes{% endblock %}
+{% block title %}Gráficas (ADMIN){% endblock %}
 
 {% block extra_css %}
 <style>
@@ -66,12 +65,10 @@
     cursor: not-allowed;
   }
 
-  /* Menú desplegable del select */
   select option {
     background-color: var(--bg-card);
     color: var(--text-light);
   }
-
   select option:checked,
   select option:hover {
     background-color: var(--accent);
@@ -106,7 +103,6 @@
   }
 </style>
 {% endblock %}
-
 
 {% block page_banner %}
   <div class="admin-bar">Gráficas (BETA)</div>
@@ -149,19 +145,26 @@
 {% block extra_js %}
   <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 
-  {% url 'api_sedes'                 as api_sedes_url %}
-  {% url 'api_grados_por_sede'       as api_grados_url %}
-  {% url 'api_grupos_por_sede_grado' as api_grupos_url %}
-  {% url 'api_metrics_activos'       as api_activos_url %}
-  {% url 'api_metrics_histograma'    as api_hist_url %}
+  {# ⚠️ Cambiamos a endpoints del ADMIN #}
+  {% url 'api_admin_sedes'               as api_sedes_url %}
+  {% url 'api_admin_grados_por_sede'     as api_grados_url %}
+  {% url 'api_admin_grupos_por_sede_grado' as api_grupos_url %}
+
+  {# Métricas (dejamos activos igual y usamos reprobados para la 2ª gráfica) #}
+  {% url 'api_metrics_activos'           as api_activos_url %}
+  {% url 'api_metrics_reprobados'        as api_reprobados_url %}
 
   <script>
+    // Mantengo las mismas claves que lee tu graficas_reportes.js
+    // Solo que ahora apuntan a las URLs correctas del ADMIN.
     window.GR_URLS = {
       api_sedes: "{{ api_sedes_url|escapejs }}",
       api_grados_por_sede: "{{ api_grados_url|escapejs }}",
       api_grupos_por_sede_grado: "{{ api_grupos_url|escapejs }}",
       api_metrics_activos: "{{ api_activos_url|escapejs }}",
-      api_metrics_histograma: "{{ api_hist_url|escapejs }}"
+      // Reutilizamos la clave existente 'api_metrics_histograma' para no tocar tu JS,
+      // pero la apuntamos al endpoint de reprobados.
+      api_metrics_histograma: "{{ api_reprobados_url|escapejs }}"
     };
   </script>
 

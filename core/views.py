@@ -3183,52 +3183,53 @@ def _guard_admin(request: HttpRequest) -> HttpResponse | None:
 # =========================================================
 @login_required(login_url="login")
 @require_GET
-def api_admin_sedes(request: HttpRequest) -> JsonResponse:
+def api_admin_sedes(request):
     if (resp := _guard_admin(request)) is not None:
-        return JsonResponse({"sedes": []})
+        return JsonResponse({"error":"forbidden"}, status=403)
     with connection.cursor() as cur:
         cur.execute("SELECT id, nombre FROM public.sedes ORDER BY nombre;")
-        sedes = [{"id": r[0], "nombre": r[1]} for r in cur.fetchall()]
-    return JsonResponse({"sedes": sedes})
+        rows = cur.fetchall()
+    return JsonResponse({"sedes": rows})
 
 @login_required(login_url="login")
 @require_GET
-def api_admin_grados_por_sede(request: HttpRequest) -> JsonResponse:
+def api_admin_grados_por_sede(request):
     if (resp := _guard_admin(request)) is not None:
-        return JsonResponse({"grados": []})
-    sede_id = (request.GET.get("sede_id") or "").strip()
-    if not re.fullmatch(r"\d{1,10}", sede_id or ""):
-        return JsonResponse({"grados": []})
+        return JsonResponse({"error":"forbidden"}, status=403)
+    sede = (request.GET.get("sede_id") or "").strip()
     with connection.cursor() as cur:
         cur.execute("""
-            SELECT DISTINCT gr.id, gr.nombre
-              FROM public.grupos g
-              JOIN public.grados gr ON gr.id = g.grado_id
-             WHERE g.sede_id = %s
-             ORDER BY gr.id;
-        """, [sede_id])
-        grados = [{"id": r[0], "nombre": r[1]} for r in cur.fetchall()]
-    return JsonResponse({"grados": grados})
+          SELECT gr.id, gr.nombre
+          FROM public.grados gr
+          WHERE %s = '' OR EXISTS (
+              SELECT 1 FROM public.grupos g
+              WHERE g.grado_id = gr.id AND (%s = '' OR g.sede_id::text = %s)
+          )
+          ORDER BY gr.nombre;
+        """, [sede, sede, sede])
+        rows = cur.fetchall()
+    return JsonResponse({"grados": rows})
 
 @login_required(login_url="login")
 @require_GET
-def api_admin_grupos_por_sede_grado(request: HttpRequest) -> JsonResponse:
+def api_admin_grupos_por_sede_grado(request):
     if (resp := _guard_admin(request)) is not None:
-        return JsonResponse({"grupos": []})
-    sede_id  = (request.GET.get("sede_id")  or "").strip()
-    grado_id = (request.GET.get("grado_id") or "").strip()
-    ok = all(re.fullmatch(r"\d{1,10}", v or "") for v in (sede_id, grado_id))
-    if not ok:
-        return JsonResponse({"grupos": []})
+        return JsonResponse({"error":"forbidden"}, status=403)
+    sede  = (request.GET.get("sede_id") or "").strip()
+    grado = (request.GET.get("grado_id") or "").strip()
     with connection.cursor() as cur:
         cur.execute("""
-            SELECT id, nombre
-              FROM public.grupos
-             WHERE sede_id=%s AND grado_id=%s
-             ORDER BY nombre;
-        """, [sede_id, grado_id])
-        grupos = [{"id": r[0], "nombre": r[1]} for r in cur.fetchall()]
-    return JsonResponse({"grupos": grupos})
+          SELECT g.id, CONCAT(s.nombre, ' - ', gr.nombre, ' - ', g.nombre)
+          FROM public.grupos g
+          JOIN public.sedes s ON s.id = g.sede_id
+          JOIN public.grados gr ON gr.id = g.grado_id
+          WHERE (%s = '' OR s.id::text = %s)
+            AND (%s = '' OR gr.id::text = %s)
+          ORDER BY s.nombre, gr.nombre, g.nombre;
+        """, [sede, sede, grado, grado])
+        rows = cur.fetchall()
+    return JsonResponse({"grupos": rows})
+
 
 @login_required(login_url="login")
 @require_GET
@@ -3266,11 +3267,19 @@ def api_admin_estudiantes_por_grupo(request: HttpRequest) -> JsonResponse:
 
 # Vistas HTML
 @login_required
+@require_GET
 def rector_graficas_reportes(request):
+    # Solo rector
+    if (resp := _guard_rector(request)) is not None:
+        return resp
     return render(request, "core/rector/graficas_reportes.html")
 
 @login_required
+@require_GET
 def administrativo_graficas_reportes(request):
+    # Solo administrativo / admin
+    if (resp := _guard_admin(request)) is not None:
+        return resp
     return render(request, "core/administrativo/graficas_reportes.html")
 
 # Helper seguro para leer ints
