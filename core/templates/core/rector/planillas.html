@@ -5,71 +5,76 @@
 
 {% block extra_css %}
 <style>
-  /* Escala consistente */
-  :root{font-size:16px}
-  @media (max-width:75em){:root{font-size:15px}}
-  @media (max-width:62em){:root{font-size:14px}}
-  @media (max-width:48em){:root{font-size:13px}}
-  @media (max-width:36em){:root{font-size:12px}}
+  /* Escala general un poco mayor en desktop, con degradado hacia móviles */
+  :root{ font-size:18px; }                      /* ↑ antes 16px */
+  @media (max-width:75em){ :root{font-size:17px} }
+  @media (max-width:62em){ :root{font-size:16px} }
+  @media (max-width:48em){ :root{font-size:15px} }
+  @media (max-width:36em){ :root{font-size:14px} }
 
-  /* Tarjeta centrada */
-  .pl { width:100%; max-width:52rem; margin:0 auto; padding:1rem; }
+  /* Tarjeta centrada más ancha y con más respiro */
+  .pl{ width:100%; max-width:60rem; margin:0 auto; padding:1.25rem; }  /* ↑ 52rem */
   .pl-card{
     background:#0b1220; color:#e5ecf6;
     border:1px solid rgba(255,255,255,.08);
-    border-radius:1rem; box-shadow:0 .75rem 1.5rem rgba(0,0,0,.35);
-    padding:1.25rem;
+    border-radius:1.1rem;
+    box-shadow:0 .9rem 1.8rem rgba(0,0,0,.38);
+    padding:1.5rem;                                          /* ↑ */
   }
 
-  /* Grid del formulario */
-  .pl-form{ display:grid; gap:1rem; grid-template-columns:1fr; }
+  /* Grid con mayor separación */
+  .pl-form{ display:grid; gap:1.25rem; grid-template-columns:1fr; }
   @media (min-width:56.25em){ .pl-form{ grid-template-columns:repeat(2,1fr); } }
 
-  /* Campo tipo input blanco con icono a la izquierda */
+  /* Campos más altos y legibles */
   .pl-field{
     position:relative; display:flex; align-items:center;
-    height:3.75rem; border-radius:.875rem;
+    height:4.25rem;                                        /* ↑ 3.75rem */
+    border-radius:1rem;
     background:#fff; border:1px solid rgba(0,0,0,.08);
-    box-shadow:0 .625rem 1.25rem rgba(0,0,0,.22);
-    padding:0 .875rem 0 2.75rem;
+    box-shadow:0 .75rem 1.5rem rgba(0,0,0,.22);
+    padding:0 1rem 0 3.25rem;                               /* ↑ padding izq */
   }
   .pl-ico{
-    position:absolute; left:.875rem; top:50%; transform:translateY(-50%);
-    color:#111; opacity:.9;
+    position:absolute; left:1rem; top:50%; transform:translateY(-50%);
+    color:#111; opacity:.9; font-size:1.15rem;              /* ↑ icono */
   }
   .pl-field select{
     width:100%; border:none; outline:none; background:transparent;
-    font-weight:700; color:#111; font-size:1rem; appearance:none;
+    font-weight:700; color:#111; font-size:1.1rem;          /* ↑ texto */
+    appearance:none;
   }
   .pl-field select:disabled{ opacity:.6; }
   .pl-field select:focus{
-    outline:none; box-shadow:0 0 0 .2rem rgba(177,26,26,.15); border-radius:.5rem;
+    outline:none; box-shadow:0 0 0 .22rem rgba(177,26,26,.16);
+    border-radius:.6rem;
   }
 
-  /* Botones pill */
-  .pl-actions{ display:grid; gap:.75rem; grid-template-columns:1fr; margin-top:.5rem; }
+  /* Botones tipo pill más grandes */
+  .pl-actions{ display:grid; gap:.9rem; grid-template-columns:1fr; margin-top:.75rem; }
   @media (min-width:33.75em){ .pl-actions{ grid-template-columns:repeat(2,1fr); } }
   .pl-actions .btn{
-    height:2.75rem; border-radius:999rem; border:none; cursor:pointer;
-    font-weight:800; color:#fff; transition:.15s transform ease, .15s box-shadow ease;
+    height:3.25rem;                                        /* ↑ 2.75rem */
+    border-radius:999rem; border:none; cursor:pointer;
+    font-weight:800; color:#fff; font-size:1.05rem;         /* ↑ */
+    transition:.15s transform ease, .15s box-shadow ease;
   }
-  .btn-pdf{ background:#b11a1a; box-shadow:0 .75rem 1.5rem rgba(156,15,16,.35); }
-  .btn-xls{ background:#136f36; box-shadow:0 .75rem 1.5rem rgba(19,111,54,.35); }
-  .pl-actions .btn:hover{ transform:translateY(-.125rem); box-shadow:0 1rem 2rem rgba(0,0,0,.45); }
+  .btn-pdf{ background:#b11a1a; box-shadow:0 .9rem 1.8rem rgba(156,15,16,.35); }
+  .btn-xls{ background:#136f36; box-shadow:0 .9rem 1.8rem rgba(19,111,54,.35); }
+  .pl-actions .btn:hover{ transform:translateY(-.12rem); box-shadow:0 1.15rem 2.1rem rgba(0,0,0,.45); }
 
-  /* Contenedor para posicionar el badge */
-  .pl-wrap{ position:relative; padding-top:1.75rem; }
-
-  /* Título rojo centrado, flotando sobre la tarjeta */
+  /* Badge superior un poco mayor para balancear */
+  .pl-wrap{ position:relative; padding-top:2rem; }
   .pl-badge{
     position:absolute; left:50%; top:0; transform:translate(-50%,-50%);
     display:inline-block; background:#b11a1a; color:#fff;
-    padding:.55rem 1.25rem; border-radius:.75rem; font-weight:800;
-    box-shadow:0 .6rem 1.2rem rgba(0,0,0,.35), inset 0 -.25rem .6rem rgba(0,0,0,.18);
+    padding:.65rem 1.4rem; border-radius:.85rem;
+    font-weight:800; font-size:1.05rem;
+    box-shadow:0 .7rem 1.3rem rgba(0,0,0,.35), inset 0 -.28rem .65rem rgba(0,0,0,.18);
     white-space:nowrap; z-index:2;
   }
 
-  /* Grupo a todo el ancho */
+  /* Grupo a todo el ancho (como ya lo tienes) */
   .pl-field--span-2{ grid-column:1 / -1; }
 </style>
 {% endblock %}
