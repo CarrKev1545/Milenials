@@ -6,7 +6,7 @@
 {% block extra_css %}
 <style>
   /* ===== Escala tipográfica moderada ===== */
-  :root{ font-size:16.5px; }              /* antes 18px */
+  :root{ font-size:16.5px; }
   @media (max-width:75em){ :root{font-size:16px} }
   @media (max-width:62em){ :root{font-size:15.5px} }
   @media (max-width:48em){ :root{font-size:15px} }
@@ -15,17 +15,16 @@
   /* ===== Contenedor ===== */
   .pl{ width:100%; max-width:58rem; margin:0 auto; padding:1.25rem; }
 
-  /* Marco trasero grande (no requiere cambiar el HTML) */
+  /* Marco trasero grande */
   .pl-wrap{ position:relative; padding-top:2rem; }
   .pl-wrap::before{
     content:"";
     position:absolute;
-    /* agrandamos el marco respecto a la tarjeta */
-    inset:-1.25rem -1.25rem;                 /* arriba/izq/abajo/der */
-    border-radius:1.35rem;
+    inset:-1.5rem -1.5rem;                     /* halo un poco mayor */
+    border-radius:1.5rem;
     background:linear-gradient(180deg, rgba(12,12,12,.72), rgba(12,12,12,.82));
     border:1px solid rgba(255,255,255,.06);
-    box-shadow:0 1.1rem 2.2rem rgba(0,0,0,.45), inset 0 .05rem .5rem rgba(255,255,255,.035);
+    box-shadow:0 1.25rem 2.25rem rgba(0,0,0,.46), inset 0 .06rem .55rem rgba(255,255,255,.04);
     z-index:0;
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
@@ -38,7 +37,7 @@
     background:linear-gradient(180deg, rgba(9,16,32,.86), rgba(9,16,32,.92));
     border:1px solid rgba(255,255,255,.08);
     border-radius:1.1rem;
-    box-shadow:0 .8rem 1.6rem rgba(0,0,0,.38), inset 0 .02rem .35rem rgba(255,255,255,.04);
+    box-shadow:0 .95rem 1.8rem rgba(0,0,0,.40), inset 0 .02rem .35rem rgba(255,255,255,.04);
     padding:1.35rem;
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
@@ -52,7 +51,7 @@
   /* ===== Campos ===== */
   .pl-field{
     position:relative; display:flex; align-items:center;
-    height:3.9rem;                            /* antes 4.25rem */
+    height:3.9rem;
     border-radius:.95rem;
     background:#fff; border:1px solid rgba(0,0,0,.08);
     padding:0 .95rem 0 3rem;
@@ -70,20 +69,20 @@
   }
   .pl-field select:disabled{ opacity:.6; }
   .pl-field:has(select:focus-visible){
-    box-shadow:0 0 0 .22rem rgba(177,26,26,.16), 0 .65rem 1.3rem rgba(0,0,0,.22);
-    border-color:rgba(177,26,26,.32);
+    box-shadow:0 0 0 .24rem rgba(177,26,26,.18), 0 .7rem 1.35rem rgba(0,0,0,.22);
+    border-color:rgba(177,26,26,.36);
   }
   .pl-field::after{
     content:"▾";
     position:absolute; right:.85rem; top:50%; transform:translateY(-50%);
-    color:#0f172a; opacity:.55; font-size:1rem; pointer-events:none;
+    color:#0b1220; opacity:.7; font-size:1rem; pointer-events:none; font-weight:700;
   }
 
   /* ===== Acciones ===== */
   .pl-actions{ display:grid; gap:.85rem; grid-template-columns:1fr; margin-top:.7rem; }
   @media (min-width:33.75em){ .pl-actions{ grid-template-columns:repeat(2,1fr);} }
   .pl-actions .btn{
-    height:3rem;                               /* antes 3.25rem */
+    height:3rem;
     border-radius:999rem; border:1px solid rgba(255,255,255,.07);
     font-weight:800; font-size:1rem; color:#fff;
     transition: transform .12s ease, box-shadow .15s ease, filter .15s ease;
@@ -96,16 +95,18 @@
     background:#136f36;
     box-shadow:0 .8rem 1.6rem rgba(19,111,54,.32), inset 0 -.18rem .55rem rgba(0,0,0,.18);
   }
-  .pl-actions .btn:hover{ transform:translateY(-.04rem); filter:saturate(1.04); }
+  .pl-actions .btn:hover{ transform:translateY(-.06rem); filter:saturate(1.06) brightness(1.02); }
   .pl-actions .btn:active{ transform:translateY(.02rem); }
 
-  /* ===== Badge ===== */
+  /* ===== Badge (título) ===== */
   .pl-badge{
     position:absolute; left:50%; top:0; transform:translate(-50%,-50%);
-    background:linear-gradient(180deg, #c62828, #b11a1a);
-    color:#fff; padding:.58rem 1.35rem; border-radius:.9rem;
-    font-weight:800; font-size:1rem; letter-spacing:.2px;
-    box-shadow:0 .7rem 1.3rem rgba(0,0,0,.34), inset 0 -.26rem .6rem rgba(0,0,0,.18);
+    display:inline-block; background:#b11a1a; color:#fff;
+    padding:.78rem 1.75rem;
+    border-radius:.85rem; font-weight:800;
+    font-size:1.24rem; letter-spacing:.35px;
+    text-shadow:0 1px 0 rgba(0,0,0,.25);
+    box-shadow:0 .7rem 1.3rem rgba(0,0,0,.35), inset 0 -.28rem .65rem rgba(0,0,0,.18);
     white-space:nowrap; z-index:2;
   }
 
@@ -114,7 +115,6 @@
   }
 </style>
 {% endblock %}
-
 
 {% block content %}
 <section class="pl" aria-labelledby="titulo-pl">
