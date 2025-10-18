@@ -6,17 +6,42 @@
 {% block extra_css %}
 <style>
   /* ===== Escala base rem (fluida) ===== */
-  :root{ font-size:16px; }
-  @media (max-width:75em){ :root{ font-size:15px; } } /* ~1200px */
-  @media (max-width:62em){ :root{ font-size:14px; } } /* ~992px  */
-  @media (max-width:48em){ :root{ font-size:13px; } } /* ~768px  */
-  @media (max-width:36em){ :root{ font-size:12px; } } /* ~576px  */
+  :root{
+    font-size:16px;
+    /* Paleta consistente con el resto del rol Rector */
+    --bg-dark:#0b1220;
+    --fg-light:#e5ecf6;
+    --ink:#0f172a;
+    --border-light:rgba(255,255,255,.08);
+    --shadow-deep:rgba(0,0,0,.38);
+    --shadow-deeper:rgba(0,0,0,.45);
+    --field-border:rgba(0,0,0,.08);
+    --field-shadow:rgba(0,0,0,.22);
+    --accent:#c62828;                    /* rojo principal */
+    --accent-shadow:rgba(156,15,16,.35);
+    --btn-ghost:#1f2937;                 /* gris oscuro */
+    --btn-muted:#6b7280;                 /* gris medio  */
+    --ok:#136f36;                        /* verde OK */
+  }
+  @media (max-width:75em){ :root{ font-size:15px; } }
+  @media (max-width:62em){ :root{ font-size:14px; } }
+  @media (max-width:48em){ :root{ font-size:13px; } }
+  @media (max-width:36em){ :root{ font-size:12px; } }
 
-  /* ===== Layout general (patrón rector) ===== */
+  /* ===== Layout general ===== */
   .re{ width:100%; max-width:70rem; margin:0 auto; padding:1rem; }
-  .re-title{ text-align:center; font-weight:800; font-size:1.5rem; margin-bottom:1.25rem; }
 
-  .re-wrap{ display:grid; grid-template-columns:1fr 2fr; gap:1.25rem; align-items:start; }
+  /* Título tipo badge */
+  .re-title{
+    text-align:center; font-weight:800;
+    display:inline-block; margin:0 auto 1.25rem; padding:.7rem 1.4rem;
+    font-size:1.15rem; color:#fff; background:var(--accent);
+    border-radius:1rem; letter-spacing:.3px;
+    box-shadow:0 .9rem 1.5rem var(--shadow-deep), inset 0 -.28rem .68rem rgba(0,0,0,.18);
+  }
+
+  /* Dos columnas: avatar + card */
+  .re-wrap{ display:grid; grid-template-columns:1fr 2fr; gap:1.25rem; align-items:start; position:relative; }
   @media (max-width:56.25em){ .re-wrap{ grid-template-columns:1fr; } }
 
   /* Avatar / ilustración */
@@ -28,56 +53,75 @@
   }
   .re-avatar i{ font-size:3rem; color:#fff; filter:drop-shadow(0 .5rem 1rem rgba(0,0,0,.4)); }
 
-  /* Card derecha */
+  /* Card derecha: glass + halo */
   .re-right{
-    background:#0b1220; color:#e5ecf6;
+    position:relative; z-index:1;
+    color:var(--fg-light);
+    background:linear-gradient(180deg, rgba(9,16,32,.86), rgba(9,16,32,.92));
+    border:1px solid var(--border-light);
     border-radius:1rem; padding:1.25rem;
-    border:1px solid rgba(255,255,255,.08);
-    box-shadow:0 .75rem 1.5rem rgba(0,0,0,.35);
+    box-shadow:0 .9rem 1.8rem var(--shadow-deep), inset 0 .02rem .35rem rgba(255,255,255,.04);
+    backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+  }
+  .re-right::before{
+    content:""; position:absolute; inset:-1.1rem;
+    border-radius:1.35rem; z-index:-1;
+    background:linear-gradient(180deg, rgba(12,12,12,.70), rgba(12,12,12,.84));
+    border:1px solid var(--border-light);
+    box-shadow:0 1.2rem 2.2rem var(--shadow-deeper), inset 0 .05rem .5rem rgba(255,255,255,.035);
   }
 
   /* Formulario */
   .re-form{ display:grid; grid-template-columns:1fr; gap:1rem; }
   @media (min-width:48em){ .re-form{ grid-template-columns:repeat(2,1fr); } }
-  .re-form .re-field:nth-last-child(1){ grid-column:1 / -1; } /* por si quieres que el último campo se expanda */
+  .re-form .re-field:nth-last-child(1){ grid-column:1 / -1; }
 
+  /* Campos con icono y caret */
   .re-field{
     position:relative; display:flex; align-items:center;
-    height:4rem; border-radius:.875rem; background:#fff; color:#111;
-    border:1px solid rgba(0,0,0,.06);
-    box-shadow:0 .625rem 1.25rem rgba(0,0,0,.22);
-    padding:0 .875rem 0 2.75rem;
+    height:3.9rem; border-radius:.9rem; color:var(--ink);
+    background:#fff; border:1px solid var(--field-border);
+    padding:0 .95rem 0 3rem;
+    box-shadow:0 .65rem 1.3rem var(--field-shadow), inset 0 .06rem .22rem rgba(0,0,0,.06);
+    transition: box-shadow .15s ease, border-color .15s ease;
   }
   .re-ico{
-    position:absolute; left:.875rem; top:50%; transform:translateY(-50%);
-    color:#111; opacity:.9;
+    position:absolute; left:.95rem; top:50%; transform:translateY(-50%);
+    color:var(--ink); opacity:.9;
   }
   .re-caret{
-    position:absolute; right:.625rem; top:50%; transform:translateY(-50%);
-    color:#111; opacity:.85; pointer-events:none;
+    position:absolute; right:.7rem; top:50%; transform:translateY(-50%);
+    color:var(--ink); opacity:.75; pointer-events:none; font-weight:700;
   }
   .re-field select{
     appearance:none; width:100%; border:none; outline:none; background:transparent;
-    color:#111; font-weight:700; font-size:1rem; cursor:pointer;
+    color:var(--ink); font-weight:700; font-size:1rem; cursor:pointer;
+  }
+  .re-field:has(select:focus-visible){
+    box-shadow:0 0 0 .22rem rgba(198,40,40,.16), 0 .65rem 1.3rem var(--field-shadow);
+    border-color:rgba(198,40,40,.32);
   }
   .select:disabled{ opacity:.6; cursor:not-allowed; }
 
   /* Acciones */
   .re-actions{
-    display:grid; gap:.75rem; grid-template-columns:1fr; margin-top:1rem;
+    display:grid; gap:.85rem; grid-template-columns:1fr; margin-top:1rem;
   }
   @media (min-width:33.75em){ .re-actions{ grid-template-columns:repeat(3,1fr); } }
+
   .btn{
-    height:2.75rem; border:none; border-radius:999rem; cursor:pointer; font-weight:800; color:#fff;
-    background:var(--accent,#c62828);
-    box-shadow:0 .75rem 1.5rem rgba(156,15,16,.35);
-    transition:.15s transform ease, .15s box-shadow ease, .15s background ease;
+    height:2.9rem; border:none; border-radius:999rem; cursor:pointer; font-weight:800; color:#fff;
+    background:var(--accent);
+    box-shadow:0 .85rem 1.7rem var(--accent-shadow), inset 0 -.18rem .55rem rgba(0,0,0,.18);
+    transition:.15s transform ease, .15s box-shadow ease, .15s filter ease;
   }
-  .btn:hover{ transform:translateY(-.125rem); box-shadow:0 1rem 2rem rgba(156,15,16,.45); }
+  .btn:hover{ transform:translateY(-.06rem); filter:saturate(1.06) brightness(1.02); }
   .btn[disabled]{ opacity:.55; cursor:not-allowed; }
-  .btn--danger{ background:#c62828; }
-  .btn--ghost{ background:#374151; }
-  .btn--muted{ background:#6b7280; }
+
+  .btn--danger{ background:var(--accent); }
+  .btn--ghost{ background:var(--btn-ghost); box-shadow:0 .85rem 1.7rem rgba(31,41,55,.30), inset 0 -.18rem .55rem rgba(0,0,0,.18); }
+  .btn--muted{ background:var(--btn-muted); box-shadow:0 .85rem 1.7rem rgba(107,114,128,.30), inset 0 -.18rem .55rem rgba(0,0,0,.18); }
+  .btn--ok{ background:var(--ok); box-shadow:0 .85rem 1.7rem rgba(19,111,54,.32), inset 0 -.18rem .55rem rgba(0,0,0,.18); }
 
   /* Mensajes flash */
   .re-msg{ margin:.5rem 0; padding:.6rem .9rem; border-radius:.8rem; font-weight:700; }
@@ -101,14 +145,18 @@
   .backdrop.hidden{ display:none; }
   .modal{
     width:min(32rem, 92vw);
-    background:#0b1220; color:#e5ecf6;
-    border:1px solid rgba(255,255,255,.08);
+    background:var(--bg-dark); color:var(--fg-light);
+    border:1px solid var(--border-light);
     border-radius:1rem; padding:1rem;
-    box-shadow:0 1rem 2.5rem rgba(0,0,0,.45);
+    box-shadow:0 1rem 2.5rem var(--shadow-deeper);
   }
   .modal h3{ margin:0 0 .5rem; font-weight:800; font-size:1.1rem; }
   .modal p{ margin:.25rem 0 1rem; color:#e2e8f0; }
   .modal-actions{ display:flex; gap:.75rem; justify-content:flex-end; flex-wrap:wrap; }
+
+  @media (prefers-reduced-motion: reduce){
+    .re-field, .btn, .toast{ transition:none !important; }
+  }
 </style>
 {% endblock %}
 
