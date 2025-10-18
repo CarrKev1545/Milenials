@@ -5,79 +5,121 @@
 
 {% block extra_css %}
 <style>
-  /* Escala general un poco mayor en desktop, con degradado hacia móviles */
-  :root{ font-size:18px; }                      /* ↑ antes 16px */
+  /* ===== Escala tipográfica (un poco más grande en desktop) ===== */
+  :root{ font-size:18px; }
   @media (max-width:75em){ :root{font-size:17px} }
   @media (max-width:62em){ :root{font-size:16px} }
   @media (max-width:48em){ :root{font-size:15px} }
   @media (max-width:36em){ :root{font-size:14px} }
 
-  /* Tarjeta centrada más ancha y con más respiro */
-  .pl{ width:100%; max-width:60rem; margin:0 auto; padding:1.25rem; }  /* ↑ 52rem */
+  /* ===== Contenedor y tarjeta ===== */
+  .pl{ width:100%; max-width:62rem; margin:0 auto; padding:1.5rem; }
+  .pl-wrap{ position:relative; padding-top:2.2rem; }
+
+  /* Card con efecto “glass” sutil sobre el banner/foto */
   .pl-card{
-    background:#0b1220; color:#e5ecf6;
+    color:#e7eef8;
+    background:linear-gradient(180deg, rgba(9,16,32,.88), rgba(9,16,32,.94));
     border:1px solid rgba(255,255,255,.08);
-    border-radius:1.1rem;
-    box-shadow:0 .9rem 1.8rem rgba(0,0,0,.38);
-    padding:1.5rem;                                          /* ↑ */
+    border-radius:1.15rem;
+    box-shadow:
+      0 .9rem 1.8rem rgba(0,0,0,.40),
+      inset 0 .02rem .4rem rgba(255,255,255,.04);
+    padding:1.6rem;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px); /* Saf/old webkit */
   }
 
-  /* Grid con mayor separación */
+  /* Separación del formulario */
   .pl-form{ display:grid; gap:1.25rem; grid-template-columns:1fr; }
   @media (min-width:56.25em){ .pl-form{ grid-template-columns:repeat(2,1fr); } }
+  .pl-field--span-2{ grid-column:1 / -1; }
 
-  /* Campos más altos y legibles */
+  /* ===== Campos ===== */
   .pl-field{
     position:relative; display:flex; align-items:center;
-    height:4.25rem;                                        /* ↑ 3.75rem */
+    height:4.25rem;
     border-radius:1rem;
-    background:#fff; border:1px solid rgba(0,0,0,.08);
-    box-shadow:0 .75rem 1.5rem rgba(0,0,0,.22);
-    padding:0 1rem 0 3.25rem;                               /* ↑ padding izq */
+    background:#fff;
+    border:1px solid rgba(0,0,0,.08);
+    padding:0 2.75rem 0 3.25rem;
+    box-shadow:
+      0 .75rem 1.5rem rgba(0,0,0,.22),
+      inset 0 .06rem .25rem rgba(0,0,0,.06);
+    transition: box-shadow .15s ease, border-color .15s ease, transform .08s ease;
   }
+  .pl-field:hover{
+    border-color: rgba(0,0,0,.15);
+    box-shadow:
+      0 1rem 2rem rgba(0,0,0,.28),
+      inset 0 .06rem .25rem rgba(0,0,0,.06);
+  }
+  /* Icono del campo */
   .pl-ico{
     position:absolute; left:1rem; top:50%; transform:translateY(-50%);
-    color:#111; opacity:.9; font-size:1.15rem;              /* ↑ icono */
+    color:#0f172a; opacity:.9; font-size:1.2rem;
+    transition: transform .12s ease, opacity .12s ease;
   }
+  .pl-field:hover .pl-ico{ opacity:1; transform:translateY(-50%) scale(1.02); }
+
+  /* Select sin perder accesibilidad */
   .pl-field select{
-    width:100%; border:none; outline:none; background:transparent;
-    font-weight:700; color:#111; font-size:1.1rem;          /* ↑ texto */
-    appearance:none;
+    width:100%; border:0; outline:none; background:transparent;
+    font-weight:700; color:#0f172a; font-size:1.12rem; appearance:none;
   }
-  .pl-field select:disabled{ opacity:.6; }
-  .pl-field select:focus{
-    outline:none; box-shadow:0 0 0 .22rem rgba(177,26,26,.16);
-    border-radius:.6rem;
+  .pl-field select:disabled{ opacity:.6; cursor:not-allowed; }
+
+  /* Chevron del select (solo visual) */
+  .pl-field::after{
+    content:"▾";
+    position:absolute; right:.9rem; top:50%; transform:translateY(-50%);
+    color:#0f172a; opacity:.6; font-size:1.1rem; pointer-events:none;
   }
 
-  /* Botones tipo pill más grandes */
-  .pl-actions{ display:grid; gap:.9rem; grid-template-columns:1fr; margin-top:.75rem; }
-  @media (min-width:33.75em){ .pl-actions{ grid-template-columns:repeat(2,1fr); } }
+  /* Focus accesible */
+  .pl-field:has(select:focus-visible){
+    box-shadow:0 0 0 .24rem rgba(177,26,26,.18), 0 .75rem 1.5rem rgba(0,0,0,.22);
+    border-color:rgba(177,26,26,.35);
+  }
+
+  /* ===== Acciones ===== */
+  .pl-actions{ display:grid; gap:1rem; grid-template-columns:1fr; margin-top:.9rem; }
+  @media (min-width:33.75em){ .pl-actions{ grid-template-columns:repeat(2,1fr);} }
+
   .pl-actions .btn{
-    height:3.25rem;                                        /* ↑ 2.75rem */
-    border-radius:999rem; border:none; cursor:pointer;
-    font-weight:800; color:#fff; font-size:1.05rem;         /* ↑ */
-    transition:.15s transform ease, .15s box-shadow ease;
+    height:3.3rem; border-radius:999rem; border:1px solid rgba(255,255,255,.08);
+    font-weight:800; font-size:1.06rem; color:#fff; cursor:pointer;
+    transition: transform .12s ease, box-shadow .15s ease, filter .15s ease;
   }
-  .btn-pdf{ background:#b11a1a; box-shadow:0 .9rem 1.8rem rgba(156,15,16,.35); }
-  .btn-xls{ background:#136f36; box-shadow:0 .9rem 1.8rem rgba(19,111,54,.35); }
-  .pl-actions .btn:hover{ transform:translateY(-.12rem); box-shadow:0 1.15rem 2.1rem rgba(0,0,0,.45); }
+  .btn-pdf{
+    background:#b11a1a;
+    box-shadow:0 .9rem 1.8rem rgba(156,15,16,.34), inset 0 -.2rem .6rem rgba(0,0,0,.18);
+  }
+  .btn-xls{
+    background:#136f36;
+    box-shadow:0 .9rem 1.8rem rgba(19,111,54,.34), inset 0 -.2rem .6rem rgba(0,0,0,.18);
+  }
+  .pl-actions .btn:hover{ transform:translateY(-.06rem); filter:saturate(1.05); }
+  .pl-actions .btn:active{ transform:translateY(.02rem); }
 
-  /* Badge superior un poco mayor para balancear */
-  .pl-wrap{ position:relative; padding-top:2rem; }
+  /* ===== Badge superior ===== */
   .pl-badge{
     position:absolute; left:50%; top:0; transform:translate(-50%,-50%);
-    display:inline-block; background:#b11a1a; color:#fff;
-    padding:.65rem 1.4rem; border-radius:.85rem;
-    font-weight:800; font-size:1.05rem;
-    box-shadow:0 .7rem 1.3rem rgba(0,0,0,.35), inset 0 -.28rem .65rem rgba(0,0,0,.18);
+    display:inline-block;
+    background:linear-gradient(180deg, #c62828, #b11a1a);
+    color:#fff; padding:.7rem 1.5rem; border-radius:.95rem;
+    font-weight:800; font-size:1.08rem; letter-spacing:.2px;
+    box-shadow:0 .8rem 1.4rem rgba(0,0,0,.35), inset 0 -.28rem .65rem rgba(0,0,0,.18);
     white-space:nowrap; z-index:2;
   }
 
-  /* Grupo a todo el ancho (como ya lo tienes) */
-  .pl-field--span-2{ grid-column:1 / -1; }
+  /* Respeta usuarios con “reduced motion” */
+  @media (prefers-reduced-motion: reduce){
+    .pl-field, .pl-ico, .pl-actions .btn { transition:none !important; }
+  }
 </style>
 {% endblock %}
+
 
 {% block content %}
 <section class="pl" aria-labelledby="titulo-pl">
