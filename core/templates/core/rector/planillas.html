@@ -5,50 +5,55 @@
 
 {% block extra_css %}
 <style>
-  /* ===== Escala tipográfica moderada ===== */
+  /* Escala tipográfica estable */
   :root{ font-size:16.5px; }
   @media (max-width:75em){ :root{font-size:16px} }
   @media (max-width:62em){ :root{font-size:15.5px} }
   @media (max-width:48em){ :root{font-size:15px} }
   @media (max-width:36em){ :root{font-size:14px} }
 
-  /* ===== Contenedor ===== */
+  /* Contenedor */
   .pl{ width:100%; max-width:58rem; margin:0 auto; padding:1.25rem; }
 
-  /* Marco trasero grande (más alto arriba para despegar del título) */
-  .pl-wrap{ position:relative; padding-top:3.25rem; } /* ↑ antes 2rem */
+  /* Marco trasero MUY notorio (más grande alrededor) */
+  .pl-wrap{ position:relative; padding-top:4.25rem; } /* ↑ despega la tarjeta del título */
   .pl-wrap::before{
     content:"";
     position:absolute;
-    top:-2.25rem; right:-1.5rem; bottom:-1.5rem; left:-1.5rem; /* ↑ aire arriba */
-    border-radius:1.5rem;
-    background:linear-gradient(180deg, rgba(12,12,12,.72), rgba(12,12,12,.82));
-    border:1px solid rgba(255,255,255,.06);
-    box-shadow:0 1.25rem 2.25rem rgba(0,0,0,.46), inset 0 .06rem .55rem rgba(255,255,255,.04);
+    top:-3.25rem;            /* ↑ más alto por encima del título */
+    right:-2rem;
+    bottom:-2rem;
+    left:-2rem;              /* ↑ más aire a los lados y abajo */
+    border-radius:1.6rem;
+    background:linear-gradient(180deg, rgba(12,12,12,.70), rgba(12,12,12,.84));
+    border:1px solid rgba(255,255,255,.07);
+    box-shadow:
+      0 1.6rem 2.6rem rgba(0,0,0,.46),
+      inset 0 .06rem .55rem rgba(255,255,255,.04);
     z-index:0;
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
   }
 
-  /* ===== Tarjeta principal ===== */
+  /* Tarjeta principal */
   .pl-card{
     position:relative; z-index:1;
     color:#e7eef8;
     background:linear-gradient(180deg, rgba(9,16,32,.86), rgba(9,16,32,.92));
     border:1px solid rgba(255,255,255,.08);
     border-radius:1.1rem;
-    box-shadow:0 .95rem 1.8rem rgba(0,0,0,.40), inset 0 .02rem .35rem rgba(255,255,255,.04);
+    box-shadow:0 1rem 1.9rem rgba(0,0,0,.40), inset 0 .02rem .35rem rgba(255,255,255,.04);
     padding:1.35rem;
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
   }
 
-  /* ===== Grid ===== */
+  /* Grid */
   .pl-form{ display:grid; gap:1.1rem; grid-template-columns:1fr; }
   @media (min-width:56.25em){ .pl-form{ grid-template-columns:repeat(2,1fr); } }
   .pl-field--span-2{ grid-column:1 / -1; }
 
-  /* ===== Campos ===== */
+  /* Campos */
   .pl-field{
     position:relative; display:flex; align-items:center;
     height:3.9rem;
@@ -64,8 +69,7 @@
   }
   .pl-field select{
     width:100%; border:0; outline:none; background:transparent;
-    font-weight:700; color:#0f172a; font-size:1.03rem;
-    appearance:none;
+    font-weight:700; color:#0f172a; font-size:1.03rem; appearance:none;
   }
   .pl-field select:disabled{ opacity:.6; }
   .pl-field:has(select:focus-visible){
@@ -73,41 +77,40 @@
     border-color:rgba(177,26,26,.36);
   }
   .pl-field::after{
-    content:"▾";
-    position:absolute; right:.85rem; top:50%; transform:translateY(-50%);
+    content:"▾"; position:absolute; right:.85rem; top:50%; transform:translateY(-50%);
     color:#0b1220; opacity:.7; font-size:1rem; pointer-events:none; font-weight:700;
   }
 
-  /* ===== Acciones ===== */
+  /* Acciones */
   .pl-actions{ display:grid; gap:.85rem; grid-template-columns:1fr; margin-top:.7rem; }
   @media (min-width:33.75em){ .pl-actions{ grid-template-columns:repeat(2,1fr);} }
   .pl-actions .btn{
-    height:3rem;
-    border-radius:999rem; border:1px solid rgba(255,255,255,.07);
+    height:3rem; border-radius:999rem; border:1px solid rgba(255,255,255,.07);
     font-weight:800; font-size:1rem; color:#fff;
     transition: transform .12s ease, box-shadow .15s ease, filter .15s ease;
   }
-  .btn-pdf{
-    background:#b11a1a;
-    box-shadow:0 .8rem 1.6rem rgba(156,15,16,.32), inset 0 -.18rem .55rem rgba(0,0,0,.18);
-  }
-  .btn-xls{
-    background:#136f36;
-    box-shadow:0 .8rem 1.6rem rgba(19,111,54,.32), inset 0 -.18rem .55rem rgba(0,0,0,.18);
-  }
+  .btn-pdf{ background:#b11a1a; box-shadow:0 .8rem 1.6rem rgba(156,15,16,.32), inset 0 -.18rem .55rem rgba(0,0,0,.18); }
+  .btn-xls{ background:#136f36; box-shadow:0 .8rem 1.6rem rgba(19,111,54,.32), inset 0 -.18rem .55rem rgba(0,0,0,.18); }
   .pl-actions .btn:hover{ transform:translateY(-.06rem); filter:saturate(1.06) brightness(1.02); }
   .pl-actions .btn:active{ transform:translateY(.02rem); }
 
-  /* ===== Badge (título) — subido y con más aire vertical ===== */
+  /* Título (badge) — más arriba y con sombra suave */
   .pl-badge{
-    position:absolute; left:50%; top:0; transform:translate(-50%,-70%); /* ↑ separa más del card */
+    position:absolute; left:50%; top:0; transform:translate(-50%,-115%); /* ↑ subido */
     display:inline-block; background:#b11a1a; color:#fff;
-    padding:.8rem 1.85rem;
-    border-radius:.9rem; font-weight:800;
+    padding:.85rem 1.95rem;
+    border-radius:1rem; font-weight:800;
     font-size:1.24rem; letter-spacing:.35px;
     text-shadow:0 1px 0 rgba(0,0,0,.25);
-    box-shadow:0 .7rem 1.3rem rgba(0,0,0,.35), inset 0 -.28rem .65rem rgba(0,0,0,.18);
+    box-shadow:0 .9rem 1.5rem rgba(0,0,0,.38), inset 0 -.3rem .7rem rgba(0,0,0,.18);
     white-space:nowrap; z-index:2;
+  }
+
+  /* Ajustes en pantallas pequeñas para que todo respire sin cortar */
+  @media (max-width:48em){
+    .pl-wrap{ padding-top:3.25rem; }
+    .pl-wrap::before{ top:-2.5rem; right:-1rem; bottom:-1rem; left:-1rem; }
+    .pl-badge{ transform:translate(-50%,-95%); }
   }
 
   @media (prefers-reduced-motion: reduce){
@@ -115,6 +118,7 @@
   }
 </style>
 {% endblock %}
+
 
 {% block content %}
 <section class="pl" aria-labelledby="titulo-pl">
