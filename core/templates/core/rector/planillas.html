@@ -42,6 +42,9 @@
     font-weight:700; color:#111; font-size:1rem; appearance:none;
   }
   .pl-field select:disabled{ opacity:.6; }
+  .pl-field select:focus{
+    outline:none; box-shadow:0 0 0 .2rem rgba(177,26,26,.15); border-radius:.5rem;
+  }
 
   /* Botones pill */
   .pl-actions{ display:grid; gap:.75rem; grid-template-columns:1fr; margin-top:.5rem; }
@@ -53,47 +56,60 @@
   .btn-pdf{ background:#b11a1a; box-shadow:0 .75rem 1.5rem rgba(156,15,16,.35); }
   .btn-xls{ background:#136f36; box-shadow:0 .75rem 1.5rem rgba(19,111,54,.35); }
   .pl-actions .btn:hover{ transform:translateY(-.125rem); box-shadow:0 1rem 2rem rgba(0,0,0,.45); }
-</style>
-{% endblock %}
 
-{% block page_banner %}
-  <div class="page-banner page-banner--info">
-    <h1 class="page-title">Planillas — Estudiantes activos</h1>
-  </div>
+  /* Contenedor para posicionar el badge */
+  .pl-wrap{ position:relative; padding-top:1.75rem; }
+
+  /* Título rojo centrado, flotando sobre la tarjeta */
+  .pl-badge{
+    position:absolute; left:50%; top:0; transform:translate(-50%,-50%);
+    display:inline-block; background:#b11a1a; color:#fff;
+    padding:.55rem 1.25rem; border-radius:.75rem; font-weight:800;
+    box-shadow:0 .6rem 1.2rem rgba(0,0,0,.35), inset 0 -.25rem .6rem rgba(0,0,0,.18);
+    white-space:nowrap; z-index:2;
+  }
+
+  /* Grupo a todo el ancho */
+  .pl-field--span-2{ grid-column:1 / -1; }
+</style>
 {% endblock %}
 
 {% block content %}
 <section class="pl" aria-labelledby="titulo-pl">
-  <div class="pl-card" role="group" aria-label="Filtros de exportación">
-    <form class="pl-form" onsubmit="return false;" autocomplete="off">
-      <!-- Sede -->
-      <label class="pl-field" for="pl-sede">
-        <span class="pl-ico"><i class="fa-solid fa-building-columns"></i></span>
-        <select id="pl-sede">
-          <option value="">Todas</option>
-        </select>
-      </label>
+  <div class="pl-wrap">
+    <div id="titulo-pl" class="pl-badge">Planillas — Estudiantes activos</div>
 
-      <!-- Grado -->
-      <label class="pl-field" for="pl-grado">
-        <span class="pl-ico"><i class="fa-solid fa-layer-group"></i></span>
-        <select id="pl-grado" disabled>
-          <option value="">Todos</option>
-        </select>
-      </label>
+    <div class="pl-card" role="group" aria-label="Filtros de exportación">
+      <form class="pl-form" onsubmit="return false;" autocomplete="off">
+        <!-- Sede -->
+        <label class="pl-field" for="pl-sede">
+          <span class="pl-ico"><i class="fa-solid fa-building-columns"></i></span>
+          <select id="pl-sede">
+            <option value="">Todas</option>
+          </select>
+        </label>
 
-      <!-- Grupo -->
-      <label class="pl-field" for="pl-grupo">
-        <span class="pl-ico"><i class="fa-solid fa-people-group"></i></span>
-        <select id="pl-grupo" disabled>
-          <option value="">Todos</option>
-        </select>
-      </label>
-    </form>
+        <!-- Grado -->
+        <label class="pl-field" for="pl-grado">
+          <span class="pl-ico"><i class="fa-solid fa-layer-group"></i></span>
+          <select id="pl-grado" disabled>
+            <option value="">Todos</option>
+          </select>
+        </label>
 
-    <div class="pl-actions">
-      <button type="button" id="btn-pdf" class="btn btn-pdf">Descargar PDF</button>
-      <button type="button" id="btn-xls" class="btn btn-xls">Descargar Excel</button>
+        <!-- Grupo (a todo el ancho) -->
+        <label class="pl-field pl-field--span-2" for="pl-grupo">
+          <span class="pl-ico"><i class="fa-solid fa-people-group"></i></span>
+          <select id="pl-grupo" disabled>
+            <option value="">Todos</option>
+          </select>
+        </label>
+      </form>
+
+      <div class="pl-actions">
+        <button type="button" id="btn-pdf" class="btn btn-pdf">Descargar PDF</button>
+        <button type="button" id="btn-xls" class="btn btn-xls">Descargar Excel</button>
+      </div>
     </div>
   </div>
 </section>
@@ -134,16 +150,12 @@
   function normalize(list) {
     const arr = Array.isArray(list) ? list : [];
     return arr.map(item => {
-      if (Array.isArray(item)) {
-        // [id, "Nombre"] o [id, "Sede - Grado - Grupo"]
-        return { id: item[0], nombre: String(item[1] ?? item[0]) };
-      }
+      if (Array.isArray(item)) return { id: item[0], nombre: String(item[1] ?? item[0]) };
       if (item && typeof item === 'object') {
         const id = item.id ?? item.value ?? item.pk ?? item.key ?? '';
         const nombre = item.nombre ?? item.name ?? item.text ?? item.label ?? item.titulo ?? String(id);
         return { id, nombre };
       }
-      // Primitivos
       return { id: item, nombre: String(item) };
     });
   }
@@ -151,13 +163,11 @@
   // Extrae la lista de una respuesta flexible
   function extractList(data) {
     if (!data) return [];
-    // claves comunes
     if (Array.isArray(data.sedes))  return normalize(data.sedes);
     if (Array.isArray(data.grados)) return normalize(data.grados);
     if (Array.isArray(data.grupos)) return normalize(data.grupos);
     if (Array.isArray(data.results))return normalize(data.results);
     if (Array.isArray(data))        return normalize(data);
-    // objeto con índices numéricos -> conviértelo
     return normalize(Object.values(data));
   }
 
@@ -187,7 +197,6 @@
     try{
       const data = await j(URL_SEDES);
       const sedes = extractList(data);
-      console.debug('SEDES ->', sedes, data);
       fill(selSede, 'Todas', sedes);
       enable(selSede, true);
     }catch(e){
@@ -199,16 +208,14 @@
   // ---- Carga Grados (depende de sede) ----
   async function loadGrados() {
     const sede = selSede.value;
-    // reset dependientes
     resetSelect(selGrado, 'Todos');
     resetSelect(selGrupo, 'Todos');
     if (!sede) return;
 
     try{
-      const qs = new URLSearchParams({ sede_id: sede, sede: sede }); // enviamos ambos nombres
+      const qs = new URLSearchParams({ sede_id: sede, sede: sede });
       const data = await j(`${URL_GRADOS}?${qs.toString()}`);
       const grados = extractList(data);
-      console.debug('GRADOS ->', grados, data);
       fill(selGrado, 'Todos', grados);
       enable(selGrado, grados.length > 0);
     }catch(e){
@@ -224,13 +231,9 @@
     if (!sede || !grado) return;
 
     try{
-      const qs = new URLSearchParams({
-        sede_id: sede, sede: sede,
-        grado_id: grado, grado: grado
-      });
+      const qs = new URLSearchParams({ sede_id: sede, sede: sede, grado_id: grado, grado: grado });
       const data = await j(`${URL_GRUPOS}?${qs.toString()}`);
       const grupos = extractList(data);
-      console.debug('GRUPOS ->', grupos, data);
       fill(selGrupo, 'Todos', grupos);
       enable(selGrupo, grupos.length > 0);
     }catch(e){
@@ -248,7 +251,6 @@
     if (selGrupo.value) { add('grupo_id', selGrupo.value); add('grupo', selGrupo.value); }
 
     const url = baseUrl + (p.toString() ? `?${p}` : '');
-    console.debug('EXPORT URL ->', url);   // para verificar en consola
     window.open(url, '_blank', 'noopener');
   }
 
