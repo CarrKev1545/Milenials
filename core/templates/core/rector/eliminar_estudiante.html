@@ -1,12 +1,13 @@
 {% extends "core/base_dashboard.html" %}
 {% load static %}
+
 {% block title %}Eliminar Estudiantes{% endblock %}
 
 {% block extra_css %}
 <style>
   :root{
     font-size:16.5px;
-    /* Paleta global del proyecto */
+    /* Paleta global (coincide con el resto del proyecto) */
     --bg-dark:#0b1220;
     --fg-light:#e5ecf6;
     --ink:#111;
@@ -16,9 +17,9 @@
     --field-border:rgba(0,0,0,.08);
     --field-shadow:rgba(0,0,0,.22);
     --accent:#c62828;                    /* rojo principal */
-    --accent-shadow:rgba(156,15,16,.35); /* sombra para rojo */
-    --btn-ghost:#c62828;                 /* “Buscar” */
-    --btn-muted:#6b7280;                 /* “Limpiar” */
+    --accent-shadow:rgba(156,15,16,.35); /* sombra rojo */
+    --btn-ghost:#3b82f6;                 /* Buscar (azulado) */
+    --btn-muted:#6b7280;                 /* Limpiar (gris) */
   }
   @media (max-width:75em){ :root{font-size:16px} }
   @media (max-width:62em){ :root{font-size:15.5px} }
@@ -41,7 +42,7 @@
   .del-card{
     position:relative; z-index:1;
     color:var(--fg-light);
-    background:linear-gradient(180deg, #151518, #151518); /* ~ --bg-dark */
+    background:linear-gradient(180deg, #151518, #151518);
     border:1px solid var(--border-light);
     border-radius:1.1rem;
     box-shadow:0 .8rem 1.6rem var(--shadow-deep), inset 0 .02rem .35rem rgba(0,0,0,.35);
@@ -102,10 +103,9 @@
     font-weight:800; font-size:1rem; color:#fff !important;
     transition: transform .12s ease, box-shadow .15s ease, filter .15s ease, opacity .12s ease;
   }
-  /* Buscar → ghost/slate; Limpiar → muted; Eliminar → rojo acento */
   .btn-find{
     background:var(--btn-ghost) !important;
-    box-shadow:0 .8rem 1.6rem #136f36(55,65,81,.30), inset 0 -.18rem .55rem rgba(0,0,0,.18);
+    box-shadow:0 .8rem 1.6rem rgba(59,130,246,.30), inset 0 -.18rem .55rem rgba(0,0,0,.18);
   }
   .btn-clear{
     background:var(--btn-muted) !important;
@@ -120,10 +120,11 @@
   .del-actions .btn:active{ transform:translateY(.02rem); }
   .del-actions .btn:disabled{ opacity:.55; filter:grayscale(.1); cursor:not-allowed; }
 
-  /* ===== Mensajes ===== */
+  /* ===== Mensajes (Django messages) ===== */
   .del-messages .alert{ border-radius:.75rem; margin-bottom:.5rem; }
 
-  /* ===== Resumen del estudiante ===== */
+  /* ===== RESUMEN DEL ESTUDIANTE: ancho completo y 2 columnas ===== */
+  #preview{ width:100%; }
   #preview .card{
     background:linear-gradient(180deg, rgba(15,23,42,.65), rgba(15,23,42,.85));
     color:var(--fg-light); border:1px solid var(--border-light);
@@ -131,19 +132,42 @@
     box-shadow:0 .8rem 1.6rem var(--shadow-deep), inset 0 .02rem .35rem rgba(255,255,255,.04);
     backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
   }
-  #preview .card-body{ padding:1rem 1.1rem; }
+  #preview .card-body{ padding:1.1rem 1.25rem; }
 
   #preview h6{
-    font-size:.9rem; letter-spacing:.25px; margin-bottom:.75rem !important;
+    font-size:.92rem; letter-spacing:.25px; margin-bottom:.85rem !important;
     color:#cbd5e1;
     display:inline-block; background:rgba(255,255,255,.06);
     border:1px solid var(--border-light); border-radius:999rem;
-    padding:.35rem .75rem;
+    padding:.38rem .8rem;
   }
 
-  #preview .row > div > div{ padding:.25rem 0; border-bottom:1px dashed var(--border-light); }
+  /* Grid responsive del contenido del resumen */
+  #preview .row{
+    display:grid;
+    grid-template-columns: 1fr;      /* móvil */
+    gap:.9rem 1.25rem;
+  }
+  @media (min-width:56.25em){        /* ~900px: 2 columnas */
+    #preview .row{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+  }
+  #preview .row .col-12,
+  #preview .row .col-md-6{ width:100%; }
+
+  /* Línea de dato: etiqueta a la izquierda, valor a la derecha */
+  #preview .row > div > div{
+    display:flex; align-items:flex-start; justify-content:space-between;
+    gap:.75rem; padding:.4rem .1rem;
+    border-bottom:1px dashed var(--border-light);
+  }
   #preview .row > div > div:last-child{ border-bottom:0; }
-  #preview strong{ color:#f1f5f9; font-weight:800; }
+  #preview strong{ color:#f1f5f9; font-weight:800; letter-spacing:.2px; min-width:7.5rem; }
+  #preview span{ color:#e2e8f0; }
+
+  @media (max-width:36em){
+    #preview .row > div > div{ flex-wrap:wrap; }
+    #preview strong{ min-width:auto; }
+  }
 
   @media (prefers-reduced-motion: reduce){
     .del-field, .del-actions .btn { transition:none !important; }
@@ -151,13 +175,12 @@
 </style>
 {% endblock %}
 
-
 {% block content %}
 <section class="del" aria-labelledby="titulo-del">
   <div class="del-wrap">
     <div id="titulo-del" class="del-badge">Eliminar Estudiantes</div>
 
-    <div class="del-card" role="group" aria-label="Eliminar por documento">
+    <div class="del-card">
       {% if messages %}
         <div class="del-messages mb-3">
           {% for message in messages %}
@@ -166,14 +189,13 @@
         </div>
       {% endif %}
 
-      {# === FORMULARIO: lógica/IDs intactos === #}
-      <form id="form-eliminar" method="post" action="{% url 'rector_eliminar_estudiante' %}" class="del-form" autocomplete="off" novalidate>
+      <form id="form-eliminar" method="post" action="{% url 'rector_eliminar_estudiante' %}" class="del-form">
         {% csrf_token %}
 
-        <!-- Campo Documento con icono -->
+        <!-- Campo documento (mismos ids/names) -->
         <div>
-          <label class="form-label mb-2">Documento del estudiante</label>
-          <label class="del-field" for="inp-doc">
+          <label for="inp-doc" class="form-label mb-2">Documento del estudiante</label>
+          <div class="del-field">
             <span class="del-ico"><i class="fa-solid fa-id-card"></i></span>
             <input
               type="text"
@@ -187,37 +209,34 @@
               placeholder="Solo dígitos (5–20)"
               required
             >
-          </label>
+          </div>
           <div class="del-help">
             Escribe el documento y te mostraremos los datos antes de eliminar.
           </div>
         </div>
 
-        <!-- Acciones -->
+        <!-- Botones (mismos ids) -->
         <div class="del-actions">
           <button id="btn-preview" type="button" class="btn btn-find">Buscar</button>
-          <button id="btn-limpiar" type="button" class="btn btn-clear">Limpiar</button>
-          <!-- ÚNICO botón: envía el formulario cuando hay alumno -->
-          <button id="btn-eliminar" type="submit" class="btn btn-danger" disabled>
-            Eliminar Estudiante
-          </button>
+          <button id="btn-limpiar"  type="button" class="btn btn-clear">Limpiar</button>
+          <button id="btn-eliminar" type="submit" class="btn btn-danger" disabled>Eliminar Estudiante</button>
         </div>
 
-        <!-- Resumen del estudiante (IDs intactos) -->
-        <div id="preview" class="mt-3" style="display:none;">
-          <div class="card border-0 shadow-sm">
+        <!-- Resumen del estudiante (mismos ids) -->
+        <div id="preview" class="mt-4" style="display:none;">
+          <div class="card border-0">
             <div class="card-body">
-              <h6 class="text-muted mb-3">Resumen del estudiante</h6>
+              <h6 class="mb-3">Resumen del estudiante</h6>
               <div class="row">
                 <div class="col-12 col-md-6">
-                  <div><strong>Nombres:</strong> <span id="pv-nombres">-</span></div>
+                  <div><strong>Nombres:</strong>   <span id="pv-nombres">-</span></div>
                   <div><strong>Apellidos:</strong> <span id="pv-apellidos">-</span></div>
                   <div><strong>Documento:</strong> <span id="pv-doc">-</span></div>
                 </div>
                 <div class="col-12 col-md-6">
-                  <div><strong>Sede:</strong> <span id="pv-sede">-</span></div>
-                  <div><strong>Grado:</strong> <span id="pv-grado">-</span></div>
-                  <div><strong>Grupo:</strong> <span id="pv-grupo">-</span></div>
+                  <div><strong>Sede:</strong>   <span id="pv-sede">-</span></div>
+                  <div><strong>Grado:</strong>  <span id="pv-grado">-</span></div>
+                  <div><strong>Grupo:</strong>  <span id="pv-grupo">-</span></div>
                 </div>
               </div>
             </div>
@@ -225,7 +244,6 @@
         </div>
 
       </form>
-      {# === /FORMULARIO === #}
     </div>
   </div>
 </section>
