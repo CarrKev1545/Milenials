@@ -1,28 +1,122 @@
-{% extends "core/base.html" %}
+{% extends "core/base_dashboard.html" %}
 {% load static %}
 {% block title %}Eliminar Estudiantes{% endblock %}
 
+{% block extra_css %}
+<style>
+  :root{ font-size:16.5px }
+  @media (max-width:75em){ :root{font-size:16px} }
+  @media (max-width:62em){ :root{font-size:15.5px} }
+  @media (max-width:48em){ :root{font-size:15px} }
+  @media (max-width:36em){ :root{font-size:14px} }
+
+  /* ===== Contenedor principal (alineado al centro) ===== */
+  .del{ width:100%; max-width:52rem; margin:0 auto; padding:1.25rem; }
+
+  /* Marco trasero grande (fondo translúcido) */
+  .del-wrap{ position:relative; padding-top:2.1rem; }
+  .del-wrap::before{
+    content:""; position:absolute; inset:-1.25rem -1.25rem;
+    border-radius:1.35rem;
+    background:linear-gradient(180deg, rgba(12,12,12,.72), rgba(12,12,12,.82));
+    border:1px solid rgba(255,255,255,.06);
+    box-shadow:0 1.1rem 2.2rem rgba(0,0,0,.45), inset 0 .05rem .5rem rgba(255,255,255,.035);
+    z-index:0; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  }
+
+  /* Tarjeta principal */
+  .del-card{
+    position:relative; z-index:1;
+    color:#e7eef8;
+    background:linear-gradient(180deg, rgba(9,16,32,.86), rgba(9,16,32,.92));
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:1.1rem;
+    box-shadow:0 .8rem 1.6rem rgba(0,0,0,.38), inset 0 .02rem .35rem rgba(255,255,255,.04);
+    padding:1.35rem;
+    backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+  }
+
+  /* Título en badge */
+  .del-badge{
+    position:absolute; left:50%; top:0; transform:translate(-50%,-95%); /* Ajusta -95% si quieres bajarlo/subirlo */
+    display:inline-block; background:#b11a1a; color:#fff;
+    padding:.78rem 1.85rem; border-radius:1rem; font-weight:800;
+    font-size:1.22rem; letter-spacing:.3px; text-shadow:0 1px 0 rgba(0,0,0,.25);
+    box-shadow:0 .9rem 1.5rem rgba(0,0,0,.38), inset 0 -.28rem .68rem rgba(0,0,0,.18);
+    white-space:nowrap; z-index:2;
+  }
+
+  /* Grid del formulario */
+  .del-form{ display:grid; gap:1rem; grid-template-columns:1fr; }
+
+  /* Campo con icono a la izquierda */
+  .del-field{
+    position:relative; display:flex; align-items:center;
+    height:3.9rem; border-radius:.95rem; background:#fff;
+    border:1px solid rgba(0,0,0,.08);
+    padding:0 .95rem 0 3rem;
+    box-shadow:0 .65rem 1.3rem rgba(0,0,0,.22), inset 0 .06rem .22rem rgba(0,0,0,.06);
+    transition: box-shadow .15s ease, border-color .15s ease;
+  }
+  .del-ico{
+    position:absolute; left:.95rem; top:50%; transform:translateY(-50%);
+    color:#0f172a; opacity:.9; font-size:1.08rem;
+  }
+  /* Neutraliza Bootstrap dentro del wrapper para que se vea como en Planillas */
+  .del-field .form-control{
+    border:0 !important; background:transparent !important;
+    box-shadow:none !important; outline:0 !important;
+    padding:0 !important; height:auto !important; color:#0f172a;
+    font-weight:700; font-size:1.03rem;
+  }
+  .del-field:has(.form-control:focus-visible){
+    box-shadow:0 0 0 .22rem rgba(177,26,26,.16), 0 .65rem 1.3rem rgba(0,0,0,.22);
+    border-color:rgba(177,26,26,.32);
+  }
+
+  .del-help{ opacity:.85; font-size:.92rem; margin-top:.25rem }
+
+  /* Acciones en 3 columnas (Buscar, Limpiar, Eliminar) */
+  .del-actions{ display:grid; gap:.85rem; grid-template-columns:1fr 1fr 1fr; }
+  @media (max-width:36em){ .del-actions{ grid-template-columns:1fr; } }
+  .del-actions .btn{
+    height:3rem; border-radius:999rem; border:1px solid rgba(255,255,255,.07);
+    font-weight:800; font-size:1rem; color:#fff !important;
+    transition: transform .12s ease, box-shadow .15s ease, filter .15s ease;
+  }
+  .btn-find{ background:#1f3a8a !important; box-shadow:0 .8rem 1.6rem rgba(31,58,138,.32), inset 0 -.18rem .55rem rgba(0,0,0,.18); }
+  .btn-clear{ background:#6b7280 !important; box-shadow:0 .8rem 1.6rem rgba(107,114,128,.32), inset 0 -.18rem .55rem rgba(0,0,0,.18); }
+  .btn-danger{ background:#b11a1a !important; box-shadow:0 .8rem 1.6rem rgba(156,15,16,.32), inset 0 -.18rem .55rem rgba(0,0,0,.18); }
+  .del-actions .btn:hover{ transform:translateY(-.04rem); filter:saturate(1.04); }
+
+  /* Mensajes dentro de la tarjeta */
+  .del-messages .alert{ border-radius:.75rem; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid">
-  <div class="card shadow-sm mx-auto" style="max-width: 920px;">
-    <div class="card-body">
+<section class="del" aria-labelledby="titulo-del">
+  <div class="del-wrap">
+    <div id="titulo-del" class="del-badge">Eliminar Estudiantes</div>
 
-      <h4 class="mb-3">Eliminar Estudiantes</h4>
-
+    <div class="del-card" role="group" aria-label="Eliminar por documento">
       {% if messages %}
-        <div class="mb-3">
+        <div class="del-messages mb-3">
           {% for message in messages %}
             <div class="alert alert-{{ message.tags }} mb-2" role="alert">{{ message }}</div>
           {% endfor %}
         </div>
       {% endif %}
 
-      <form id="form-eliminar" method="post" action="{% url 'rector_eliminar_estudiante' %}">
+      {# === FORMULARIO: lógica/IDs intactos === #}
+      <form id="form-eliminar" method="post" action="{% url 'rector_eliminar_estudiante' %}" class="del-form" autocomplete="off" novalidate>
         {% csrf_token %}
 
-        <div class="row g-3 align-items-end">
-          <div class="col-12 col-md-6">
-            <label class="form-label">Documento del estudiante</label>
+        <!-- Campo Documento con icono -->
+        <div>
+          <label class="form-label mb-2">Documento del estudiante</label>
+          <label class="del-field" for="inp-doc">
+            <span class="del-ico"><i class="fa-solid fa-id-card"></i></span>
             <input
               type="text"
               inputmode="numeric"
@@ -35,28 +129,24 @@
               placeholder="Solo dígitos (5–20)"
               required
             >
-            <div class="form-text">
-              Escribe el documento y te mostraremos los datos antes de eliminar.
-            </div>
-          </div>
-
-          <div class="col-12 col-md-6 d-flex gap-2">
-            <button id="btn-preview" type="button" class="btn btn-outline-primary">
-              Buscar
-            </button>
-            <button id="btn-limpiar" type="button" class="btn btn-outline-secondary">
-              Limpiar
-            </button>
-
-            <!-- ÚNICO botón: envía el formulario cuando hay alumno -->
-            <button id="btn-eliminar" type="submit" class="btn btn-danger ms-auto" disabled>
-              Eliminar Estudiante
-            </button>
+          </label>
+          <div class="del-help">
+            Escribe el documento y te mostraremos los datos antes de eliminar.
           </div>
         </div>
 
-        <!-- Resumen del estudiante -->
-        <div id="preview" class="mt-4" style="display:none;">
+        <!-- Acciones -->
+        <div class="del-actions">
+          <button id="btn-preview" type="button" class="btn btn-find">Buscar</button>
+          <button id="btn-limpiar" type="button" class="btn btn-clear">Limpiar</button>
+          <!-- ÚNICO botón: envía el formulario cuando hay alumno -->
+          <button id="btn-eliminar" type="submit" class="btn btn-danger" disabled>
+            Eliminar Estudiante
+          </button>
+        </div>
+
+        <!-- Resumen del estudiante (IDs intactos) -->
+        <div id="preview" class="mt-3" style="display:none;">
           <div class="card border-0 shadow-sm">
             <div class="card-body">
               <h6 class="text-muted mb-3">Resumen del estudiante</h6>
@@ -77,10 +167,13 @@
         </div>
 
       </form>
+      {# === /FORMULARIO === #}
     </div>
   </div>
-</div>
+</section>
+{% endblock %}
 
+{% block extra_js %}
 <script>
 (function () {
   const inp = document.getElementById('inp-doc');
@@ -122,9 +215,8 @@
     }
     try {
       btnPreview.disabled = true;
-      // Usa la API de este módulo
       const res = await fetch(`{% url 'api_estudiante_por_documento_elim' %}?doc=${encodeURIComponent(doc)}`, {
-      credentials: 'same-origin'
+        credentials: 'same-origin'
       });
       const data = await res.json();
       if (!data.ok || !data.found) {
@@ -140,7 +232,7 @@
       pvGrado.textContent = est.grado || '-';
       pvGrupo.textContent = est.grupo || '-';
       pv.style.display = '';
-      btnEliminar.disabled = false;  // habilita envío directo
+      btnEliminar.disabled = false;
     } catch (e) {
       resetPreview();
       alert('Error consultando el estudiante.');
@@ -159,5 +251,3 @@
 })();
 </script>
 {% endblock %}
-
-
