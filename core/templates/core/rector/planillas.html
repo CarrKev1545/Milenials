@@ -6,7 +6,20 @@
 {% block extra_css %}
 <style>
   /* Escala tipográfica estable */
-  :root{ font-size:16.5px; }
+  :root{
+    font-size:16.5px;
+    /* paleta traída del primer style */
+    --bg-dark:#0b1220;
+    --fg-light:#e5ecf6;
+    --ink:#111;
+    --border-light:rgba(255,255,255,.08);
+    --shadow-deep:rgba(0,0,0,.35);
+    --shadow-deeper:rgba(0,0,0,.45);
+    --field-border:rgba(0,0,0,.06);
+    --field-shadow:rgba(0,0,0,.22);
+    --accent:#c62828;                    /* rojo principal */
+    --accent-shadow:rgba(156,15,16,.35); /* sombra para rojo */
+  }
   @media (max-width:75em){ :root{font-size:16px} }
   @media (max-width:62em){ :root{font-size:15.5px} }
   @media (max-width:48em){ :root{font-size:15px} }
@@ -15,37 +28,31 @@
   /* Contenedor */
   .pl{ width:100%; max-width:58rem; margin:0 auto; padding:1.25rem; }
 
-  /* Marco trasero MUY notorio (más grande alrededor) */
-  .pl-wrap{ position:relative; padding-top:4.25rem; } /* ↑ despega la tarjeta del título */
+  /* Marco trasero */
+  .pl-wrap{ position:relative; padding-top:4.25rem; }
   .pl-wrap::before{
     content:"";
     position:absolute;
-    top:-3.25rem;            /* ↑ más alto por encima del título */
-    right:-2rem;
-    bottom:-2rem;
-    left:-2rem;              /* ↑ más aire a los lados y abajo */
+    top:-3.25rem; right:-2rem; bottom:-2rem; left:-2rem;
     border-radius:1.6rem;
     background:linear-gradient(180deg, rgba(12,12,12,.70), rgba(12,12,12,.84));
-    border:1px solid rgba(255,255,255,.07);
-    box-shadow:
-      0 1.6rem 2.6rem rgba(0,0,0,.46),
-      inset 0 .06rem .55rem rgba(255,255,255,.04);
+    border:1px solid var(--border-light);
+    box-shadow:0 1.6rem 2.6rem var(--shadow-deeper), inset 0 .06rem .55rem rgba(255,255,255,.04);
     z-index:0;
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
   }
 
-  /* Tarjeta principal */
+  /* Tarjeta principal (usa colores del patrón) */
   .pl-card{
     position:relative; z-index:1;
-    color:#e7eef8;
-    background:linear-gradient(180deg, rgba(9,16,32,.86), rgba(9,16,32,.92));
-    border:1px solid rgba(0,0,0,.35);
+    color:var(--fg-light);
+    background:linear-gradient(180deg, rgba(11,18,32,.86), rgba(11,18,32,.92)); /* ~#0b1220 */
+    border:1px solid var(--border-light);
     border-radius:1.1rem;
-    box-shadow:0 1rem 1.9rem rgba(0,0,0,.35), inset 0 .02rem .35rem rgba(0,0,0,.35);
+    box-shadow:0 1rem 1.9rem var(--shadow-deep), inset 0 .02rem .35rem rgba(255,255,255,.04);
     padding:1.35rem;
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
   }
 
   /* Grid */
@@ -53,61 +60,66 @@
   @media (min-width:56.25em){ .pl-form{ grid-template-columns:repeat(2,1fr); } }
   .pl-field--span-2{ grid-column:1 / -1; }
 
-  /* Campos */
+  /* Campos (colores de inputs y adornos) */
   .pl-field{
     position:relative; display:flex; align-items:center;
-    height:3.9rem;
-    border-radius:.95rem;
-    background:#fff; border:1px solid rgba(0,0,0,.08);
+    height:3.9rem; border-radius:.95rem;
+    background:#fff; border:1px solid var(--field-border);
     padding:0 .95rem 0 3rem;
-    box-shadow:0 .65rem 1.3rem rgba(0,0,0,.22), inset 0 .06rem .22rem rgba(0,0,0,.06);
+    box-shadow:0 .65rem 1.3rem var(--field-shadow), inset 0 .06rem .22rem rgba(0,0,0,.06);
     transition: box-shadow .15s ease, border-color .15s ease;
   }
   .pl-ico{
     position:absolute; left:.95rem; top:50%; transform:translateY(-50%);
-    color:#0f172a; opacity:.9; font-size:1.08rem;
+    color:var(--ink); opacity:.9; font-size:1.08rem;
   }
   .pl-field select{
     width:100%; border:0; outline:none; background:transparent;
-    font-weight:700; color:#0f172a; font-size:1.03rem; appearance:none;
+    font-weight:700; color:var(--ink); font-size:1.03rem; appearance:none;
   }
   .pl-field select:disabled{ opacity:.6; }
   .pl-field:has(select:focus-visible){
-    box-shadow:0 0 0 .24rem rgba(177,26,26,.18), 0 .7rem 1.35rem rgba(0,0,0,.22);
-    border-color:rgba(177,26,26,.36);
+    /* focus en rojo del patrón */
+    box-shadow:0 0 0 .24rem rgba(198,40,40,.18), 0 .7rem 1.35rem var(--field-shadow);
+    border-color:rgba(198,40,40,.36);
   }
   .pl-field::after{
     content:"▾"; position:absolute; right:.85rem; top:50%; transform:translateY(-50%);
-    color:#0b1220; opacity:.7; font-size:1rem; pointer-events:none; font-weight:700;
+    color:var(--ink); opacity:.7; font-size:1rem; pointer-events:none; font-weight:700;
   }
 
   /* Acciones */
   .pl-actions{ display:grid; gap:.85rem; grid-template-columns:1fr; margin-top:.7rem; }
   @media (min-width:33.75em){ .pl-actions{ grid-template-columns:repeat(2,1fr);} }
   .pl-actions .btn{
-    height:3rem; border-radius:999rem; border:1px solid rgba(255,255,255,.07);
+    height:3rem; border-radius:999rem; border:1px solid var(--border-light);
     font-weight:800; font-size:1rem; color:#fff;
     transition: transform .12s ease, box-shadow .15s ease, filter .15s ease;
   }
-  .btn-pdf{ background:#b11a1a ; box-shadow:0 .8rem 1.6rem rgba(156,15,16,.32), inset 0 -.18rem .55rem rgba(0,0,0,.18); }
-  .btn-xls{ background:#136f36; box-shadow:0 .8rem 1.6rem rgba(19,111,54,.32), inset 0 -.18rem .55rem rgba(0,0,0,.18); }
+  .btn-pdf{
+    background:var(--accent);
+    box-shadow:0 .8rem 1.6rem var(--accent-shadow), inset 0 -.18rem .55rem rgba(0,0,0,.18);
+  }
+  .btn-xls{
+    /* mantenemos verde de Excel, solo ajustamos sombra a la misma lógica */
+    background:#136f36;
+    box-shadow:0 .8rem 1.6rem rgba(19,111,54,.32), inset 0 -.18rem .55rem rgba(0,0,0,.18);
+  }
   .pl-actions .btn:hover{ transform:translateY(-.06rem); filter:saturate(1.06) brightness(1.02); }
   .pl-actions .btn:active{ transform:translateY(.02rem); }
 
-  /* Título (badge) — mejor separación vertical */
+  /* Título (badge) con colores del patrón */
   .pl-badge{
-    position:absolute; left:50%; top:0;
-    transform:translate(-50%,-45%);  
-    display:inline-block; background:#b11a1a; color:#fff;
-    padding:.85rem 1.95rem;
-    border-radius:1rem; font-weight:800;
+    position:absolute; left:50%; top:0; transform:translate(-50%,-45%);
+    display:inline-block; background:var(--accent); color:#fff;
+    padding:.85rem 1.95rem; border-radius:1rem; font-weight:800;
     font-size:1.24rem; letter-spacing:.35px;
     text-shadow:0 1px 0 rgba(0,0,0,.25);
-    box-shadow:0 .9rem 1.5rem rgba(0,0,0,.38), inset 0 -.3rem .7rem rgba(0,0,0,.18);
+    box-shadow:0 .9rem 1.5rem var(--shadow-deeper), inset 0 -.3rem .7rem rgba(0,0,0,.18);
     white-space:nowrap; z-index:2;
   }
 
-  /* Ajustes en pantallas pequeñas para que todo respire sin cortar */
+  /* Ajustes responsive */
   @media (max-width:48em){
     .pl-wrap{ padding-top:3.25rem; }
     .pl-wrap::before{ top:-2.5rem; right:-1rem; bottom:-1rem; left:-1rem; }
