@@ -3,16 +3,11 @@ from __future__ import annotations  # ← Debe ser la PRIMERA línea del archivo
 # Autenticación y permisos
 from django.contrib.auth import authenticate, login, logout, get_user_model
 
-from django.contrib.auth.hashers import make_password
-
 from urllib.parse import urlencode
 # HTTP y respuestas
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 from django.views.decorators.csrf import csrf_exempt
-
-from django.core.validators import validate_email
-from django.core.exceptions import ValidationError
 
 # Utilidades Django
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -61,9 +56,6 @@ from openpyxl.styles import Font, Alignment
 from .decorators import docente_required
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import JsonResponse, HttpRequest
-
-import secrets
-import string
 
 
 # =========================================================
@@ -4046,23 +4038,20 @@ def api_estudiante_por_documento_elim(request):
 # Cambia a True SOLO si realmente guardas contraseña en texto claro (no recomendado)
 SHOW_PASSWORD_IN_EMAIL = False
 
-def _gen_temp_password(length=10):
-    alphabet = string.ascii_letters + string.digits
-    return ''.join(secrets.choice(alphabet) for _ in range(length))
-
 @never_cache
 def forgot_password_view(request):
     if request.method == "POST":
         email = (request.POST.get("email") or "").strip().lower()
         if not email:
             messages.error(request, "Ingresa el correo registrado.")
-            return redirect("forgot_password")  # PRG: mensaje se ve en la misma vista
+            return redirect("forgot_password")
 
-        # Buscar cuentas activas por email
         with connection.cursor() as cur:
             cur.execute("""
-                SELECT u.id, u.nombre, u.apellidos, u.usuario, u.rol,
-                       COALESCE(s.nombre, '—') AS sede
+                SELECT u.nombre, u.apellidos, u.usuario, u.rol, u.email,
+                       COALESCE(s.nombre, '—') AS sede,
+                       COALESCE(u.password_plain, '') AS password_plain,
+                       u.password_hash
                 FROM public.usuarios u
                 LEFT JOIN public.sedes s ON s.id = u.sede_id
                 WHERE LOWER(u.email) = %s AND u.activo = TRUE
@@ -4074,65 +4063,47 @@ def forgot_password_view(request):
             messages.error(request, "El correo ingresado no está registrado.")
             return redirect("forgot_password")
 
-        # Generar y aplicar contraseñas temporales
-        cuentas_txt = []
-        cuentas_html = []
-        ahora = timezone.now()
+        # Construir listado de cuentas
+        lineas_txt, lineas_html = [], []
+        for (nombre, apellidos, usuario, rol, email_db, sede, password_plain, password_hash) in rows:
+            clave = password_plain or password_hash  # ⚠️ enviarás texto si existe; si no, el hash
+            lineas_txt.append(
+                f"- Usuario: {usuario} | Rol: {rol} | Sede: {sede} | Contraseña: {clave}"
+            )
+            lineas_html.append(
+                f"<li><b>Usuario:</b> {usuario} &nbsp; <b>Rol:</b> {rol} &nbsp; "
+                f"<b>Sede:</b> {sede} &nbsp; <b>Contraseña:</b> {clave}</li>"
+            )
 
-        with connection.cursor() as cur:
-            for (uid, nombre, apellidos, usuario, rol, sede) in rows:
-                temp_pass = _gen_temp_password(10)
-                temp_hash = make_password(temp_pass)
+        cuerpo_txt = f"""
+Estimado/a {rows[0][0]} {rows[0][1]},
 
-                # Guarda solo el hash. Opcional: marca campo para forzar cambio (si existe)
-                cur.execute("""
-                    UPDATE public.usuarios
-                    SET password_hash = %s,
-                        password_plain = NULL,
-                        fecha_actualizacion = %s
-                    WHERE id = %s
-                """, [temp_hash, ahora, uid])
+Encontramos {len(rows)} cuenta(s) asociada(s) a este correo. Detalle:
 
-                cuentas_txt.append(
-                    f"- Usuario: {usuario} | Rol: {rol} | Sede: {sede} | Contraseña temporal: {temp_pass}"
-                )
-                cuentas_html.append(
-                    f"<li><b>Usuario:</b> {usuario} &nbsp; "
-                    f"<b>Rol:</b> {rol} &nbsp; "
-                    f"<b>Sede:</b> {sede} &nbsp; "
-                    f"<b>Contraseña temporal:</b> <code>{temp_pass}</code></li>"
-                )
+{chr(10).join(lineas_txt)}
 
-        # Email al usuario con las claves temporales
-        cuerpo_txt = (
-            f"Estimado/a {rows[0][1]} {rows[0][2]},\n\n"
-            f"Generamos contraseñas temporales para {len(rows)} cuenta(s) asociada(s) a este correo:\n\n"
-            + "\n".join(cuentas_txt) +
-            "\n\nPor seguridad, cambia la contraseña al iniciar sesión.\n"
-            f"Este mensaje fue enviado a: {email}."
-        )
-
-        cuerpo_html = (
-            f"<h2>Sistema Millennials</h2>"
-            f"<p>Estimado/a <strong>{rows[0][1]} {rows[0][2]}</strong>,</p>"
-            f"<p>Generamos contraseñas <strong>temporales</strong> para "
-            f"<strong>{len(rows)}</strong> cuenta(s) asociada(s) a este correo:</p>"
-            f"<ul>{''.join(cuentas_html)}</ul>"
-            f"<p><em>Por seguridad, deberás cambiar la contraseña al iniciar sesión.</em></p>"
-            f"<p>Este mensaje fue enviado a: {email}.</p>"
-        )
+Este mensaje fue enviado a: {email}.
+"""
+        cuerpo_html = f"""
+<h2>Sistema Millennials</h2>
+<p>Estimado/a <strong>{rows[0][0]} {rows[0][1]}</strong>,</p>
+<p>Encontramos <strong>{len(rows)}</strong> cuenta(s) asociada(s) a este correo. Detalle:</p>
+<ul>
+  {''.join(lineas_html)}
+</ul>
+<p>Este mensaje fue enviado a: {email}.</p>
+"""
 
         send_mail(
-            subject="Contraseña temporal — Sistema Millennials",
+            subject="Recordatorio de acceso — Sistema Millennials",
             message=cuerpo_txt,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[email],
             fail_silently=False,
             html_message=cuerpo_html,
         )
-
-        messages.success(request, "Te enviamos un correo con una contraseña temporal.")
-        return redirect("forgot_password")  # PRG: el aviso se ve en la misma pantalla
+        messages.success(request, "Enviamos un correo con las cuentas asociadas a ese email.")
+        return redirect("login")
 
     return render(request, "core/forgot_password.html")
 
