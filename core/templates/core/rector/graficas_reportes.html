@@ -37,7 +37,6 @@
     position:absolute;
     top:-2rem; right:-1.25rem; bottom:-1.25rem; left:-1.25rem;
     border-radius:1.35rem;
-    background:linear-gradient(180deg, var(--plate-grad-from,.72), var(--plate-grad-to,.84));
     background:linear-gradient(180deg, rgba(12,12,12,.70), rgba(12,12,12,.84));
     border:1px solid var(--border-light);
     box-shadow:0 1.1rem 2.2rem var(--shadow-deeper), inset 0 .05rem .5rem rgba(255,255,255,.035);
@@ -63,7 +62,6 @@
     box-shadow:0 .65rem 1.3rem rgba(0,0,0,.22), inset 0 .06rem .22rem rgba(0,0,0,.06);
     transition: box-shadow .15s ease, border-color .15s ease, transform .08s ease;
   }
-  /* Icono a la izquierda para consistencia visual (usa tu HTML si ya tienes <i>) */
   .gr-field::before{
     content:"\f0ce"; /* fa-table as fallback */
     font: normal 900 1.05rem/1 "Font Awesome 6 Free";
@@ -86,7 +84,6 @@
     color:var(--ink); opacity:.55; font-weight:700; pointer-events:none;
   }
 
-  /* Menú del select */
   select option{
     background:var(--bg-card); color:var(--text-light);
   }
@@ -98,9 +95,9 @@
   .gr-grid{
     position:relative; z-index:1;
     display:grid; gap:1rem;
-    grid-template-columns:1fr;          /* móvil */
+    grid-template-columns:1fr;
   }
-  @media (min-width:56.25em){          /* ≥900px: 2 columnas */
+  @media (min-width:56.25em){
     .gr-grid{ grid-template-columns:repeat(2, 1fr); }
   }
 
@@ -112,6 +109,9 @@
     box-shadow:0 .8rem 1.6rem var(--shadow-deep), inset 0 .02rem .35rem rgba(255,255,255,.04);
     color:var(--text-light);
     backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+
+    /* Evita recortes si hay muchas etiquetas; scroll suave horizontal si hace falta */
+    overflow-x:auto; overscroll-behavior:contain;
   }
 
   .gr-title{
@@ -128,13 +128,12 @@
 
   .chart{
     width:100%;
-    height:clamp(16rem, 42vw, 24rem);   /* responde al ancho */
+    height:clamp(16rem, 42vw, 24rem);
+    padding-bottom:.25rem; /* un pelín más de aire para ticks bajos */
   }
 
-  /* ===== Botones de utilidad (si existieran) ===== */
-  .gr-actions{
-    display:flex; gap:.6rem; flex-wrap:wrap; margin:.4rem 0 0 auto;
-  }
+  /* Botones utilitarios (si se usan) */
+  .gr-actions{ display:flex; gap:.6rem; flex-wrap:wrap; margin:.4rem 0 0 auto; }
   .gr-btn{
     appearance:none; border:1px solid var(--border-light);
     background:var(--accent); color:#fff; font-weight:800; font-size:.95rem;
@@ -151,8 +150,6 @@
   }
 </style>
 {% endblock %}
-
-
 
 {% block page_banner %}
   <div class="admin-bar">Gráficas (BETA)</div>
@@ -210,6 +207,61 @@
       api_metrics_activos: "{{ api_activos_url|escapejs }}",
       api_metrics_histograma: "{{ api_hist_url|escapejs }}"
     };
+  </script>
+
+  <!-- ===== Tema y mejoras visuales para ECharts (no cambia tu lógica) ===== -->
+  <script>
+  (function () {
+    if (!window.echarts) return;
+
+    /* util para truncar etiquetas muy largas en ejes */
+    function ellipsis(v, max){ v = (v ?? '').toString(); return v.length > max ? v.slice(0, max-1) + '…' : v; }
+
+    /* Registrar tema coherente con el dashboard */
+    echarts.registerTheme('millennials', {
+      color: ['#3b82f6', '#c62828', '#136f36', '#f59e0b', '#8b5cf6'],
+      textStyle: { color: '#e5ecf6', fontFamily: "Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial" },
+      grid: { top: 30, right: 16, bottom: 26, left: 40, containLabel: true },
+      tooltip: {
+        backgroundColor: 'rgba(15,23,42,.95)',
+        borderColor: 'rgba(255,255,255,.12)',
+        textStyle: { color: '#e5ecf6' },
+        padding: 10,
+        extraCssText: 'box-shadow:0 .75rem 1.5rem rgba(0,0,0,.35);backdrop-filter:blur(2px)'
+      },
+      legend: {
+        textStyle: { color: '#e5ecf6', fontWeight: 700 },
+        itemWidth: 10, itemHeight: 10, icon: 'circle'
+      },
+      categoryAxis: {
+        axisLine: { lineStyle: { color: 'rgba(255,255,255,.12)' } },
+        splitLine: { show: true, lineStyle: { color: 'rgba(255,255,255,.06)' } },
+        axisLabel: {
+          color: '#cbd5e1',
+          fontWeight: 700,
+          margin: 10,
+          overflow: 'truncate',
+          width: 90,
+          formatter: function (v){ return ellipsis(v, 16); }
+        }
+      },
+      valueAxis: {
+        axisLine: { lineStyle: { color: 'rgba(255,255,255,.12)' } },
+        splitLine: { lineStyle: { color: 'rgba(255,255,255,.08)' } },
+        axisLabel: { color: '#cbd5e1', fontWeight: 700, margin: 8 }
+      }
+    });
+
+    /* Si tu JS no pasa tema a echarts.init, forzamos el nuestro sin romper nada */
+    const _origInit = echarts.init;
+    echarts.init = function(dom, theme, opts){
+      return _origInit.call(this, dom, theme || 'millennials', opts);
+    };
+
+    /* Exponemos por si tu archivo externo quiere reutilizar */
+    window.GR_EC_THEME = 'millennials';
+    window.GR_ELLIPSIS = ellipsis;
+  })();
   </script>
 
   <script src="{% static 'core/js/graficas_reportes.js' %}"></script>
