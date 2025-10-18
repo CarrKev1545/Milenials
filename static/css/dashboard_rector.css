@@ -1,0 +1,39 @@
+/* === Forzar 4 tarjetas en la primera fila (desktop) === */
+.home-cards{
+  display:grid;               /* por si en tu hoja ya era flex u otro */
+  gap: 2rem;
+}
+
+@media (min-width: 1200px){    /* ~ ≥ 1200px */
+  .home-cards{
+    grid-template-columns: repeat(4, 1fr);  /* 4 columnas */
+  }
+}
+
+/* Escalas agradables para tablets y móviles */
+@media (min-width: 768px) and (max-width: 1199.98px){
+  .home-cards{
+    grid-template-columns: repeat(2, 1fr);  /* 2 x 2 */
+  }
+}
+@media (max-width: 767.98px){
+  .home-cards{
+    grid-template-columns: 1fr;             /* una por fila */
+  }
+}
+
+/* Asegura que cada tarjeta no imponga un ancho mínimo que rompa el grid */
+.home-card{
+  width: 100%;
+  min-width: 0;           /* evita que un width interno fuerce salto de línea */
+}
+
+/* Mantén las “cajas negras” cuadradas sin crecer demasiado */
+.home-card .card-box{
+  aspect-ratio: 1 / 1;    /* cuadrado perfecto */
+}
+
+/* Si tus tiles eran muy grandes y por eso no cabían 4, reduce un pelín el padding */
+.home-card .label{
+  margin-top: 1rem;
+}
