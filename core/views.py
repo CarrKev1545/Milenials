@@ -4103,7 +4103,7 @@ Este mensaje fue enviado a: {email}.
             html_message=cuerpo_html,
         )
         messages.success(request, "Enviamos un correo con las cuentas asociadas a ese email.")
-        return redirect("login")
+        return redirect("forgot_password")
 
     return render(request, "core/forgot_password.html")
 
