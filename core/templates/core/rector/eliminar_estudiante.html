@@ -134,20 +134,24 @@
     box-shadow:0 .8rem 1.6rem var(--shadow-deep), inset 0 .02rem .35rem rgba(255,255,255,.04);
     backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
   }
-  #preview .card-body{ padding:1.1rem 1.25rem; }
+  #preview .card-body{ padding:1.1rem 1.25rem; display: grid; }
 
   #preview h6{
     font-size:.92rem;
     letter-spacing:.25px;
+    margin:0 0 .85rem !important;     /* quitamos inline-block y usamos grid */
     color:#cbd5e1;
     background:rgba(255,255,255,.06);
     border:1px solid var(--border-light);
     border-radius:999rem;
     padding:.38rem .8rem;
-    display:table;                      
-    margin:0 auto .85rem !important;    
-    text-align:center;                  
+    justify-self:center;                 
   }
+
+  #preview .card-body .row{
+  justify-self:stretch;
+  width:100%;
+}
 
   /* Grid responsive del contenido del resumen (anula .row de Bootstrap) */
   #preview .row{
