@@ -4044,7 +4044,8 @@ def forgot_password_view(request):
         email = (request.POST.get("email") or "").strip().lower()
         if not email:
             messages.error(request, "Ingresa el correo registrado.")
-            return redirect("forgot_password")
+            # Volvemos a la MISMA plantilla para que el mensaje se muestre aquí
+            return render(request, "core/forgot_password.html")
 
         with connection.cursor() as cur:
             cur.execute("""
@@ -4061,12 +4062,12 @@ def forgot_password_view(request):
 
         if not rows:
             messages.error(request, "El correo ingresado no está registrado.")
-            return redirect("forgot_password")
+            return render(request, "core/forgot_password.html")
 
-        # Construir listado de cuentas
+        # Construcción de líneas (sin cambios)
         lineas_txt, lineas_html = [], []
         for (nombre, apellidos, usuario, rol, email_db, sede, password_plain, password_hash) in rows:
-            clave = password_plain or password_hash  # ⚠️ enviarás texto si existe; si no, el hash
+            clave = password_plain or password_hash
             lineas_txt.append(
                 f"- Usuario: {usuario} | Rol: {rol} | Sede: {sede} | Contraseña: {clave}"
             )
@@ -4102,10 +4103,14 @@ Este mensaje fue enviado a: {email}.
             fail_silently=False,
             html_message=cuerpo_html,
         )
-        messages.success(request, "Enviamos un correo con las cuentas asociadas a ese email.")
-        return redirect("forgot_password")
 
+        messages.success(request, "Enviamos un correo con las cuentas asociadas a ese email.")
+        # Importante: render directo para consumir el mensaje AQUÍ y no en otra vista
+        return render(request, "core/forgot_password.html")
+
+    # GET
     return render(request, "core/forgot_password.html")
+
 
 def _es_docente(user):
     if not getattr(user, "is_authenticated", False):
