@@ -10,21 +10,19 @@
   @media (max-width:48em){ :root{font-size:15px} }
   @media (max-width:36em){ :root{font-size:14px} }
 
-  /* ===== Contenedor principal (alineado al centro) ===== */
+  /* ===== Layout general del módulo ===== */
   .del{ width:100%; max-width:52rem; margin:0 auto; padding:1.25rem; }
+  .del-wrap{ position:relative; padding-top:2.35rem; } /* +aire para el título */
 
-  /* Marco trasero grande (fondo translúcido) */
-  .del-wrap{ position:relative; padding-top:2.1rem; }
   .del-wrap::before{
     content:""; position:absolute; inset:-1.25rem -1.25rem;
     border-radius:1.35rem;
-    background:linear-gradient(180deg, rgba(12,12,12,.72), rgba(12,12,12,.82));
+    background:linear-gradient(180deg, rgba(12,12,12,.70), rgba(12,12,12,.84));
     border:1px solid rgba(255,255,255,.06);
     box-shadow:0 1.1rem 2.2rem rgba(0,0,0,.45), inset 0 .05rem .5rem rgba(255,255,255,.035);
     z-index:0; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
   }
 
-  /* Tarjeta principal */
   .del-card{
     position:relative; z-index:1;
     color:#e7eef8;
@@ -32,37 +30,40 @@
     border:1px solid rgba(255,255,255,.08);
     border-radius:1.1rem;
     box-shadow:0 .8rem 1.6rem rgba(0,0,0,.38), inset 0 .02rem .35rem rgba(255,255,255,.04);
-    padding:1.35rem;
+    padding:1.35rem 1.35rem 1.1rem;
     backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
   }
 
-  /* Título en badge */
+  /* ===== Título (badge) mejor equilibrado ===== */
   .del-badge{
-    position:absolute; left:50%; top:0; transform:translate(-50%,-95%); /* Ajusta -95% si quieres bajarlo/subirlo */
+    position:absolute; left:50%; top:0; transform:translate(-50%,-88%);
     display:inline-block; background:#b11a1a; color:#fff;
     padding:.78rem 1.85rem; border-radius:1rem; font-weight:800;
-    font-size:1.22rem; letter-spacing:.3px; text-shadow:0 1px 0 rgba(0,0,0,.25);
-    box-shadow:0 .9rem 1.5rem rgba(0,0,0,.38), inset 0 -.28rem .68rem rgba(0,0,0,.18);
+    font-size:1.22rem; letter-spacing:.3px;
+    text-shadow:0 1px 0 rgba(0,0,0,.25);
+    box-shadow:
+      0 .9rem 1.5rem rgba(0,0,0,.38),
+      inset 0 -.28rem .68rem rgba(0,0,0,.18),
+      0 0 0 .25rem rgba(177,26,26,.12); /* halo suave */
     white-space:nowrap; z-index:2;
   }
 
-  /* Grid del formulario */
+  /* ===== Grid del formulario ===== */
   .del-form{ display:grid; gap:1rem; grid-template-columns:1fr; }
 
-  /* Campo con icono a la izquierda */
+  /* ===== Campo con icono ===== */
   .del-field{
     position:relative; display:flex; align-items:center;
-    height:3.9rem; border-radius:.95rem; background:#fff;
+    height:3.85rem; border-radius:.95rem; background:#fff;
     border:1px solid rgba(0,0,0,.08);
     padding:0 .95rem 0 3rem;
     box-shadow:0 .65rem 1.3rem rgba(0,0,0,.22), inset 0 .06rem .22rem rgba(0,0,0,.06);
-    transition: box-shadow .15s ease, border-color .15s ease;
+    transition: box-shadow .15s ease, border-color .15s ease, transform .08s ease;
   }
   .del-ico{
     position:absolute; left:.95rem; top:50%; transform:translateY(-50%);
     color:#0f172a; opacity:.9; font-size:1.08rem;
   }
-  /* Neutraliza Bootstrap dentro del wrapper para que se vea como en Planillas */
   .del-field .form-control{
     border:0 !important; background:transparent !important;
     box-shadow:none !important; outline:0 !important;
@@ -72,25 +73,63 @@
   .del-field:has(.form-control:focus-visible){
     box-shadow:0 0 0 .22rem rgba(177,26,26,.16), 0 .65rem 1.3rem rgba(0,0,0,.22);
     border-color:rgba(177,26,26,.32);
+    transform:translateY(-1px);
   }
+  .del-help{ opacity:.85; font-size:.92rem; margin-top:.35rem }
 
-  .del-help{ opacity:.85; font-size:.92rem; margin-top:.25rem }
-
-  /* Acciones en 3 columnas (Buscar, Limpiar, Eliminar) */
-  .del-actions{ display:grid; gap:.85rem; grid-template-columns:1fr 1fr 1fr; }
+  /* ===== Acciones (3 botones iguales) ===== */
+  .del-actions{
+    display:grid; gap:.85rem; grid-template-columns:repeat(3, 1fr);
+    margin-top:.2rem;
+  }
   @media (max-width:36em){ .del-actions{ grid-template-columns:1fr; } }
+
   .del-actions .btn{
     height:3rem; border-radius:999rem; border:1px solid rgba(255,255,255,.07);
     font-weight:800; font-size:1rem; color:#fff !important;
-    transition: transform .12s ease, box-shadow .15s ease, filter .15s ease;
+    transition: transform .12s ease, box-shadow .15s ease, filter .15s ease, opacity .12s ease;
   }
-  .btn-find{ background:#1f3a8a !important; box-shadow:0 .8rem 1.6rem rgba(31,58,138,.32), inset 0 -.18rem .55rem rgba(0,0,0,.18); }
-  .btn-clear{ background:#6b7280 !important; box-shadow:0 .8rem 1.6rem rgba(107,114,128,.32), inset 0 -.18rem .55rem rgba(0,0,0,.18); }
+  .btn-find{ background:#2746a6 !important; box-shadow:0 .8rem 1.6rem rgba(39,70,166,.30), inset 0 -.18rem .55rem rgba(0,0,0,.18); }
+  .btn-clear{ background:#6b7280 !important; box-shadow:0 .8rem 1.6rem rgba(107,114,128,.30), inset 0 -.18rem .55rem rgba(0,0,0,.18); }
   .btn-danger{ background:#b11a1a !important; box-shadow:0 .8rem 1.6rem rgba(156,15,16,.32), inset 0 -.18rem .55rem rgba(0,0,0,.18); }
-  .del-actions .btn:hover{ transform:translateY(-.04rem); filter:saturate(1.04); }
 
-  /* Mensajes dentro de la tarjeta */
-  .del-messages .alert{ border-radius:.75rem; }
+  .del-actions .btn:hover{ transform:translateY(-.04rem); filter:saturate(1.05); }
+  .del-actions .btn:active{ transform:translateY(.02rem); }
+  .del-actions .btn:disabled{ opacity:.55; filter:grayscale(.1); cursor:not-allowed; }
+
+  /* ===== Mensajes (Django messages) ===== */
+  .del-messages .alert{ border-radius:.75rem; margin-bottom:.5rem; }
+
+  /* ===== Resumen del estudiante (glass + chip) ===== */
+  #preview .card{
+    background:linear-gradient(180deg, rgba(15,23,42,.65), rgba(15,23,42,.85));
+    color:#e5edf8; border:1px solid rgba(255,255,255,.06);
+    border-radius:1rem; overflow:hidden;
+    box-shadow:0 .8rem 1.6rem rgba(0,0,0,.35), inset 0 .02rem .35rem rgba(255,255,255,.04);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  }
+  #preview .card-body{ padding:1rem 1.1rem; }
+
+  #preview h6{
+    font-size:.9rem; letter-spacing:.25px; margin-bottom:.75rem !important;
+    color:#cbd5e1;
+    display:inline-block; background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.08); border-radius:999rem;
+    padding:.35rem .75rem;
+  }
+
+  #preview .row > div > div{
+    padding:.25rem 0; border-bottom:1px dashed rgba(255,255,255,.07);
+  }
+  #preview .row > div > div:last-child{ border-bottom:0; }
+
+  /* Etiquetas en negrita con mejor contraste */
+  #preview strong{ color:#f1f5f9; font-weight:800; }
+
+  /* Reduce micro-movimiento para accesibilidad */
+  @media (prefers-reduced-motion: reduce){
+    .del-field, .del-actions .btn { transition:none !important; }
+  }
 </style>
 {% endblock %}
 
