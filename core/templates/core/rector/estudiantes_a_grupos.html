@@ -1,357 +1,267 @@
 {% extends "core/base_dashboard.html" %}
 {% load static %}
 
-{% block title %}Estudiante a grupos{% endblock %}
+{% block title %}Planillas — Estudiantes activos{% endblock %}
 
 {% block extra_css %}
 <style>
-  /* Escala base rem (fluida) */
-  :root { font-size: 16px; }
-  @media (max-width: 75em){ :root { font-size: 15px; } }
-  @media (max-width: 62em){ :root { font-size: 14px; } }
-  @media (max-width: 48em){ :root { font-size: 13px; } }
-  @media (max-width: 36em){ :root { font-size: 12px; } }
+  /* Escala consistente con 'registro_estudiantes' */
+  :root { font-size:16px; }
+  @media (max-width:75em){ :root{ font-size:15px; } }
+  @media (max-width:62em){ :root{ font-size:14px; } }
+  @media (max-width:48em){ :root{ font-size:13px; } }
+  @media (max-width:36em){ :root{ font-size:12px; } }
 
-  /* Layout general (reutiliza el patrón del módulo rector) */
-  .re{ width:100%; max-width:70rem; margin:0 auto; padding:1rem; }
-  .re-title{ text-align:center; font-weight:800; font-size:1.5rem; margin-bottom:1.25rem; }
+  /* Contenedor y título */
+  .pl      { width:100%; max-width:52rem; margin:0 auto; padding:1rem; }
+  .pl-title{ text-align:center; font-weight:800; font-size:1.5rem; margin-bottom:1.25rem; }
 
-  .re-wrap{ display:grid; grid-template-columns:1fr 2fr; gap:1.25rem; align-items:start; }
-  @media (max-width:56.25em){ .re-wrap{ grid-template-columns:1fr; } }
-
-  /* Avatar */
-  .re-left{ display:flex; justify-content:center; }
-  .re-avatar{
-    width:6.25rem; height:6.25rem; border-radius:50%;
-    display:grid; place-items:center; background:#0c0c0c;
-    box-shadow:0 .75rem 1.5rem rgba(0,0,0,.35), inset 0 -.5rem 1rem rgba(0,0,0,.2);
-  }
-  .re-avatar i{ font-size:3rem; color:#fff; filter:drop-shadow(0 .5rem 1rem rgba(0,0,0,.4)); }
-
-  /* Card derecha */
-  .re-right{
-    background:#0b1220; color:#e5ecf6;
-    border-radius:1rem; padding:1.25rem;
-    border:1px solid rgba(255,255,255,.08);
+  /* Tarjeta centrada */
+  .pl-card{
+    background:#0b1220; border-radius:1rem; color:#e5ecf6;
+    padding:1.25rem; border:1px solid rgba(255,255,255,.08);
     box-shadow:0 .75rem 1.5rem rgba(0,0,0,.35);
+    margin:0 auto;
   }
 
-  /* Formulario */
-  .re-form{ display:grid; grid-template-columns:1fr; gap:1rem; }
-  @media (min-width:56.25em){
-    .re-form{ grid-template-columns:repeat(2,1fr); }
-    .re-field--span-2{ grid-column:1/-1; }
-  }
+  /* Formulario (inputs tipo “registro”) */
+  .pl-form{ display:grid; gap:1rem; grid-template-columns:1fr; }
+  @media (min-width:56.25em){ .pl-form{ grid-template-columns:repeat(2,1fr); } }
 
-  .re-field{
+  .pl-field{
     position:relative; display:flex; align-items:center;
-    height:4rem; border-radius:.875rem; background:#fff; color:#111;
-    border:1px solid rgba(0,0,0,.06);
+    height:3.75rem; border-radius:.875rem;
+    background:#fff; border:1px solid rgba(0,0,0,.08);
     box-shadow:0 .625rem 1.25rem rgba(0,0,0,.22);
     padding:0 .875rem 0 2.75rem;
   }
-  .re-ico{
+  .pl-ico{
     position:absolute; left:.875rem; top:50%; transform:translateY(-50%);
     color:#111; opacity:.9;
   }
-  .re-caret{
-    position:absolute; right:.625rem; top:50%; transform:translateY(-50%);
-    color:#111; opacity:.85; pointer-events:none;
+  .pl-field select{
+    width:100%; border:none; outline:none; background:transparent;
+    font-weight:700; color:#111; font-size:1rem; appearance:none;
   }
+  .pl-field select:disabled{ opacity:.6; }
 
-  .re-field select,
-  .re-field input{
-    appearance:none; width:100%; border:none; outline:none; background:transparent;
-    color:#111; font-weight:700; font-size:1rem;
+  /* Botones */
+  .pl-actions{ display:grid; gap:.75rem; grid-template-columns:1fr; margin-top:.5rem; }
+  @media (min-width:33.75em){ .pl-actions{ grid-template-columns:repeat(2,1fr); } }
+  .pl-actions .btn{
+    height:2.75rem; border-radius:999rem; border:none; cursor:pointer;
+    font-weight:800; color:#fff; transition:.15s transform ease, .15s box-shadow ease;
   }
-  .re-field input::placeholder{ color:#666; font-weight:600; }
-
-  /* Estados dependientes */
-  .is-disabled{ opacity:.6; cursor:not-allowed; }
-
-  /* Acciones */
-  .re-actions{
-    display:grid; gap:.75rem; grid-template-columns:1fr; margin-top:1rem;
-  }
-  @media (min-width:33.75em){ .re-actions{ grid-template-columns:repeat(2,1fr); } }
-  .btn{
-    height:2.75rem; border:none; border-radius:999rem; cursor:pointer; font-weight:800; color:#fff;
-    background:var(--accent,#c62828);
-    box-shadow:0 .75rem 1.5rem rgba(156,15,16,.35);
-    transition:.15s transform ease, .15s box-shadow ease;
-  }
-  .btn:hover{ transform:translateY(-.125rem); box-shadow:0 1rem 2rem rgba(156,15,16,.45); }
-
-  /* Mensajes (compatibles con las clases que ya usas en el módulo) */
-  .re-msg{ margin:.5rem 0; padding:.6rem .9rem; border-radius:.8rem; font-weight:700; }
-  .re-msg--ok{ background:#065f46; color:#d1fae5; }
-  .re-msg--err{ background:#7f1d1d; color:#fee2e2; }
-
-  /* Toast mínimo reutilizable */
-  .toast{
-    position:fixed; right:1rem; bottom:1rem; z-index:1000;
-    background:#111827; color:#fff; padding:.625rem .75rem; border-radius:.625rem;
-    box-shadow:0 .5rem 1.5rem rgba(0,0,0,.25); max-width:60ch;
-    opacity:1; transition:opacity .18s ease;
-  }
-  .toast.hidden{ opacity:0; pointer-events:none; }
-
-  /* Detalles solicitados */
-  #eg-nombre[readonly]{ font-style:italic; opacity:.95; }
+  .btn-pdf{ background:#b11a1a; box-shadow:0 .75rem 1.5rem rgba(156,15,16,.35); }
+  .btn-xls{ background:#136f36; box-shadow:0 .75rem 1.5rem rgba(19,111,54,.35); }
+  .pl-actions .btn:hover{ transform:translateY(-.125rem); box-shadow:0 1rem 2rem rgba(0,0,0,.45); }
 </style>
 {% endblock %}
 
 {% block content %}
-<section class="re" aria-labelledby="titulo-eg">
-  <h1 id="titulo-eg" class="re-title">Estudiante a grupos</h1>
+<section class="pl" aria-labelledby="titulo-pl">
+  <h1 id="titulo-pl" class="pl-title">Planillas — Estudiantes activos</h1>
 
-  <div class="re-wrap">
-    <!-- Columna izquierda: avatar -->
-    <aside class="re-left" aria-label="Ilustración estudiantes">
-      <div class="re-avatar" aria-hidden="true">
-        <i class="fa-solid fa-people-group"></i>
-      </div>
-    </aside>
+  <!-- Tarjeta centrada -->
+  <div class="pl-card">
+    <form class="pl-form" onsubmit="return false;" autocomplete="off">
+      <!-- Sede -->
+      <label class="pl-field" for="pl-sede">
+        <span class="pl-ico"><i class="fa-solid fa-building-columns"></i></span>
+        <select id="pl-sede">
+          <option value="">Todas</option>
+        </select>
+      </label>
 
-    <!-- Columna derecha: formulario -->
-    <div class="re-right">
+      <!-- Grado -->
+      <label class="pl-field" for="pl-grado">
+        <span class="pl-ico"><i class="fa-solid fa-layer-group"></i></span>
+        <select id="pl-grado" disabled>
+          <option value="">Todos</option>
+        </select>
+      </label>
 
-      {% if messages %}
-        {% for m in messages %}
-          <div class="re-msg {% if m.tags == 'success' %}re-msg--ok{% else %}re-msg--err{% endif %}">
-            {{ m }}
-          </div>
-        {% endfor %}
-      {% endif %}
+      <!-- Grupo -->
+      <label class="pl-field" for="pl-grupo">
+        <span class="pl-ico"><i class="fa-solid fa-people-group"></i></span>
+        <select id="pl-grupo" disabled>
+          <option value="">Todos</option>
+        </select>
+      </label>
+    </form>
 
-      <div class="re-card">
-        <form class="re-form" id="eg-form" method="post" autocomplete="off" novalidate>
-          {% csrf_token %}
-
-          <!-- Documento -->
-          <label class="re-field" for="eg-doc">
-            <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-id-card"></i></span>
-            <input id="eg-doc" name="documento" type="text" inputmode="numeric" pattern="[0-9]{4,30}"
-                   placeholder="Cédula de ciudadanía / Tarjeta de identidad"
-                   aria-label="Documento del estudiante" required>
-          </label>
-
-          <!-- Nombre (solo lectura) -->
-          <label class="re-field" for="eg-nombre">
-            <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
-            <input id="eg-nombre" name="nombre_estudiante" type="text"
-                   placeholder="Nombre del estudiante" aria-label="Nombre del estudiante"
-                   readonly>
-          </label>
-
-          <!-- Sede -->
-          <label class="re-field" for="eg-sede">
-            <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-building"></i></span>
-            <select id="eg-sede" name="sede_id" required aria-label="Seleccione la sede">
-              <option value="">Seleccione la sede</option>
-              {% for s in sedes %}
-                <option value="{{ s.id }}">{{ s.nombre }}</option>
-              {% endfor %}
-            </select>
-            <span class="re-caret" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
-          </label>
-
-          <!-- Grado (se activa al elegir sede) -->
-          <label class="re-field" for="eg-grado">
-            <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-graduation-cap"></i></span>
-            <select id="eg-grado" name="grado_id" required aria-label="Seleccione el grado" disabled>
-              <option value="">Seleccione el grado</option>
-            </select>
-            <span class="re-caret" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
-          </label>
-
-          <!-- Grupo (se activa al elegir grado) -->
-          <label class="re-field" for="eg-grupo">
-            <span class="re-ico" aria-hidden="true"><i class="fa-solid fa-users-rectangle"></i></span>
-            <select id="eg-grupo" name="grupo_id" required aria-label="Seleccione el grupo" disabled>
-              <option value="">Seleccione el grupo</option>
-            </select>
-            <span class="re-caret" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
-          </label>
-        </form>
-
-        <!-- Acciones -->
-        <div class="re-actions">
-          <button type="submit" form="eg-form" class="btn btn--danger">Asignar</button>
-          <button type="reset"  form="eg-form" class="btn btn--danger">Limpiar</button>
-        </div>
-      </div>
+    <div class="pl-actions">
+      <button type="button" id="btn-pdf" class="btn btn-pdf">Descargar PDF</button>
+      <button type="button" id="btn-xls" class="btn btn-xls">Descargar Excel</button>
     </div>
   </div>
 </section>
-
-<!-- Toast -->
-<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 {% endblock %}
 
 {% block extra_js %}
+{# ——— Lógica intacta ——— #}
+{% url 'api_sedes' as api_sedes_url %}
+{% url 'api_grados_por_sede' as api_grados_url %}
+{% url 'api_grupos_por_sede_grado' as api_grupos_url %}
+{% url 'planillas_export_pdf' as export_pdf_url %}
+{% url 'planillas_export_excel' as export_xls_url %}
+
 <script>
-(function(){
-  const $ = (s) => document.querySelector(s);
+(() => {
+  // ---- Elementos (IDs se conservan) ----
+  const selSede  = document.getElementById('pl-sede');
+  const selGrado = document.getElementById('pl-grado');
+  const selGrupo = document.getElementById('pl-grupo');
+  const btnPDF   = document.getElementById('btn-pdf');
+  const btnXLS   = document.getElementById('btn-xls');
 
-  const form     = $('#eg-form');
-  const csrfInp  = form.querySelector('input[name=csrfmiddlewaretoken]');
-  const docInp   = $('#eg-doc');
-  const nameInp  = $('#eg-nombre');
-  const sedeSel  = $('#eg-sede');
-  const gradoSel = $('#eg-grado');
-  const grupoSel = $('#eg-grupo');
+  // ---- Endpoints inyectados desde Django ----
+  const URL_SEDES  = "{{ api_sedes_url|escapejs }}";
+  const URL_GRADOS = "{{ api_grados_url|escapejs }}";
+  const URL_GRUPOS = "{{ api_grupos_url|escapejs }}";
 
-  /* ---------- helpers ---------- */
-  function showToast(msg, ok=true){
-    const el = $('#toast');
-    el.textContent = msg;
-    el.style.background = ok ? '#065f46' : '#7f1d1d';
-    el.classList.remove('hidden');
-    setTimeout(() => el.classList.add('hidden'), 2600);
-  }
-  function clearSelect(sel, ph){
-    sel.innerHTML = '';
-    const opt = document.createElement('option');
-    opt.value = ''; opt.textContent = ph;
-    sel.appendChild(opt);
-  }
-  function setDisabled(sel, on){
-    sel.disabled = !!on;
-    sel.classList.toggle('is-disabled', !!on);
-  }
-  async function fetchJSON(url){
-    const r = await fetch(url, {headers: {'X-Requested-With':'fetch'}});
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    return await r.json();
+  const URL_PDF = "{{ export_pdf_url|escapejs }}";
+  const URL_XLS = "{{ export_xls_url|escapejs }}";
+
+  // ---- Helpers ----
+  async function j(url){
+    const r = await fetch(url, { credentials:'same-origin' });
+    if(!r.ok) throw new Error(`${r.status} ${url}`);
+    return r.json();
   }
 
-  /* ---------- Documento → nombre (debounce + blur) ---------- */
-  let timer = null;
-  function sanitizeDoc(){
-    docInp.value = docInp.value.replace(/\D+/g, '').slice(0, 30);
-    if(!docInp.value) nameInp.value = '';
-  }
-  async function lookupByDoc(){
-    const doc = docInp.value.trim();
-    if(!doc){ nameInp.value=''; return; }
-    try{
-      const data = await fetchJSON("{% url 'api_estudiante_por_documento' %}?doc="+encodeURIComponent(doc));
-      nameInp.value = data.nombre_completo || `${data.nombre||''} ${data.apellidos||''}`.trim();
-    }catch{ nameInp.value=''; }
-  }
-  docInp.addEventListener('input', () => {
-    sanitizeDoc();
-    clearTimeout(timer);
-    if(docInp.value.length >= 5){ timer = setTimeout(lookupByDoc, 350); }
-    else{ nameInp.value=''; }
-  });
-  docInp.addEventListener('blur', lookupByDoc);
-
-  /* ---------- Cascada Sede → Grado → Grupo ---------- */
-  setDisabled(gradoSel, true);
-  setDisabled(grupoSel, true);
-
-  sedeSel.addEventListener('change', async () => {
-    clearSelect(gradoSel, 'Seleccione el grado');
-    clearSelect(grupoSel, 'Seleccione el grupo');
-    setDisabled(grupoSel, true);
-
-    const sede_id = sedeSel.value;
-    setDisabled(gradoSel, !sede_id);
-    if(!sede_id) return;
-
-    try{
-      const data = await fetchJSON("{% url 'api_grados_por_sede' %}?sede_id="+encodeURIComponent(sede_id));
-      const grados = Array.isArray(data) ? data : (data.grados || []);
-      grados.forEach(g=>{
-        const opt = document.createElement('option');
-        opt.value = g.id; opt.textContent = g.nombre;
-        gradoSel.appendChild(opt);
-      });
-    }catch(e){ console.warn('Error cargando grados:', e); }
-  });
-
-  gradoSel.addEventListener('change', async () => {
-    clearSelect(grupoSel, 'Seleccione el grupo');
-    setDisabled(grupoSel, true);
-
-    const sede_id  = sedeSel.value;
-    const grado_id = gradoSel.value;
-    if(!sede_id || !grado_id) return;
-
-    try{
-      const data = await fetchJSON("{% url 'api_grupos_por_sede_grado' %}?sede_id="+encodeURIComponent(sede_id)+"&grado_id="+encodeURIComponent(grado_id));
-      const grupos = Array.isArray(data) ? data : (data.grupos || []);
-      grupos.forEach(g=>{
-        const opt = document.createElement('option');
-        opt.value = g.id; opt.textContent = g.nombre;
-        grupoSel.appendChild(opt);
-      });
-      setDisabled(grupoSel, grupos.length === 0);
-    }catch(e){ console.warn('Error cargando grupos:', e); }
-  });
-
-  /* ---------- Envío ---------- */
-  form.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const payload = {
-      documento: docInp.value.trim(),
-      sede_id:   sedeSel.value,
-      grado_id:  gradoSel.value,
-      grupo_id:  grupoSel.value,
-    };
-    if(!payload.documento || !payload.sede_id || !payload.grado_id || !payload.grupo_id){
-      showToast('Completa documento, sede, grado y grupo.', false); return;
-    }
-    try{
-      const r = await fetch("{% url 'rector_estudiantes_a_grupos_asignar' %}", {
-        method:'POST',
-        headers:{
-          'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8',
-          'X-CSRFToken': csrfInp ? csrfInp.value : '',
-        },
-        body: new URLSearchParams(payload),
-      });
-      const data = await r.json();
-      if(data.ok){ showToast(data.msg || 'Estudiante asignado con éxito.'); }
-      else{ showToast(data.msg || 'No se pudo asignar.', false); }
-    }catch{ showToast('Error de red al asignar.', false); }
-  });
-
-  /* ---------- Reset ---------- */
-  form.addEventListener('reset', ()=>{
-    setTimeout(()=>{
-      clearSelect(gradoSel, 'Seleccione el grado');
-      clearSelect(grupoSel, 'Seleccione el grupo');
-      setDisabled(gradoSel, true);
-      setDisabled(grupoSel, true);
-      nameInp.value = '';
-    },0);
-  });
-
-  /* ---------- Accesibilidad: que toda la franja enfoque el control ---------- */
-  document.querySelectorAll('.re-field').forEach(label=>{
-    if(!label.hasAttribute('tabindex')) label.tabIndex = 0;
-    const ctl = label.querySelector('select, input');
-    if(!ctl) return;
-
-    label.addEventListener('click',(ev)=>{
-      if(ev.target === ctl) return;
-      if(ctl.disabled) return;
-      ev.preventDefault();
-      ctl.focus();
-      if(ctl.tagName === 'SELECT' && typeof ctl.showPicker === 'function'){ try{ ctl.showPicker(); }catch{} }
-    });
-    label.addEventListener('keydown',(ev)=>{
-      if(ev.key === 'Enter' || ev.key === ' '){
-        ev.preventDefault();
-        if(ctl.disabled) return;
-        ctl.focus();
-        if(ctl.tagName === 'SELECT' && typeof ctl.showPicker === 'function'){ try{ ctl.showPicker(); }catch{} }
+  // Normaliza arrays/objetos a [{id, nombre}]
+  function normalize(list) {
+    const arr = Array.isArray(list) ? list : [];
+    return arr.map(item => {
+      if (Array.isArray(item)) {
+        // [id, "Nombre"] o [id, "Sede - Grado - Grupo"]
+        return { id: item[0], nombre: String(item[1] ?? item[0]) };
       }
+      if (item && typeof item === 'object') {
+        const id = item.id ?? item.value ?? item.pk ?? item.key ?? '';
+        const nombre = item.nombre ?? item.name ?? item.text ?? item.label ?? item.titulo ?? String(id);
+        return { id, nombre };
+      }
+      // Primitivos
+      return { id: item, nombre: String(item) };
     });
-  });
+  }
+
+  // Extrae la lista de una respuesta flexible
+  function extractList(data) {
+    if (!data) return [];
+    // claves comunes
+    if (Array.isArray(data.sedes))  return normalize(data.sedes);
+    if (Array.isArray(data.grados)) return normalize(data.grados);
+    if (Array.isArray(data.grupos)) return normalize(data.grupos);
+    if (Array.isArray(data.results))return normalize(data.results);
+    if (Array.isArray(data))        return normalize(data);
+    // objeto con índices numéricos -> conviértelo
+    return normalize(Object.values(data));
+  }
+
+  function fill(select, placeholder, items) {
+    select.innerHTML = '';
+    const ph = document.createElement('option');
+    ph.value = ''; ph.textContent = placeholder;
+    select.appendChild(ph);
+    items.forEach(({id, nombre}) => {
+      const o = document.createElement('option');
+      o.value = id; o.textContent = nombre;
+      select.appendChild(o);
+    });
+  }
+
+  function resetSelect(select, placeholder) {
+    fill(select, placeholder, []);
+    select.disabled = true;
+  }
+
+  function enable(select, on=true) {
+    select.disabled = !on;
+  }
+
+  // ---- Carga Sedes ----
+  async function loadSedes() {
+    try{
+      const data = await j(URL_SEDES);
+      const sedes = extractList(data);
+      console.debug('SEDES ->', sedes, data);
+      fill(selSede, 'Todas', sedes);
+      enable(selSede, true);
+    }catch(e){
+      console.warn('Sedes:', e);
+      resetSelect(selSede, 'Todas');
+    }
+  }
+
+  // ---- Carga Grados (depende de sede) ----
+  async function loadGrados() {
+    const sede = selSede.value;
+    // reset dependientes
+    resetSelect(selGrado, 'Todos');
+    resetSelect(selGrupo, 'Todos');
+    if (!sede) return;
+
+    try{
+      const qs = new URLSearchParams({ sede_id: sede, sede: sede }); // enviamos ambos nombres
+      const data = await j(`${URL_GRADOS}?${qs.toString()}`);
+      const grados = extractList(data);
+      console.debug('GRADOS ->', grados, data);
+      fill(selGrado, 'Todos', grados);
+      enable(selGrado, grados.length > 0);
+    }catch(e){
+      console.warn('Grados:', e);
+    }
+  }
+
+  // ---- Carga Grupos (depende de sede+grado) ----
+  async function loadGrupos() {
+    const sede  = selSede.value;
+    const grado = selGrado.value;
+    resetSelect(selGrupo, 'Todos');
+    if (!sede || !grado) return;
+
+    try{
+      const qs = new URLSearchParams({
+        sede_id: sede, sede: sede,
+        grado_id: grado, grado: grado
+      });
+      const data = await j(`${URL_GRUPOS}?${qs.toString()}`);
+      const grupos = extractList(data);
+      console.debug('GRUPOS ->', grupos, data);
+      fill(selGrupo, 'Todos', grupos);
+      enable(selGrupo, grupos.length > 0);
+    }catch(e){
+      console.warn('Grupos:', e);
+    }
+  }
+
+  // ---- Descargas ----
+  function openExport(baseUrl){
+    const p = new URLSearchParams();
+    const add = (k,v) => { if (v) p.append(k, v); };
+
+    if (selSede.value)  { add('sede_id', selSede.value);  add('sede',  selSede.value); }
+    if (selGrado.value) { add('grado_id', selGrado.value); add('grado', selGrado.value); }
+    if (selGrupo.value) { add('grupo_id', selGrupo.value); add('grupo', selGrupo.value); }
+
+    const url = baseUrl + (p.toString() ? `?${p}` : '');
+    console.debug('EXPORT URL ->', url);   // para verificar en consola
+    window.open(url, '_blank', 'noopener');
+  }
+
+  // Eventos
+  btnPDF.addEventListener('click', () => openExport(URL_PDF));
+  btnXLS.addEventListener('click', () => openExport(URL_XLS));
+  selSede .addEventListener('change', loadGrados);
+  selGrado.addEventListener('change', loadGrupos);
+
+  // Init
+  resetSelect(selGrado, 'Todos');
+  resetSelect(selGrupo, 'Todos');
+  loadSedes().then(loadGrados);
 })();
 </script>
 {% endblock %}
