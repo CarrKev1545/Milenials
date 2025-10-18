@@ -143,6 +143,37 @@
     .tabla th:nth-child(2), .tabla td:nth-child(2){display:none}
     .tabla th:nth-child(1){width:auto}
   }
+  /* ===== FIXES VISUALES (no lógica) ===== */
+
+  /* 1) Ocultar la “inicial” redonda */
+  .avatar{ display:none !important; }
+
+  /* Reacomodo del nombre cuando no hay avatar */
+  .alum{ gap:.35rem !important; align-items:flex-start !important; }
+  .alum > span{
+    white-space:normal !important;      /* permite varias líneas */
+    word-break:break-word !important;   /* rompe si hay apellidos larguísimos */
+    overflow-wrap:anywhere !important;  /* asegura el salto en cualquier punto */
+    line-height:1.2;
+  }
+
+  /* 2) Asegurar que el nombre no se corte por ancho/solape */
+  .tabla{ table-layout:auto !important; } /* deja que el navegador calcule el ancho */
+  .tabla th:nth-child(1){ width:auto !important; }     /* 1ª columna flexible */
+  .tabla th:nth-child(2){ width:18ch !important; }     /* documento compacto */
+  .tabla th:nth-child(3){ width:24ch !important; }     /* botones caben bien */
+
+  /* La celda fija (1ª col) queda por encima y no la “tapan” las otras */
+  .tabla tbody td:first-child{
+    z-index:6 !important;                 /* sube prioridad de pintado */
+    background:#fff !important;           /* fondo sólido sin transparencias */
+    box-shadow:.0625rem 0 0 #e6ebf3 !important; /* separador sutil a la derecha */
+    max-width:none !important;            /* sin límite artificial */
+  }
+
+  /* Ajuste de filas para que el alto crezca con varias líneas */
+  .tabla tbody td{ vertical-align:middle; }
+
 </style>
 {% endblock %}
 
