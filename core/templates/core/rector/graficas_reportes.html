@@ -5,107 +5,153 @@
 
 {% block extra_css %}
 <style>
-  :root {
-    --bg-dark: #0b1220;
-    --bg-card: #141c2e;
-    --border-light: rgba(255,255,255,.08);
-    --text-light: #e5ecf6;
-    --accent: #9c0f10;
-    --accent-hover: #800000;
+  /* ===== Paleta y escala base ===== */
+  :root{
+    font-size:16px;
+    --bg-dark:#0b1220;
+    --bg-card:#151826;                 /* carta interna */
+    --plate-grad-from:#0c0c0c;
+    --plate-grad-to:#111318;
+    --border-light:rgba(255,255,255,.08);
+    --text-light:#e5ecf6;
+    --ink:#0f172a;
+    --accent:#c62828;                  /* rojo proyecto */
+    --accent-2:#136f36;                /* verde auxiliar */
+    --accent-shadow:rgba(156,15,16,.35);
+    --shadow-deep:rgba(0,0,0,.38);
+    --shadow-deeper:rgba(0,0,0,.45);
+  }
+  @media (max-width:75em){ :root{ font-size:15px } }
+  @media (max-width:62em){ :root{ font-size:14.5px } }
+  @media (max-width:48em){ :root{ font-size:14px } }
+
+  /* ===== Wrapper con “backplate” amplio (como en otras vistas) ===== */
+  .gr-wrap{
+    max-width:70rem;
+    margin:0 auto;
+    padding:1.25rem;
+    position:relative;
+  }
+  .gr-wrap::before{
+    content:"";
+    position:absolute;
+    top:-2rem; right:-1.25rem; bottom:-1.25rem; left:-1.25rem;
+    border-radius:1.35rem;
+    background:linear-gradient(180deg, var(--plate-grad-from,.72), var(--plate-grad-to,.84));
+    background:linear-gradient(180deg, rgba(12,12,12,.70), rgba(12,12,12,.84));
+    border:1px solid var(--border-light);
+    box-shadow:0 1.1rem 2.2rem var(--shadow-deeper), inset 0 .05rem .5rem rgba(255,255,255,.035);
+    z-index:0; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
   }
 
-  .gr-wrap {
-    max-width: 68.75rem; /* 1100px */
-    margin: 0 auto;
-    padding: 1rem;
+  /* ===== Filtros / Selects ===== */
+  .gr-filtros{
+    position:relative; z-index:1;
+    display:grid; gap:1rem;
+    grid-template-columns:repeat(3, 1fr);
+    margin-bottom:1.1rem;
+  }
+  @media (max-width:56.25em){ .gr-filtros{ grid-template-columns:1fr; } }
+
+  .gr-field{
+    position:relative;
+    display:flex; align-items:center;
+    height:3.25rem; padding:0 1rem 0 3rem;
+    border-radius:.95rem;
+    background:#fff;
+    border:1px solid rgba(0,0,0,.08);
+    box-shadow:0 .65rem 1.3rem rgba(0,0,0,.22), inset 0 .06rem .22rem rgba(0,0,0,.06);
+    transition: box-shadow .15s ease, border-color .15s ease, transform .08s ease;
+  }
+  /* Icono a la izquierda para consistencia visual (usa tu HTML si ya tienes <i>) */
+  .gr-field::before{
+    content:"\f0ce"; /* fa-table as fallback */
+    font: normal 900 1.05rem/1 "Font Awesome 6 Free";
+    position:absolute; left:.95rem; top:50%; transform:translateY(-50%);
+    color:var(--ink); opacity:.9;
+  }
+  .gr-field:focus-within{
+    box-shadow:0 0 0 .22rem rgba(198,40,40,.16), 0 .65rem 1.3rem rgba(0,0,0,.22);
+    border-color:rgba(198,40,40,.32);
+    transform:translateY(-1px);
+  }
+  .gr-field select{
+    appearance:none; width:100%;
+    border:0; outline:0; background:transparent;
+    color:var(--ink); font-weight:700; font-size:1.02rem; cursor:pointer;
+  }
+  .gr-field select:disabled{ opacity:.6; cursor:not-allowed; }
+  .gr-field::after{
+    content:"▾"; position:absolute; right:.9rem; top:50%; transform:translateY(-50%);
+    color:var(--ink); opacity:.55; font-weight:700; pointer-events:none;
   }
 
-  .gr-filtros {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: .75rem;
-    margin-bottom: 1rem;
+  /* Menú del select */
+  select option{
+    background:var(--bg-card); color:var(--text-light);
   }
-  @media (max-width: 53.75rem) {
-    .gr-filtros { grid-template-columns: 1fr; }
+  select option:checked, select option:hover{
+    background:var(--accent); color:#fff;
   }
 
-  /* ---------- SELECTS ---------- */
-  .gr-field {
-    position: relative;
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: .75rem;
-    box-shadow: 0 .5rem 1rem rgba(0,0,0,.25);
-    height: 3rem;
-    display: flex;
-    align-items: center;
-    padding: 0 .75rem;
-    transition: border-color .2s, box-shadow .2s;
+  /* ===== Tarjetas/gráficas ===== */
+  .gr-grid{
+    position:relative; z-index:1;
+    display:grid; gap:1rem;
+    grid-template-columns:1fr;          /* móvil */
+  }
+  @media (min-width:56.25em){          /* ≥900px: 2 columnas */
+    .gr-grid{ grid-template-columns:repeat(2, 1fr); }
   }
 
-  .gr-field:hover {
-    border-color: var(--accent-hover);
-    box-shadow: 0 0 .5rem #800000;
+  .gr-card{
+    background:linear-gradient(180deg, rgba(9,16,32,.86), rgba(9,16,32,.92));
+    border:1px solid var(--border-light);
+    border-radius:1.1rem;
+    padding:1rem 1rem 1.15rem;
+    box-shadow:0 .8rem 1.6rem var(--shadow-deep), inset 0 .02rem .35rem rgba(255,255,255,.04);
+    color:var(--text-light);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
   }
 
-  .gr-field select {
-    flex: 1;
-    border: 0;
-    outline: 0;
-    background: transparent;
-    color: var(--text-light);
-    font-weight: 600;
-    font-size: 1rem;
-    appearance: none;
-    cursor: pointer;
+  .gr-title{
+    margin:0 0 .6rem;
+    font-weight:800; letter-spacing:.25px;
+    font-size:1.06rem; color:#f1f5f9;
+    display:flex; align-items:center; gap:.5rem;
+  }
+  .gr-title::before{
+    content:""; width:.5rem; height:.5rem; border-radius:999rem;
+    background:var(--accent);
+    box-shadow:0 0 .55rem var(--accent-shadow);
   }
 
-  .gr-field select:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  .chart{
+    width:100%;
+    height:clamp(16rem, 42vw, 24rem);   /* responde al ancho */
   }
 
-  /* Menú desplegable del select */
-  select option {
-    background-color: var(--bg-card);
-    color: var(--text-light);
+  /* ===== Botones de utilidad (si existieran) ===== */
+  .gr-actions{
+    display:flex; gap:.6rem; flex-wrap:wrap; margin:.4rem 0 0 auto;
   }
-
-  select option:checked,
-  select option:hover {
-    background-color: var(--accent);
-    color: #fff;
+  .gr-btn{
+    appearance:none; border:1px solid var(--border-light);
+    background:var(--accent); color:#fff; font-weight:800; font-size:.95rem;
+    height:2.6rem; padding:0 1rem; border-radius:999rem; cursor:pointer;
+    box-shadow:0 .8rem 1.6rem var(--accent-shadow), inset 0 -.18rem .55rem rgba(0,0,0,.18);
+    transition: transform .12s ease, filter .15s ease;
   }
+  .gr-btn:hover{ transform:translateY(-1px); filter:saturate(1.05); }
+  .gr-btn--ghost{ background:#374151; }
+  .gr-btn--ok{ background:var(--accent-2); }
 
-  /* ---------- TARJETAS Y GRÁFICOS ---------- */
-  .gr-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  .gr-card {
-    background: var(--bg-dark);
-    border: 1px solid var(--border-light);
-    border-radius: 1rem;
-    padding: 1rem;
-    box-shadow: 0 .75rem 1.5rem rgba(0,0,0,.35);
-    color: var(--text-light);
-  }
-
-  .gr-title {
-    font-weight: 800;
-    margin: 0 0 .5rem;
-    font-size: 1.05rem;
-  }
-
-  .chart {
-    width: 100%;
-    height: clamp(16rem, 45vw, 23.75rem);
+  @media (prefers-reduced-motion: reduce){
+    .gr-field, .gr-btn{ transition:none !important; }
   }
 </style>
 {% endblock %}
+
 
 
 {% block page_banner %}
