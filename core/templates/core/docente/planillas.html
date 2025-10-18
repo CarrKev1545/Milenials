@@ -3,228 +3,178 @@
 
 {% block extra_css %}
 <style>
+  /* ===== Variables y escala (igual al rector) ===== */
   :root{
-    /* escala base fluida */
-    font-size:16px;
-  }
-  @media (max-width:75em){ :root{ font-size:15px } }
-  @media (max-width:62em){ :root{ font-size:14.5px } }
-  @media (max-width:48em){ :root{ font-size:14px } }
-
-  /* ===== Paleta local (alineada al proyecto) ===== */
-  .pl{
+    font-size:16.5px;
     --bg-dark:#0b1220;
-    --plate-from:#0c0c0c;
-    --plate-to:#121622;
-    --text:#e5ecf6;
-    --muted:#cbd5e1;
-    --ink:#0f172a;
-    --border:rgba(255,255,255,.08);
-    --accent:#c62828;                 /* rojo principal */
+    --fg-light:#e5ecf6;
+    --ink:#111;
+    --border-light:rgba(255,255,255,.08);
+    --shadow-deep:rgba(0,0,0,.35);
+    --shadow-deeper:rgba(0,0,0,.45);
+    --field-border:rgba(0,0,0,.06);
+    --field-shadow:rgba(0,0,0,.22);
+    --accent:#c62828;
     --accent-shadow:rgba(156,15,16,.35);
-    --ok:#16a34a;
-    --ok-shadow:rgba(22,163,74,.35);
+  }
+  @media (max-width:75em){ :root{font-size:16px} }
+  @media (max-width:62em){ :root{font-size:15.5px} }
+  @media (max-width:48em){ :root{font-size:15px} }
+  @media (max-width:36em){ :root{font-size:14px} }
+
+  /* ===== Layout base de esta vista ===== */
+  .main{ display:block; padding:1.25rem; }
+  .main > h1.mb-3{
+    position:absolute; left:50%; top:0; transform:translate(-50%,-50%);
+    margin:0; background:var(--accent); color:#fff; font-weight:800;
+    padding:.85rem 1.95rem; border-radius:1rem; letter-spacing:.35px;
+    text-shadow:0 1px 0 rgba(0,0,0,.25);
+    box-shadow:0 .9rem 1.5rem var(--shadow-deeper), inset 0 -.3rem .7rem rgba(0,0,0,.18);
+    z-index:3; white-space:nowrap;
   }
 
-  /* ===== Backplate ancho con halo ===== */
-  .pl-wrap{
+  /* ===== Tarjeta/Backplate alrededor del <form> ===== */
+  .main form.row.g-2{
     position:relative;
-    width:100%;
-    max-width:70rem;
-    margin:0 auto;
-    padding:1.25rem;
-  }
-  .pl-wrap::before{
-    content:"";
-    position:absolute; inset:-1.25rem;
-    border-radius:1.35rem;
-    background:linear-gradient(180deg, rgba(12,12,12,.72), rgba(12,12,12,.84));
-    border:1px solid var(--border);
-    box-shadow:0 1.1rem 2.2rem rgba(0,0,0,.45), inset 0 .05rem .5rem rgba(255,255,255,.035);
-    backdrop-filter: blur(3px);
-    z-index:0;
-  }
-
-  /* ===== Tarjeta principal ===== */
-  .pl-card{
-    position:relative; z-index:1;
-    color:var(--text);
-    background:linear-gradient(180deg, rgba(9,16,32,.86), rgba(9,16,32,.92));
-    border:1px solid var(--border);
+    width:min(58rem, 92vw);
+    margin:3.75rem auto 0;        /* deja espacio al badge */
+    padding:1.35rem;
+    color:var(--fg-light);
+    background:linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.35));
+    border:1px solid var(--border-light);
     border-radius:1.1rem;
-    padding:1.25rem 1.25rem 1rem;
-    box-shadow:0 .9rem 1.6rem rgba(0,0,0,.45), inset 0 .02rem .35rem rgba(255,255,255,.04);
-    backdrop-filter: blur(5px);
+    box-shadow:0 1rem 1.9rem var(--shadow-deep), inset 0 .02rem .35rem rgba(255,255,255,.04);
+    backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+    z-index:2;
+  }
+  .main form.row.g-2::before{
+    content:""; position:absolute; inset:-2rem;
+    border-radius:1.6rem; z-index:-1;
+    background:linear-gradient(180deg, rgba(12,12,12,.70), rgba(12,12,12,.84));
+    border:1px solid var(--border-light);
+    box-shadow:0 1.6rem 2.6rem var(--shadow-deeper), inset 0 .06rem .55rem rgba(255,255,255,.04);
+    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
   }
 
-  /* ===== Badge / título ===== */
-  .pl-badge{
-    position:absolute; left:50%; top:0; transform:translate(-50%,-55%);
-    background:var(--accent); color:#fff; font-weight:800;
-    padding:.8rem 1.6rem; border-radius:999rem; letter-spacing:.3px;
-    box-shadow:0 .9rem 1.5rem var(--accent-shadow), inset 0 -.28rem .68rem rgba(0,0,0,.18);
-    white-space:nowrap;
+  /* ===== Campos (etiqueta + select) ===== */
+  .main .form-label{
+    display:block; font-weight:800; color:#cbd5e1; margin:.15rem .25rem .45rem;
   }
-  .pl-title{
-    margin-top:.6rem; text-align:center;
-    font-weight:800; font-size:1.35rem;
+  .main .form-select{
+    height:3.9rem; border-radius:.95rem; background:#fff; color:var(--ink);
+    border:1px solid var(--field-border);
+    box-shadow:0 .65rem 1.3rem var(--field-shadow), inset 0 .06rem .22rem rgba(0,0,0,.06);
+    padding:.625rem .95rem .625rem 3rem; font-weight:700; font-size:1.03rem;
+    appearance:none; position:relative;
   }
-
-  /* ===== Grid del formulario ===== */
-  .pl-form{ display:grid; gap:1rem; grid-template-columns:repeat(12,1fr); margin-top:.75rem; }
-  .pl-col{ grid-column:span 12; }
-  @media (min-width:48em){
-    .pl-col-md-3{ grid-column:span 4; }   /* 3 columnas en desktop (12/3=4) */
+  /* caret custom */
+  .main .form-select:not([multiple]){
+    background-image:linear-gradient(45deg, transparent 50%, #555 50%),
+                     linear-gradient(135deg, #555 50%, transparent 50%);
+    background-position: calc(100% - 1.05rem) 1.35rem, calc(100% - .65rem) 1.35rem;
+    background-size:.45rem .45rem, .45rem .45rem;
+    background-repeat:no-repeat;
   }
-
-  /* ===== Campos con icono y caret ===== */
-  .pl-field{
-    position:relative; display:flex; align-items:center;
-    height:3.25rem; border-radius:.95rem; background:#fff; color:var(--ink);
-    border:1px solid rgba(0,0,0,.08);
-    box-shadow:0 .65rem 1.3rem rgba(0,0,0,.22), inset 0 .06rem .22rem rgba(0,0,0,.06);
-    padding:0 .95rem 0 3rem;
-    transition: box-shadow .15s ease, border-color .15s ease, transform .08s ease;
+  /* icono izquierda */
+  .main .col-md-3{ position:relative; }
+  .main .col-md-3::before{
+    content:"\f03a"; /* fa-table por defecto */
+    font: normal 900 1.08rem/1 "Font Awesome 6 Free";
+    position:absolute; left:1.05rem; top:calc(2.25rem + .95rem); color:#111; opacity:.9;
+    pointer-events:none;
   }
-  .pl-field::before{
-    content:"\f19c"; /* fa-school como base */
-    font: normal 900 1.05rem/1 "Font Awesome 6 Free";
-    position:absolute; left:.95rem; top:50%; transform:translateY(-50%);
-    color:var(--ink); opacity:.9;
-  }
-  /* íconos distintos por campo */
-  #f_sede.pl-select + .pl-caret + .dummy{} /* marcador no usado, sólo para claridad */
-  #f_grado + .pl-caret::after{}            /* idem */
-
-  .pl-field select{
-    appearance:none; width:100%; border:0; outline:0; background:transparent;
-    color:var(--ink); font-weight:700; font-size:1.02rem; cursor:pointer;
-  }
-  .pl-field:focus-within{
-    box-shadow:0 0 0 .22rem rgba(198,40,40,.16), 0 .65rem 1.3rem rgba(0,0,0,.22);
-    border-color:rgba(198,40,40,.32);
-    transform:translateY(-1px);
-  }
-  .pl-caret{
-    position:absolute; right:.9rem; top:50%; transform:translateY(-50%); pointer-events:none;
-    color:var(--ink); opacity:.55; font-weight:700;
-  }
-  .pl-caret::after{ content:"▾"; }
-
-  /* etiquetas pequeñas (mantiene accesibilidad) */
-  .pl-label{
-    display:block; font-weight:800; color:#e2e8f0; margin:0 0 .35rem .25rem; font-size:.9rem;
+  /* focus rojo del patrón */
+  .main .form-select:focus{
+    border-color:rgba(198,40,40,.36);
+    box-shadow:0 0 0 .24rem rgba(198,40,40,.18), 0 .7rem 1.35rem var(--field-shadow);
   }
 
   /* ===== Acciones ===== */
-  .pl-actions{ display:grid; grid-template-columns:repeat(12,1fr); gap:1rem; margin-top:.5rem; }
-  .pl-actions .pl-col{ grid-column:span 12; }
-  @media (min-width:48em){
-    .pl-actions .pl-col{ grid-column:span 4; display:flex; align-items:end; gap:.75rem; }
+  .main .d-flex.align-items-end.gap-2{ margin-top:.25rem; }
+  .main .btn{
+    height:3rem; border-radius:999rem; border:1px solid var(--border-light);
+    font-weight:800; font-size:1rem; color:#fff; padding:0 1.25rem;
+    transition: transform .12s ease, box-shadow .15s ease, filter .15s ease;
   }
-
-  .btn-pill{
-    height:3rem; border-radius:999rem; border:1px solid var(--border);
-    color:#fff; font-weight:800; cursor:pointer;
-    transition: transform .12s ease, filter .15s ease;
-  }
-  .btn-pill:hover{ transform:translateY(-1px); filter:saturate(1.05); }
-
-  .btn-danger{
-    background:var(--accent);
+  .main .btn-outline-danger{
+    background:var(--accent); border-color:transparent !important;
     box-shadow:0 .8rem 1.6rem var(--accent-shadow), inset 0 -.18rem .55rem rgba(0,0,0,.18);
   }
-  .btn-success{
-    background:var(--ok);
-    box-shadow:0 .8rem 1.6rem var(--ok-shadow), inset 0 -.18rem .55rem rgba(0,0,0,.18);
+  .main .btn-outline-success{
+    background:#136f36; border-color:transparent !important;
+    box-shadow:0 .8rem 1.6rem rgba(19,111,54,.32), inset 0 -.18rem .55rem rgba(0,0,0,.18);
+  }
+  .main .btn:hover{ transform:translateY(-.06rem); filter:saturate(1.06) brightness(1.02); }
+  .main .btn:active{ transform:translateY(.02rem); }
+
+  /* ===== Responsive ===== */
+  @media (max-width:48em){
+    .main > h1.mb-3{ transform:translate(-50%,-85%); }
+    .main form.row.g-2{ margin-top:3.25rem; }
+    .main form.row.g-2::before{ inset:-1.25rem; }
   }
 
-  /* para que los selects no se achiquen */
-  .pl-actions .btn-pill{ width:100%; }
+  @media (prefers-reduced-motion: reduce){
+    .main .form-select, .main .btn{ transition:none !important; }
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<main class="main pl" role="main" aria-label="Planillas del docente">
-  <section class="pl-wrap">
-    <div class="pl-card">
-      <div class="pl-badge">Planillas</div>
-      <h1 class="pl-title">Planillas</h1>
+<main class="main">
+  <h1 class="mb-3">Planillas</h1>
 
-      {# 👉 El form sigue apuntando al INDEX; sin cambios de lógica #}
-      <form method="get"
-            action="{% url 'docente_planillas_index' %}"
-            class="pl-form"
-            autocomplete="off"
-            novalidate>
-
-        <!-- Sede -->
-        <div class="pl-col pl-col-md-3">
-          <label class="pl-label" for="f_sede">Sede</label>
-          <div class="pl-field">
-            <select id="f_sede" name="sede" class="form-select pl-select" onchange="this.form.submit()">
-              <option value="">Todas</option>
-              {% for id, nombre in sedes %}
-                <option value="{{ id }}" {% if sel_sede == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
-              {% endfor %}
-            </select>
-            <span class="pl-caret"></span>
-          </div>
-        </div>
-
-        <!-- Grado -->
-        <div class="pl-col pl-col-md-3">
-          <label class="pl-label" for="f_grado">Grado</label>
-          <div class="pl-field">
-            <select id="f_grado" name="grado" class="form-select" onchange="this.form.submit()">
-              <option value="">Todos</option>
-              {% for id, nombre in grados %}
-                <option value="{{ id }}" {% if sel_grado == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
-              {% endfor %}
-            </select>
-            <span class="pl-caret"></span>
-          </div>
-        </div>
-
-        <!-- Grupo -->
-        <div class="pl-col pl-col-md-3">
-          <label class="pl-label" for="f_grupo">Grupo</label>
-          <div class="pl-field">
-            <select id="f_grupo" name="grupo" class="form-select">
-              <option value="">Todos</option>
-              {% for id, label in grupos %}
-                <option value="{{ id }}" {% if sel_grupo == id|stringformat:'s' %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-            <span class="pl-caret"></span>
-          </div>
-        </div>
-
-        <!-- Botones (misma lógica: landing y nueva pestaña) -->
-        <div class="pl-actions pl-col pl-col-md-3">
-          <div class="pl-col">
-            <button class="btn-pill btn-danger w-100"
-                    type="submit"
-                    name="formato" value="pdf"
-                    formaction="{% url 'docente_planillas_export_landing' %}"
-                    formtarget="_blank">
-              PDF
-            </button>
-          </div>
-
-          <div class="pl-col">
-            <button class="btn-pill btn-success w-100"
-                    type="submit"
-                    name="formato" value="excel"
-                    formaction="{% url 'docente_planillas_export_landing' %}"
-                    formtarget="_blank">
-              Excel
-            </button>
-          </div>
-        </div>
-      </form>
+  {# 👉 El form ahora apunta al INDEX, NO al landing #}
+  <form method="get" action="{% url 'docente_planillas_index' %}" class="row g-2" autocomplete="off" novalidate>
+    <div class="col-md-3">
+      <label class="form-label" for="f_sede">Sede</label>
+      <select id="f_sede" name="sede" class="form-select" onchange="this.form.submit()">
+        <option value="">Todas</option>
+        {% for id, nombre in sedes %}
+          <option value="{{ id }}" {% if sel_sede == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
+        {% endfor %}
+      </select>
     </div>
-  </section>
+
+    <div class="col-md-3">
+      <label class="form-label" for="f_grado">Grado</label>
+      <select id="f_grado" name="grado" class="form-select" onchange="this.form.submit()">
+        <option value="">Todos</option>
+        {% for id, nombre in grados %}
+          <option value="{{ id }}" {% if sel_grado == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label" for="f_grupo">Grupo</label>
+      <select id="f_grupo" name="grupo" class="form-select">
+        <option value="">Todos</option>
+        {% for id, label in grupos %}
+          <option value="{{ id }}" {% if sel_grupo == id|stringformat:'s' %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-3 d-flex align-items-end gap-2">
+      {# 👉 Los botones sí van al landing y abren en otra pestaña #}
+      <button class="btn btn-outline-danger"
+              type="submit"
+              name="formato" value="pdf"
+              formaction="{% url 'docente_planillas_export_landing' %}"
+              formtarget="_blank">
+        PDF
+      </button>
+
+      <button class="btn btn-outline-success"
+              type="submit"
+              name="formato" value="excel"
+              formaction="{% url 'docente_planillas_export_landing' %}"
+              formtarget="_blank">
+        Excel
+      </button>
+    </div>
+  </form>
 </main>
 {% endblock %}
 
