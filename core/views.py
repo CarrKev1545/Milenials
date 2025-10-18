@@ -9,6 +9,9 @@ from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, HttpR
 from django.views.decorators.http import require_GET, require_POST
 from django.views.decorators.csrf import csrf_exempt
 
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
+
 # Utilidades Django
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.timezone import now
@@ -4042,19 +4045,30 @@ SHOW_PASSWORD_IN_EMAIL = False
 def forgot_password_view(request):
     if request.method == "POST":
         email = (request.POST.get("email") or "").strip().lower()
+
+        # 1) Validación de email
         if not email:
             messages.error(request, "Ingresa el correo registrado.")
             return redirect("forgot_password")
+        try:
+            validate_email(email)
+        except ValidationError:
+            messages.error(request, "El formato del correo no es válido.")
+            return redirect("forgot_password")
 
+        # 2) Buscar cuentas activas asociadas
         with connection.cursor() as cur:
             cur.execute("""
-                SELECT u.nombre, u.apellidos, u.usuario, u.rol, u.email,
-                       COALESCE(s.nombre, '—') AS sede,
-                       COALESCE(u.password_plain, '') AS password_plain,
-                       u.password_hash
+                SELECT u.nombre,
+                       u.apellidos,
+                       u.usuario,
+                       u.rol,
+                       u.email,
+                       COALESCE(s.nombre, '—') AS sede
                 FROM public.usuarios u
                 LEFT JOIN public.sedes s ON s.id = u.sede_id
-                WHERE LOWER(u.email) = %s AND u.activo = TRUE
+                WHERE LOWER(u.email) = %s
+                  AND u.activo = TRUE
                 ORDER BY u.apellidos, u.nombre, u.usuario
             """, [email])
             rows = cur.fetchall()
@@ -4063,48 +4077,66 @@ def forgot_password_view(request):
             messages.error(request, "El correo ingresado no está registrado.")
             return redirect("forgot_password")
 
-        # Construir listado de cuentas
-        lineas_txt, lineas_html = [], []
-        for (nombre, apellidos, usuario, rol, email_db, sede, password_plain, password_hash) in rows:
-            clave = password_plain or password_hash  # ⚠️ enviarás texto si existe; si no, el hash
-            lineas_txt.append(
-                f"- Usuario: {usuario} | Rol: {rol} | Sede: {sede} | Contraseña: {clave}"
-            )
-            lineas_html.append(
-                f"<li><b>Usuario:</b> {usuario} &nbsp; <b>Rol:</b> {rol} &nbsp; "
-                f"<b>Sede:</b> {sede} &nbsp; <b>Contraseña:</b> {clave}</li>"
-            )
+        # 3) Construir correo (sin contraseñas)
+        # rows[i] => (nombre, apellidos, usuario, rol, email_db, sede)
+        nombre, apellidos = rows[0][0], rows[0][1]
 
-        cuerpo_txt = f"""
-Estimado/a {rows[0][0]} {rows[0][1]},
+        lineas_txt = [
+            f"- Usuario: {r[2]} | Rol: {r[3]} | Sede: {r[5]}"
+            for r in rows
+        ]
+        lineas_html = [
+            f"<li><b>Usuario:</b> {r[2]} &nbsp; "
+            f"<b>Rol:</b> {r[3]} &nbsp; "
+            f"<b>Sede:</b> {r[5]}</li>"
+            for r in rows
+        ]
 
-Encontramos {len(rows)} cuenta(s) asociada(s) a este correo. Detalle:
-
-{chr(10).join(lineas_txt)}
-
-Este mensaje fue enviado a: {email}.
-"""
-        cuerpo_html = f"""
-<h2>Sistema Millennials</h2>
-<p>Estimado/a <strong>{rows[0][0]} {rows[0][1]}</strong>,</p>
-<p>Encontramos <strong>{len(rows)}</strong> cuenta(s) asociada(s) a este correo. Detalle:</p>
-<ul>
-  {''.join(lineas_html)}
-</ul>
-<p>Este mensaje fue enviado a: {email}.</p>
-"""
-
-        send_mail(
-            subject="Recordatorio de acceso — Sistema Millennials",
-            message=cuerpo_txt,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[email],
-            fail_silently=False,
-            html_message=cuerpo_html,
+        cuerpo_txt = (
+            f"Sistema Millennials\n\n"
+            f"Estimado/a {nombre} {apellidos},\n\n"
+            f"Encontramos {len(rows)} cuenta(s) asociada(s) a este correo. Detalle:\n\n"
+            + "\n".join(lineas_txt)
+            + "\n\n"
+              "Si no solicitaste este mensaje o necesitas restablecer tu contraseña, "
+              "contacta a soporte o utiliza el proceso de restablecimiento indicado por tu institución.\n"
+              f"Este mensaje fue enviado a: {email}.\n"
         )
-        messages.success(request, "Enviamos un correo con las cuentas asociadas a ese email.")
-        return redirect("login")
 
+        cuerpo_html = (
+            "<h2>Sistema Millennials</h2>"
+            f"<p>Estimado/a <strong>{nombre} {apellidos}</strong>,</p>"
+            f"<p>Encontramos <strong>{len(rows)}</strong> cuenta(s) asociada(s) a este correo. Detalle:</p>"
+            f"<ul>{''.join(lineas_html)}</ul>"
+            "<p>Si no solicitaste este mensaje o necesitas restablecer tu contraseña, "
+            "contacta a soporte o utiliza el proceso de restablecimiento indicado por tu institución.</p>"
+            f"<p>Este mensaje fue enviado a: {email}.</p>"
+        )
+
+        try:
+            send_mail(
+                subject="Recordatorio de acceso — Sistema Millennials",
+                message=cuerpo_txt,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                fail_silently=False,
+                html_message=cuerpo_html,
+            )
+        except Exception:
+            messages.error(
+                request,
+                "No pudimos enviar el correo en este momento. Intenta nuevamente más tarde."
+            )
+            return redirect("forgot_password")
+
+        # 4) Mostrar el aviso en la MISMA pantalla (PRG a forgot_password)
+        messages.success(
+            request,
+            "Enviamos un correo con las cuentas asociadas a ese email."
+        )
+        return redirect("forgot_password")
+
+    # GET → render de la misma pantalla
     return render(request, "core/forgot_password.html")
 
 def _es_docente(user):
