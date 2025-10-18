@@ -94,9 +94,10 @@
   .pl-actions .btn:hover{ transform:translateY(-.06rem); filter:saturate(1.06) brightness(1.02); }
   .pl-actions .btn:active{ transform:translateY(.02rem); }
 
-  /* Título (badge) — más arriba y con sombra suave */
+  /* Título (badge) — mejor separación vertical */
   .pl-badge{
-    position:absolute; left:50%; top:0; transform:translate(-50%,-115%); /* ↑ subido */
+    position:absolute; left:50%; top:0;
+    transform:translate(-50%,-85%);  /* antes: -115%  → ahora baja y no rompe */
     display:inline-block; background:#b11a1a; color:#fff;
     padding:.85rem 1.95rem;
     border-radius:1rem; font-weight:800;
@@ -119,11 +120,10 @@
 </style>
 {% endblock %}
 
-
 {% block content %}
 <section class="pl" aria-labelledby="titulo-pl">
   <div class="pl-wrap">
-    <div id="titulo-pl" class="pl-badge">Planillas</div>
+    <div id="titulo-pl" class="pl-badge">Plantillas</div>
 
     <div class="pl-card" role="group" aria-label="Filtros de exportación">
       <form class="pl-form" onsubmit="return false;" autocomplete="off">
