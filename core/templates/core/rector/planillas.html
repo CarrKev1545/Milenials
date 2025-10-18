@@ -5,117 +5,112 @@
 
 {% block extra_css %}
 <style>
-  /* ===== Escala tipográfica (un poco más grande en desktop) ===== */
-  :root{ font-size:18px; }
-  @media (max-width:75em){ :root{font-size:17px} }
-  @media (max-width:62em){ :root{font-size:16px} }
+  /* ===== Escala tipográfica moderada ===== */
+  :root{ font-size:16.5px; }              /* antes 18px */
+  @media (max-width:75em){ :root{font-size:16px} }
+  @media (max-width:62em){ :root{font-size:15.5px} }
   @media (max-width:48em){ :root{font-size:15px} }
   @media (max-width:36em){ :root{font-size:14px} }
 
-  /* ===== Contenedor y tarjeta ===== */
-  .pl{ width:100%; max-width:62rem; margin:0 auto; padding:1.5rem; }
-  .pl-wrap{ position:relative; padding-top:2.2rem; }
+  /* ===== Contenedor ===== */
+  .pl{ width:100%; max-width:58rem; margin:0 auto; padding:1.25rem; }
 
-  /* Card con efecto “glass” sutil sobre el banner/foto */
-  .pl-card{
-    color:#e7eef8;
-    background:linear-gradient(180deg, rgba(9,16,32,.88), rgba(9,16,32,.94));
-    border:1px solid rgba(255,255,255,.08);
-    border-radius:1.15rem;
-    box-shadow:
-      0 .9rem 1.8rem rgba(0,0,0,.40),
-      inset 0 .02rem .4rem rgba(255,255,255,.04);
-    padding:1.6rem;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px); /* Saf/old webkit */
+  /* Marco trasero grande (no requiere cambiar el HTML) */
+  .pl-wrap{ position:relative; padding-top:2rem; }
+  .pl-wrap::before{
+    content:"";
+    position:absolute;
+    /* agrandamos el marco respecto a la tarjeta */
+    inset:-1.25rem -1.25rem;                 /* arriba/izq/abajo/der */
+    border-radius:1.35rem;
+    background:linear-gradient(180deg, rgba(12,12,12,.72), rgba(12,12,12,.82));
+    border:1px solid rgba(255,255,255,.06);
+    box-shadow:0 1.1rem 2.2rem rgba(0,0,0,.45), inset 0 .05rem .5rem rgba(255,255,255,.035);
+    z-index:0;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
   }
 
-  /* Separación del formulario */
-  .pl-form{ display:grid; gap:1.25rem; grid-template-columns:1fr; }
+  /* ===== Tarjeta principal ===== */
+  .pl-card{
+    position:relative; z-index:1;
+    color:#e7eef8;
+    background:linear-gradient(180deg, rgba(9,16,32,.86), rgba(9,16,32,.92));
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:1.1rem;
+    box-shadow:0 .8rem 1.6rem rgba(0,0,0,.38), inset 0 .02rem .35rem rgba(255,255,255,.04);
+    padding:1.35rem;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+  }
+
+  /* ===== Grid ===== */
+  .pl-form{ display:grid; gap:1.1rem; grid-template-columns:1fr; }
   @media (min-width:56.25em){ .pl-form{ grid-template-columns:repeat(2,1fr); } }
   .pl-field--span-2{ grid-column:1 / -1; }
 
   /* ===== Campos ===== */
   .pl-field{
     position:relative; display:flex; align-items:center;
-    height:4.25rem;
-    border-radius:1rem;
-    background:#fff;
-    border:1px solid rgba(0,0,0,.08);
-    padding:0 2.75rem 0 3.25rem;
-    box-shadow:
-      0 .75rem 1.5rem rgba(0,0,0,.22),
-      inset 0 .06rem .25rem rgba(0,0,0,.06);
-    transition: box-shadow .15s ease, border-color .15s ease, transform .08s ease;
+    height:3.9rem;                            /* antes 4.25rem */
+    border-radius:.95rem;
+    background:#fff; border:1px solid rgba(0,0,0,.08);
+    padding:0 .95rem 0 3rem;
+    box-shadow:0 .65rem 1.3rem rgba(0,0,0,.22), inset 0 .06rem .22rem rgba(0,0,0,.06);
+    transition: box-shadow .15s ease, border-color .15s ease;
   }
-  .pl-field:hover{
-    border-color: rgba(0,0,0,.15);
-    box-shadow:
-      0 1rem 2rem rgba(0,0,0,.28),
-      inset 0 .06rem .25rem rgba(0,0,0,.06);
-  }
-  /* Icono del campo */
   .pl-ico{
-    position:absolute; left:1rem; top:50%; transform:translateY(-50%);
-    color:#0f172a; opacity:.9; font-size:1.2rem;
-    transition: transform .12s ease, opacity .12s ease;
+    position:absolute; left:.95rem; top:50%; transform:translateY(-50%);
+    color:#0f172a; opacity:.9; font-size:1.08rem;
   }
-  .pl-field:hover .pl-ico{ opacity:1; transform:translateY(-50%) scale(1.02); }
-
-  /* Select sin perder accesibilidad */
   .pl-field select{
     width:100%; border:0; outline:none; background:transparent;
-    font-weight:700; color:#0f172a; font-size:1.12rem; appearance:none;
+    font-weight:700; color:#0f172a; font-size:1.03rem;
+    appearance:none;
   }
-  .pl-field select:disabled{ opacity:.6; cursor:not-allowed; }
-
-  /* Chevron del select (solo visual) */
+  .pl-field select:disabled{ opacity:.6; }
+  .pl-field:has(select:focus-visible){
+    box-shadow:0 0 0 .22rem rgba(177,26,26,.16), 0 .65rem 1.3rem rgba(0,0,0,.22);
+    border-color:rgba(177,26,26,.32);
+  }
   .pl-field::after{
     content:"▾";
-    position:absolute; right:.9rem; top:50%; transform:translateY(-50%);
-    color:#0f172a; opacity:.6; font-size:1.1rem; pointer-events:none;
-  }
-
-  /* Focus accesible */
-  .pl-field:has(select:focus-visible){
-    box-shadow:0 0 0 .24rem rgba(177,26,26,.18), 0 .75rem 1.5rem rgba(0,0,0,.22);
-    border-color:rgba(177,26,26,.35);
+    position:absolute; right:.85rem; top:50%; transform:translateY(-50%);
+    color:#0f172a; opacity:.55; font-size:1rem; pointer-events:none;
   }
 
   /* ===== Acciones ===== */
-  .pl-actions{ display:grid; gap:1rem; grid-template-columns:1fr; margin-top:.9rem; }
+  .pl-actions{ display:grid; gap:.85rem; grid-template-columns:1fr; margin-top:.7rem; }
   @media (min-width:33.75em){ .pl-actions{ grid-template-columns:repeat(2,1fr);} }
-
   .pl-actions .btn{
-    height:3.3rem; border-radius:999rem; border:1px solid rgba(255,255,255,.08);
-    font-weight:800; font-size:1.06rem; color:#fff; cursor:pointer;
+    height:3rem;                               /* antes 3.25rem */
+    border-radius:999rem; border:1px solid rgba(255,255,255,.07);
+    font-weight:800; font-size:1rem; color:#fff;
     transition: transform .12s ease, box-shadow .15s ease, filter .15s ease;
   }
   .btn-pdf{
     background:#b11a1a;
-    box-shadow:0 .9rem 1.8rem rgba(156,15,16,.34), inset 0 -.2rem .6rem rgba(0,0,0,.18);
+    box-shadow:0 .8rem 1.6rem rgba(156,15,16,.32), inset 0 -.18rem .55rem rgba(0,0,0,.18);
   }
   .btn-xls{
     background:#136f36;
-    box-shadow:0 .9rem 1.8rem rgba(19,111,54,.34), inset 0 -.2rem .6rem rgba(0,0,0,.18);
+    box-shadow:0 .8rem 1.6rem rgba(19,111,54,.32), inset 0 -.18rem .55rem rgba(0,0,0,.18);
   }
-  .pl-actions .btn:hover{ transform:translateY(-.06rem); filter:saturate(1.05); }
+  .pl-actions .btn:hover{ transform:translateY(-.04rem); filter:saturate(1.04); }
   .pl-actions .btn:active{ transform:translateY(.02rem); }
 
-  /* ===== Badge superior ===== */
+  /* ===== Badge ===== */
   .pl-badge{
     position:absolute; left:50%; top:0; transform:translate(-50%,-50%);
-    display:inline-block;
     background:linear-gradient(180deg, #c62828, #b11a1a);
-    color:#fff; padding:.7rem 1.5rem; border-radius:.95rem;
-    font-weight:800; font-size:1.08rem; letter-spacing:.2px;
-    box-shadow:0 .8rem 1.4rem rgba(0,0,0,.35), inset 0 -.28rem .65rem rgba(0,0,0,.18);
+    color:#fff; padding:.58rem 1.35rem; border-radius:.9rem;
+    font-weight:800; font-size:1rem; letter-spacing:.2px;
+    box-shadow:0 .7rem 1.3rem rgba(0,0,0,.34), inset 0 -.26rem .6rem rgba(0,0,0,.18);
     white-space:nowrap; z-index:2;
   }
 
-  /* Respeta usuarios con “reduced motion” */
   @media (prefers-reduced-motion: reduce){
-    .pl-field, .pl-ico, .pl-actions .btn { transition:none !important; }
+    .pl-field, .pl-actions .btn { transition:none !important; }
   }
 </style>
 {% endblock %}
