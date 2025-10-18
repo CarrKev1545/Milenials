@@ -15,12 +15,12 @@
   /* ===== Contenedor ===== */
   .pl{ width:100%; max-width:58rem; margin:0 auto; padding:1.25rem; }
 
-  /* Marco trasero grande */
-  .pl-wrap{ position:relative; padding-top:2rem; }
+  /* Marco trasero grande (más alto arriba para despegar del título) */
+  .pl-wrap{ position:relative; padding-top:3.25rem; } /* ↑ antes 2rem */
   .pl-wrap::before{
     content:"";
     position:absolute;
-    inset:-1.5rem -1.5rem;                     /* halo un poco mayor */
+    top:-2.25rem; right:-1.5rem; bottom:-1.5rem; left:-1.5rem; /* ↑ aire arriba */
     border-radius:1.5rem;
     background:linear-gradient(180deg, rgba(12,12,12,.72), rgba(12,12,12,.82));
     border:1px solid rgba(255,255,255,.06);
@@ -98,12 +98,12 @@
   .pl-actions .btn:hover{ transform:translateY(-.06rem); filter:saturate(1.06) brightness(1.02); }
   .pl-actions .btn:active{ transform:translateY(.02rem); }
 
-  /* ===== Badge (título) ===== */
+  /* ===== Badge (título) — subido y con más aire vertical ===== */
   .pl-badge{
-    position:absolute; left:50%; top:0; transform:translate(-50%,-50%);
+    position:absolute; left:50%; top:0; transform:translate(-50%,-70%); /* ↑ separa más del card */
     display:inline-block; background:#b11a1a; color:#fff;
-    padding:.78rem 1.75rem;
-    border-radius:.85rem; font-weight:800;
+    padding:.8rem 1.85rem;
+    border-radius:.9rem; font-weight:800;
     font-size:1.24rem; letter-spacing:.35px;
     text-shadow:0 1px 0 rgba(0,0,0,.25);
     box-shadow:0 .7rem 1.3rem rgba(0,0,0,.35), inset 0 -.28rem .65rem rgba(0,0,0,.18);
