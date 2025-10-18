@@ -131,13 +131,17 @@
   const btnPDF   = document.getElementById('btn-pdf');
   const btnXLS   = document.getElementById('btn-xls');
 
+  // Placeholders tomados del DOM (respetan tu HTML: "Sedes/Grados/Grupos")
+  const PH_SEDE  = selSede.options[0]?.text?.trim()  || 'Sede';
+  const PH_GRADO = selGrado.options[0]?.text?.trim() || 'Grado';
+  const PH_GRUPO = selGrupo.options[0]?.text?.trim() || 'Grupo';
+
   // ---- Endpoints inyectados desde Django ----
   const URL_SEDES  = "{{ api_sedes_url|escapejs }}";
   const URL_GRADOS = "{{ api_grados_url|escapejs }}";
   const URL_GRUPOS = "{{ api_grupos_url|escapejs }}";
-
-  const URL_PDF = "{{ export_pdf_url|escapejs }}";
-  const URL_XLS = "{{ export_xls_url|escapejs }}";
+  const URL_PDF    = "{{ export_pdf_url|escapejs }}";
+  const URL_XLS    = "{{ export_xls_url|escapejs }}";
 
   // ---- Helpers ----
   async function j(url){
@@ -146,7 +150,6 @@
     return r.json();
   }
 
-  // Normaliza arrays/objetos a [{id, nombre}]
   function normalize(list) {
     const arr = Array.isArray(list) ? list : [];
     return arr.map(item => {
@@ -160,7 +163,6 @@
     });
   }
 
-  // Extrae la lista de una respuesta flexible
   function extractList(data) {
     if (!data) return [];
     if (Array.isArray(data.sedes))  return normalize(data.sedes);
@@ -181,6 +183,7 @@
       o.value = id; o.textContent = nombre;
       select.appendChild(o);
     });
+    select.selectedIndex = 0; // queda mostrando el placeholder
   }
 
   function resetSelect(select, placeholder) {
@@ -188,35 +191,33 @@
     select.disabled = true;
   }
 
-  function enable(select, on=true) {
-    select.disabled = !on;
-  }
+  function enable(select, on=true) { select.disabled = !on; }
 
   // ---- Carga Sedes ----
   async function loadSedes() {
     try{
-      const data = await j(URL_SEDES);
+      const data  = await j(URL_SEDES);
       const sedes = extractList(data);
-      fill(selSede, 'Todas', sedes);
+      fill(selSede, PH_SEDE, sedes);     // << antes: 'Todas'
       enable(selSede, true);
     }catch(e){
       console.warn('Sedes:', e);
-      resetSelect(selSede, 'Todas');
+      resetSelect(selSede, PH_SEDE);
     }
   }
 
   // ---- Carga Grados (depende de sede) ----
   async function loadGrados() {
     const sede = selSede.value;
-    resetSelect(selGrado, 'Todos');
-    resetSelect(selGrupo, 'Todos');
+    resetSelect(selGrado, PH_GRADO);     // << antes: 'Todos'
+    resetSelect(selGrupo, PH_GRUPO);     // << antes: 'Todos'
     if (!sede) return;
 
     try{
       const qs = new URLSearchParams({ sede_id: sede, sede: sede });
-      const data = await j(`${URL_GRADOS}?${qs.toString()}`);
+      const data   = await j(`${URL_GRADOS}?${qs.toString()}`);
       const grados = extractList(data);
-      fill(selGrado, 'Todos', grados);
+      fill(selGrado, PH_GRADO, grados);
       enable(selGrado, grados.length > 0);
     }catch(e){
       console.warn('Grados:', e);
@@ -227,14 +228,14 @@
   async function loadGrupos() {
     const sede  = selSede.value;
     const grado = selGrado.value;
-    resetSelect(selGrupo, 'Todos');
+    resetSelect(selGrupo, PH_GRUPO);
     if (!sede || !grado) return;
 
     try{
       const qs = new URLSearchParams({ sede_id: sede, sede: sede, grado_id: grado, grado: grado });
-      const data = await j(`${URL_GRUPOS}?${qs.toString()}`);
+      const data   = await j(`${URL_GRUPOS}?${qs.toString()}`);
       const grupos = extractList(data);
-      fill(selGrupo, 'Todos', grupos);
+      fill(selGrupo, PH_GRUPO, grupos);
       enable(selGrupo, grupos.length > 0);
     }catch(e){
       console.warn('Grupos:', e);
@@ -261,8 +262,8 @@
   selGrado.addEventListener('change', loadGrupos);
 
   // Init
-  resetSelect(selGrado, 'Todos');
-  resetSelect(selGrupo, 'Todos');
+  resetSelect(selGrado, PH_GRADO);
+  resetSelect(selGrupo, PH_GRUPO);
   loadSedes().then(loadGrados);
 })();
 </script>
