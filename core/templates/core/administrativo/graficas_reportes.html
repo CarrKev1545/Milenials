@@ -25,12 +25,21 @@
   @media (max-width:62em){ :root{ font-size:14.5px } }
   @media (max-width:48em){ :root{ font-size:14px } }
 
-  /* ===== Wrapper con “backplate” amplio ===== */
+  /* ===== Wrapper con “backplate” amplio + CENTRADO VERTICAL ===== */
   .gr-wrap{
     max-width:70rem;
     margin:0 auto;
     padding:1.25rem;
     position:relative;
+
+    /* centrado */
+    min-height:74vh;                 /* ocupa alto visual suficiente */
+    display:grid;
+    align-content:center;            /* centra verticalmente el contenido interno */
+    justify-items:stretch;           /* que las tarjetas usen todo el ancho */
+    row-gap:1rem;
+    padding-top:10vh;                /* aire con la barra roja superior */
+    padding-bottom:10vh;             /* respiración antes del footer */
   }
   .gr-wrap::before{
     content:"";
@@ -41,6 +50,23 @@
     border:1px solid var(--border-light);
     box-shadow:0 1.1rem 2.2rem var(--shadow-deeper), inset 0 .05rem .5rem rgba(255,255,255,.035);
     z-index:0; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  }
+
+  /* En pantallas bajas, evita que quede demasiado abajo */
+  @media (max-height:680px){
+    .gr-wrap{
+      min-height:auto;
+      padding-top:5vh;
+      padding-bottom:6vh;
+    }
+  }
+  /* En pantallas altas, aún más centrado */
+  @media (min-height:820px){
+    .gr-wrap{
+      min-height:80vh;
+      padding-top:12vh;
+      padding-bottom:12vh;
+    }
   }
 
   /* ===== Filtros / Selects tipo pill ===== */
@@ -250,7 +276,6 @@
       }
     });
 
-    /* Forzar tema por defecto si no se especifica (sin romper llamadas existentes) */
     const _origInit = echarts.init;
     echarts.init = function(dom, theme, opts){
       return _origInit.call(this, dom, theme || 'millennials', opts);
@@ -261,6 +286,5 @@
   })();
   </script>
 
-  {# Tu archivo JS propio para ADMIN (lógica intacta) #}
   <script src="{% static 'core/js/graficas_reportes_admin.js' %}"></script>
 {% endblock %}
