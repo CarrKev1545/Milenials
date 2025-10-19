@@ -1,23 +1,151 @@
 {% extends "core/base_dashboard_administrativo.html" %}
 {% load static %}
-{% block title %}Gráficas (ADMIN){% endblock %}
+
+{% block title %}Gráficas y Reportes{% endblock %}
 
 {% block extra_css %}
 <style>
+  /* ===== Paleta y escala base (idéntica a Rector) ===== */
   :root{
-    --bg-dark:#0b1220; --bg-card:#141c2e; --border:rgba(255,255,255,.08);
-    --txt:#e5ecf6; --accent:#9c0f10;
+    font-size:16px;
+    --bg-dark:#0b1220;
+    --bg-card:#151826;                 /* carta interna */
+    --plate-grad-from:#0c0c0c;
+    --plate-grad-to:#111318;
+    --border-light:rgba(255,255,255,.08);
+    --text-light:#e5ecf6;
+    --ink:#0f172a;
+    --accent:#c62828;                  /* rojo proyecto */
+    --accent-2:#136f36;                /* verde auxiliar */
+    --accent-shadow:rgba(156,15,16,.35);
+    --shadow-deep:rgba(0,0,0,.38);
+    --shadow-deeper:rgba(0,0,0,.45);
   }
-  .gr-wrap{max-width:1100px;margin:0 auto;padding:1rem}
-  .gr-filtros{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1rem}
-  @media (max-width:900px){.gr-filtros{grid-template-columns:1fr}}
-  .gr-field{background:var(--bg-card);border:1px solid var(--border);border-radius:.75rem;
-            height:3rem;display:flex;align-items:center;padding:0 .75rem;box-shadow:0 .5rem 1rem rgba(0,0,0,.25)}
-  .gr-field select{flex:1;border:0;background:transparent;color:var(--txt);font-weight:600;cursor:pointer}
-  .gr-card{background:var(--bg-dark);border:1px solid var(--border);border-radius:1rem;padding:1rem;
-           color:var(--txt);box-shadow:0 .75rem 1.5rem rgba(0,0,0,.35);margin-bottom:1rem}
-  .gr-title{font-weight:800;margin:0 0 .5rem}
-  .chart{width:100%;height:clamp(16rem,45vw,24rem)}
+  @media (max-width:75em){ :root{ font-size:15px } }
+  @media (max-width:62em){ :root{ font-size:14.5px } }
+  @media (max-width:48em){ :root{ font-size:14px } }
+
+  /* ===== Wrapper con “backplate” amplio ===== */
+  .gr-wrap{
+    max-width:70rem;
+    margin:0 auto;
+    padding:1.25rem;
+    position:relative;
+  }
+  .gr-wrap::before{
+    content:"";
+    position:absolute;
+    top:-2rem; right:-1.25rem; bottom:-1.25rem; left:-1.25rem;
+    border-radius:1.35rem;
+    background:linear-gradient(180deg, rgba(12,12,12,.70), rgba(12,12,12,.84));
+    border:1px solid var(--border-light);
+    box-shadow:0 1.1rem 2.2rem var(--shadow-deeper), inset 0 .05rem .5rem rgba(255,255,255,.035);
+    z-index:0; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  }
+
+  /* ===== Filtros / Selects tipo pill ===== */
+  .gr-filtros{
+    position:relative; z-index:1;
+    display:grid; gap:1rem;
+    grid-template-columns:repeat(3, 1fr);
+    margin-bottom:1.1rem;
+  }
+  @media (max-width:56.25em){ .gr-filtros{ grid-template-columns:1fr; } }
+
+  .gr-field{
+    position:relative;
+    display:flex; align-items:center;
+    height:3.25rem; padding:0 1rem 0 3rem;
+    border-radius:.95rem;
+    background:#fff;
+    border:1px solid rgba(0,0,0,.08);
+    box-shadow:0 .65rem 1.3rem rgba(0,0,0,.22), inset 0 .06rem .22rem rgba(0,0,0,.06);
+    transition: box-shadow .15s ease, border-color .15s ease, transform .08s ease;
+  }
+  .gr-field::before{
+    content:"\f0ce"; /* fa-table como fallback */
+    font: normal 900 1.05rem/1 "Font Awesome 6 Free";
+    position:absolute; left:.95rem; top:50%; transform:translateY(-50%);
+    color:var(--ink); opacity:.9;
+  }
+  .gr-field:focus-within{
+    box-shadow:0 0 0 .22rem rgba(198,40,40,.16), 0 .65rem 1.3rem rgba(0,0,0,.22);
+    border-color:rgba(198,40,40,.32);
+    transform:translateY(-1px);
+  }
+  .gr-field select{
+    appearance:none; width:100%;
+    border:0; outline:0; background:transparent;
+    color:var(--ink); font-weight:700; font-size:1.02rem; cursor:pointer;
+  }
+  .gr-field select:disabled{ opacity:.6; cursor:not-allowed; }
+  .gr-field::after{
+    content:"▾"; position:absolute; right:.9rem; top:50%; transform:translateY(-50%);
+    color:var(--ink); opacity:.55; font-weight:700; pointer-events:none;
+  }
+
+  select option{
+    background:var(--bg-card); color:var(--text-light);
+  }
+  select option:checked, select option:hover{
+    background:var(--accent); color:#fff;
+  }
+
+  /* ===== Tarjetas / Gráficas ===== */
+  .gr-grid{
+    position:relative; z-index:1;
+    display:grid; gap:1rem;
+    grid-template-columns:1fr;
+  }
+  @media (min-width:56.25em){
+    .gr-grid{ grid-template-columns:repeat(2, 1fr); }
+  }
+
+  .gr-card{
+    background:linear-gradient(180deg, rgba(9,16,32,.86), rgba(9,16,32,.92));
+    border:1px solid var(--border-light);
+    border-radius:1.1rem;
+    padding:1rem 1rem 1.15rem;
+    box-shadow:0 .8rem 1.6rem var(--shadow-deep), inset 0 .02rem .35rem rgba(255,255,255,.04);
+    color:var(--text-light);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    overflow-x:auto; overscroll-behavior:contain;
+  }
+
+  .gr-title{
+    margin:0 0 .6rem;
+    font-weight:800; letter-spacing:.25px;
+    font-size:1.06rem; color:#f1f5f9;
+    display:flex; align-items:center; gap:.5rem;
+  }
+  .gr-title::before{
+    content:""; width:.5rem; height:.5rem; border-radius:999rem;
+    background:var(--accent);
+    box-shadow:0 0 .55rem var(--accent-shadow);
+  }
+
+  .chart{
+    width:100%;
+    height:clamp(16rem, 42vw, 24rem);
+    padding-bottom:.25rem;
+  }
+
+  /* Botones utilitarios (si se usan) */
+  .gr-actions{ display:flex; gap:.6rem; flex-wrap:wrap; margin:.4rem 0 0 auto; }
+  .gr-btn{
+    appearance:none; border:1px solid var(--border-light);
+    background:var(--accent); color:#fff; font-weight:800; font-size:.95rem;
+    height:2.6rem; padding:0 1rem; border-radius:999rem; cursor:pointer;
+    box-shadow:0 .8rem 1.6rem var(--accent-shadow), inset 0 -.18rem .55rem rgba(0,0,0,.18);
+    transition: transform .12s ease, filter .15s ease;
+  }
+  .gr-btn:hover{ transform:translateY(-1px); filter:saturate(1.05); }
+  .gr-btn--ghost{ background:#374151; }
+  .gr-btn--ok{ background:var(--accent-2); }
+
+  @media (prefers-reduced-motion: reduce){
+    .gr-field, .gr-btn{ transition:none !important; }
+  }
 </style>
 {% endblock %}
 
@@ -27,6 +155,7 @@
 
 {% block content %}
 <section class="gr-wrap">
+  <!-- Filtros -->
   <div class="gr-filtros">
     <label class="gr-field">
       <select id="f-sede">
@@ -45,27 +174,30 @@
     </label>
   </div>
 
-  <article class="gr-card">
-    <h3 class="gr-title">Estudiantes activos por sede</h3>
-    <div id="chart-activos-sede" class="chart"></div>
-  </article>
+  <!-- Gráficas -->
+  <div class="gr-grid">
+    <article class="gr-card">
+      <h3 class="gr-title">Estudiantes activos por sede</h3>
+      <div id="chart-activos-sede" class="chart"></div>
+    </article>
 
-  <article class="gr-card">
-    <h3 class="gr-title">Reprobados por asignatura</h3>
-    <div id="chart-reprobados" class="chart"></div>
-  </article>
+    <article class="gr-card">
+      <h3 class="gr-title">Reprobados por asignatura</h3>
+      <div id="chart-reprobados" class="chart"></div>
+    </article>
+  </div>
 </section>
 {% endblock %}
 
 {% block extra_js %}
   <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 
-  {# <<< URLs del ROL ADMINISTRATIVO >>> #}
-  {% url 'api_admin_sedes'               as admin_sedes_url %}
-  {% url 'api_admin_grados_por_sede'     as admin_grados_url %}
+  {# <<< URLs del ROL ADMINISTRATIVO (lógica intacta) >>> #}
+  {% url 'api_admin_sedes'                 as admin_sedes_url %}
+  {% url 'api_admin_grados_por_sede'       as admin_grados_url %}
   {% url 'api_admin_grupos_por_sede_grado' as admin_grupos_url %}
-  {% url 'api_metrics_activos'           as api_activos_url %}
-  {% url 'api_metrics_reprobados'        as api_reprobados_url %}
+  {% url 'api_metrics_activos'             as api_activos_url %}
+  {% url 'api_metrics_reprobados'          as api_reprobados_url %}
 
   <script>
     window.GR_URLS = {
@@ -73,11 +205,62 @@
       api_grados_por_sede: "{{ admin_grados_url|escapejs }}",
       api_grupos_por_sede_grado: "{{ admin_grupos_url|escapejs }}",
       api_metrics_activos: "{{ api_activos_url|escapejs }}",
-      api_metrics_reprobados: "{{ api_reprobados_url|escapejs }}"
+      api_metrics_reprobados: "{{ api_reprobados_url|escapejs }}",
     };
   </script>
 
-  {# Usa SOLO este JS (reemplaza el archivo en static) #}
+  <!-- ===== Tema y mejoras visuales para ECharts (idéntico al Rector; no toca tu lógica) ===== -->
+  <script>
+  (function () {
+    if (!window.echarts) return;
+
+    function ellipsis(v, max){ v = (v ?? '').toString(); return v.length > max ? v.slice(0, max-1) + '…' : v; }
+
+    echarts.registerTheme('millennials', {
+      color: ['#3b82f6', '#c62828', '#136f36', '#f59e0b', '#8b5cf6'],
+      textStyle: { color: '#e5ecf6', fontFamily: "Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial" },
+      grid: { top: 30, right: 16, bottom: 26, left: 40, containLabel: true },
+      tooltip: {
+        backgroundColor: 'rgba(15,23,42,.95)',
+        borderColor: 'rgba(255,255,255,.12)',
+        textStyle: { color: '#e5ecf6' },
+        padding: 10,
+        extraCssText: 'box-shadow:0 .75rem 1.5rem rgba(0,0,0,.35);backdrop-filter:blur(2px)'
+      },
+      legend: {
+        textStyle: { color: '#e5ecf6', fontWeight: 700 },
+        itemWidth: 10, itemHeight: 10, icon: 'circle'
+      },
+      categoryAxis: {
+        axisLine: { lineStyle: { color: 'rgba(255,255,255,.12)' } },
+        splitLine: { show: true, lineStyle: { color: 'rgba(255,255,255,.06)' } },
+        axisLabel: {
+          color: '#cbd5e1',
+          fontWeight: 700,
+          margin: 10,
+          overflow: 'truncate',
+          width: 90,
+          formatter: function (v){ return ellipsis(v, 16); }
+        }
+      },
+      valueAxis: {
+        axisLine: { lineStyle: { color: 'rgba(255,255,255,.12)' } },
+        splitLine: { lineStyle: { color: 'rgba(255,255,255,.08)' } },
+        axisLabel: { color: '#cbd5e1', fontWeight: 700, margin: 8 }
+      }
+    });
+
+    /* Forzar tema por defecto si no se especifica (sin romper llamadas existentes) */
+    const _origInit = echarts.init;
+    echarts.init = function(dom, theme, opts){
+      return _origInit.call(this, dom, theme || 'millennials', opts);
+    };
+
+    window.GR_EC_THEME = 'millennials';
+    window.GR_ELLIPSIS = ellipsis;
+  })();
+  </script>
+
+  {# Tu archivo JS propio para ADMIN (lógica intacta) #}
   <script src="{% static 'core/js/graficas_reportes_admin.js' %}"></script>
 {% endblock %}
-
