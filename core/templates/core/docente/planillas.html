@@ -129,36 +129,33 @@
     .pl-field, .pl-actions .btn { transition:none !important; }
   }
 
-    .pl{
-    /* antes: width/max-width/margin/padding */
-    min-height: 58vh;               /* alto visible para centrar */
-    display: grid;                  /* grid → permite centrar vertical */
-    align-items: center;            /* centra verticalmente .pl-wrap */
-    justify-items: center;          /* asegura centrado horizontal */
-    padding-top: 6vh;               /* aire arriba para que el badge rojo no choque con el header */
-    padding-bottom: 8vh;            /* aire abajo para respiración visual */
+  .pl{
+  /* ocupa más alto visible para compensar header + badge */
+  min-height: 74vh;
+  display: grid;
+  place-items: center;   /* centra horizontal y vertical */
+  padding-top: 10vh;     /* baja un poco más el card */
+  padding-bottom: 10vh;  /* equilibrio visual con el footer */
   }
 
-  /* Ajuste fino del marco “glass” cuando está centrado */
-  .pl-wrap{
-    width: 100%;
-  }
+  /* el wrapper no limita el centrado */
+  .pl-wrap{ width:100%; }
 
-  /* En pantallas bajas, evita que quede demasiado abajo */
+  /* En pantallas con poca altura, evitamos que se vaya demasiado abajo */
   @media (max-height: 680px){
     .pl{
       min-height: auto;
-      padding-top: 3.5vh;
-      padding-bottom: 5vh;
+      padding-top: 5vh;
+      padding-bottom: 6vh;
     }
   }
 
-  /* Si ves que aún queda un pelín alto, puedes subir 1–2 puntos estos valores: */
+  /* En pantallas altas, aún más centrado */
   @media (min-height: 820px){
     .pl{
-      min-height: 62vh;
-      padding-top: 7vh;
-      padding-bottom: 9vh;
+      min-height: 80vh;
+      padding-top: 12vh;
+      padding-bottom: 12vh;
     }
   }
 </style>
