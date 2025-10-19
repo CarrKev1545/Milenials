@@ -1,67 +1,208 @@
 {% extends "core/base_dashboard_docente.html" %}
+{% load static %}
+
 {% block title %}Planillas - Docente{% endblock %}
 
+{% block extra_css %}
+<style>
+  /* Escala tipográfica estable */
+  :root{
+    font-size:16.5px;
+    /* paleta traída del primer style */
+    --bg-dark:#0b1220;
+    --fg-light:#e5ecf6;
+    --ink:#111;
+    --border-light:rgba(255,255,255,.08);
+    --shadow-deep:rgba(0,0,0,.35);
+
+    --accent:#2563eb;           /* azul */
+    --accent-2:#00b894;         /* verde suave */
+    --accent-3:#ef4444;         /* rojo primario */
+    --accent-shadow:rgba(37, 99, 235, .38);
+  }
+  @media (max-width:62em){ :root{font-size:15.5px} }
+  @media (max-width:48em){ :root{font-size:15px} }
+  @media (max-width:36em){ :root{font-size:14px} }
+
+  /* Contenedor */
+  .pl{ width:100%; max-width:58rem; margin:0 auto; padding:1.25rem; }
+
+  /* Marco trasero */
+  .pl-wrap{ position:relative; padding-top:4.25rem; }
+  .pl-wrap::before{
+    content:"";
+    position:absolute;
+    top:-3.25rem; right:-2rem; bottom:-2rem; left:-2rem;
+    border-radius:1.6rem;
+    background:linear-gradient(135deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
+    border:1px solid var(--border-light);
+    box-shadow:
+      0 1.25rem 2.25rem rgba(0,0,0,.35),
+      inset 0 0 0 .75px rgba(255,255,255,.06);
+    backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+  }
+
+  /* Badge superior */
+  .pl-badge{
+    position:absolute; top:.25rem; left:1rem;
+    display:inline-flex; align-items:center; gap:.5rem;
+    padding:.5rem .9rem; border-radius:999rem;
+    font-weight:800; letter-spacing:.25px;
+    color:#fff; background:rgba(255,255,255,.06);
+    border:1px solid var(--border-light);
+    box-shadow: 0 .65rem 1.25rem rgba(0,0,0,.28);
+    backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+  }
+
+  /* Card principal */
+  .pl-card{
+    position:relative;
+    background:rgba(16,24,38,.95);
+    color:var(--fg-light);
+    border:1px solid var(--border-light);
+    border-radius:1rem;
+    padding:1.25rem;
+    box-shadow:
+      0 1rem 2rem rgba(0,0,0,.35),
+      inset 0 0 0 .75px rgba(255,255,255,.05);
+  }
+
+  /* Formulario */
+  .pl-form{
+    display:grid;
+    gap:1rem;
+    grid-template-columns:1fr;
+  }
+  @media (min-width:34em){
+    .pl-form{ grid-template-columns:repeat(2,1fr); }
+  }
+
+  .pl-field{
+    position:relative;
+    display:grid;
+    grid-template-columns:2.5rem 1fr;
+    align-items:center;
+    gap:.5rem;
+    padding:.5rem .75rem;
+    background:rgba(255,255,255,.035);
+    border:1px solid var(--border-light);
+    border-radius:.75rem;
+    box-shadow: inset 0 0 0 .75px rgba(255,255,255,.04);
+  }
+  .pl-field--span-2{ grid-column:1/-1; }
+
+  .pl-ico{
+    display:inline-grid; place-items:center;
+    width:2.25rem; height:2.25rem;
+    border-radius:.6rem;
+    background:rgba(255,255,255,.055);
+    border:1px solid var(--border-light);
+    color:#fff;
+  }
+
+  .pl-field select{
+    width:100%;
+    appearance:none; -webkit-appearance:none; -moz-appearance:none;
+    background:transparent; color:#fff; border:none; outline:none;
+    font-weight:600; letter-spacing:.2px;
+    padding:.35rem .25rem;
+  }
+
+  /* Acciones */
+  .pl-actions{ display:grid; gap:.85rem; grid-template-columns:1fr; margin-top:.7rem; }
+  @media (min-width:33.75em){ .pl-actions{ grid-template-columns:repeat(2,1fr);} }
+  .pl-actions .btn{
+    height:3rem; border-radius:999rem; border:1px solid var(--border-light);
+    font-weight:800; font-size:1rem; color:#fff;
+    transition: transform .12s ease, box-shadow .15s ease, filter .15s ease;
+  }
+  .btn-pdf{
+    background:var(--accent);
+    box-shadow:0 .8rem 1.6rem var(--accent-shadow), inset 0 -.18rem .55rem rgba(0,0,0,.18);
+  }
+  .btn-xls{
+    background:linear-gradient(135deg, #15803d 0%, #16a34a 80%);
+    box-shadow:0 .85rem 1.65rem rgba(22,163,74,.35), inset 0 -.18rem .55rem rgba(0,0,0,.18);
+  }
+  .pl-actions .btn:hover{
+    transform: translateY(-1px);
+    filter: brightness(1.03);
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<main class="main">
-  <h1 class="mb-3">Planillas</h1>
+<section class="pl" aria-labelledby="titulo-pl">
+  <div class="pl-wrap">
+    <div id="titulo-pl" class="pl-badge">Plantillas</div>
 
-  {# 👉 El form ahora apunta al INDEX, NO al landing #}
-  <form method="get" action="{% url 'docente_planillas_index' %}" class="row g-2" autocomplete="off" novalidate>
-    <div class="col-md-3">
-      <label class="form-label" for="f_sede">Sede</label>
-      <select id="f_sede" name="sede" class="form-select" onchange="this.form.submit()">
-        <option value="">Todas</option>
-        {% for id, nombre in sedes %}
-          <option value="{{ id }}" {% if sel_sede == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
-        {% endfor %}
-      </select>
+    <div class="pl-card" role="group" aria-label="Filtros de exportación">
+      {# 👉 El form ahora apunta al INDEX (se mantiene la lógica actual) #}
+      <form method="get"
+            action="{% url 'docente_planillas_index' %}"
+            class="pl-form"
+            autocomplete="off" novalidate>
+
+        <!-- Sede -->
+        <label class="pl-field" for="f_sede">
+          <span class="pl-ico"><i class="fa-solid fa-building-columns"></i></span>
+          <select id="f_sede" name="sede" onchange="this.form.submit()">
+            <option value="">{% if sel_sede %}Sede{% else %}Todas{% endif %}</option>
+            {% for id, nombre in sedes %}
+              <option value="{{ id }}" {% if sel_sede == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
+            {% endfor %}
+          </select>
+        </label>
+
+        <!-- Grado -->
+        <label class="pl-field" for="f_grado">
+          <span class="pl-ico"><i class="fa-solid fa-layer-group"></i></span>
+          <select id="f_grado" name="grado" onchange="this.form.submit()">
+            <option value="">{% if sel_grado %}Grado{% else %}Todos{% endif %}</option>
+            {% for id, nombre in grados %}
+              <option value="{{ id }}" {% if sel_grado == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
+            {% endfor %}
+          </select>
+        </label>
+
+        <!-- Grupo -->
+        <label class="pl-field pl-field--span-2" for="f_grupo">
+          <span class="pl-ico"><i class="fa-solid fa-people-group"></i></span>
+          <select id="f_grupo" name="grupo">
+            <option value="">{% if sel_grupo %}Grupo{% else %}Todos{% endif %}</option>
+            {% for id, label in grupos %}
+              <option value="{{ id }}" {% if sel_grupo == id|stringformat:'s' %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+
+        <!-- Acciones -->
+        <div class="pl-actions">
+          <button class="btn btn-pdf"
+                  type="submit"
+                  name="formato" value="pdf"
+                  formaction="{% url 'docente_planillas_export_landing' %}"
+                  formtarget="_blank">
+            Descargar PDF
+          </button>
+
+          <button class="btn btn-xls"
+                  type="submit"
+                  name="formato" value="excel"
+                  formaction="{% url 'docente_planillas_export_landing' %}"
+                  formtarget="_blank">
+            Descargar Excel
+          </button>
+        </div>
+      </form>
     </div>
-
-    <div class="col-md-3">
-      <label class="form-label" for="f_grado">Grado</label>
-      <select id="f_grado" name="grado" class="form-select" onchange="this.form.submit()">
-        <option value="">Todos</option>
-        {% for id, nombre in grados %}
-          <option value="{{ id }}" {% if sel_grado == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
-        {% endfor %}
-      </select>
-    </div>
-
-    <div class="col-md-3">
-      <label class="form-label" for="f_grupo">Grupo</label>
-      <select id="f_grupo" name="grupo" class="form-select">
-        <option value="">Todos</option>
-        {% for id, label in grupos %}
-          <option value="{{ id }}" {% if sel_grupo == id|stringformat:'s' %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-      </select>
-    </div>
-
-    <div class="col-md-3 d-flex align-items-end gap-2">
-      {# 👉 Los botones sí van al landing y abren en otra pestaña #}
-      <button class="btn btn-outline-danger"
-              type="submit"
-              name="formato" value="pdf"
-              formaction="{% url 'docente_planillas_export_landing' %}"
-              formtarget="_blank">
-        PDF
-      </button>
-
-      <button class="btn btn-outline-success"
-              type="submit"
-              name="formato" value="excel"
-              formaction="{% url 'docente_planillas_export_landing' %}"
-              formtarget="_blank">
-        Excel
-      </button>
-    </div>
-  </form>
-</main>
+  </div>
+</section>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-  // Deja solo el número del grupo en el combo (p.ej. "1101")
+  // Conserva la lógica actual: limpiar el label del grupo a solo el número (p.ej. "1101")
   (function () {
     const sel = document.getElementById('f_grupo');
     if (!sel) return;
@@ -69,12 +210,10 @@
     Array.from(sel.options).forEach(opt => {
       if (!opt.value) return;                 // deja "Todos"
       const txt = (opt.textContent || '').trim();
-      const parts = txt.split(' - ');         // "Sede Secundaria - 11° - 1101"
+      const parts = txt.split(' - ');         // "Sede X - 11° - 1101"
       const last = parts[parts.length - 1];   // "1101"
       if (last) opt.textContent = last.trim();
     });
   })();
 </script>
 {% endblock %}
-
-
