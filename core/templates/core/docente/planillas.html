@@ -145,85 +145,60 @@
 {% endblock %}
 
 {% block content %}
-<main class="main pl" role="main" aria-label="Planillas del docente">
-  <section class="pl-wrap">
-    <div class="pl-card">
-      <div class="pl-badge">Planillas</div>
+<main class="main">
+  <h1 class="mb-3">Planillas</h1>
 
-      {# 👉 El form sigue apuntando al INDEX; sin cambios de lógica #}
-      <form method="get"
-            action="{% url 'docente_planillas_index' %}"
-            class="pl-form"
-            autocomplete="off"
-            novalidate>
-
-        <!-- Sede -->
-        <div class="pl-col pl-col-md-3">
-          <label class="pl-label" for="f_sede">Sede</label>
-          <div class="pl-field">
-            <select id="f_sede" name="sede" class="form-select pl-select" onchange="this.form.submit()">
-              <option value="">Todas</option>
-              {% for id, nombre in sedes %}
-                <option value="{{ id }}" {% if sel_sede == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
-              {% endfor %}
-            </select>
-            <span class="pl-caret"></span>
-          </div>
-        </div>
-
-        <!-- Grado -->
-        <div class="pl-col pl-col-md-3">
-          <label class="pl-label" for="f_grado">Grado</label>
-          <div class="pl-field">
-            <select id="f_grado" name="grado" class="form-select" onchange="this.form.submit()">
-              <option value="">Todos</option>
-              {% for id, nombre in grados %}
-                <option value="{{ id }}" {% if sel_grado == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
-              {% endfor %}
-            </select>
-            <span class="pl-caret"></span>
-          </div>
-        </div>
-
-        <!-- Grupo -->
-        <div class="pl-col pl-col-md-3">
-          <label class="pl-label" for="f_grupo">Grupo</label>
-          <div class="pl-field">
-            <select id="f_grupo" name="grupo" class="form-select">
-              <option value="">Todos</option>
-              {% for id, label in grupos %}
-                <option value="{{ id }}" {% if sel_grupo == id|stringformat:'s' %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-            <span class="pl-caret"></span>
-          </div>
-        </div>
-
-        <!-- Botones (misma lógica: landing y nueva pestaña) -->
-        <div class="pl-actions pl-col pl-col-md-3">
-          <div class="pl-col">
-            <button class="btn-pill btn-danger w-100"
-                    type="submit"
-                    name="formato" value="pdf"
-                    formaction="{% url 'docente_planillas_export_landing' %}"
-                    formtarget="_blank">
-              PDF
-            </button>
-          </div>
-
-          <div class="pl-col">
-            <button class="btn-pill btn-success w-100"
-                    type="submit"
-                    name="formato" value="excel"
-                    formaction="{% url 'docente_planillas_export_landing' %}"
-                    formtarget="_blank">
-              Excel
-            </button>
-          </div>
-        </div>
-      </form>
+  {# 👉 El form ahora apunta al INDEX, NO al landing #}
+  <form method="get" action="{% url 'docente_planillas_index' %}" class="row g-2" autocomplete="off" novalidate>
+    <div class="col-md-3">
+      <label class="form-label" for="f_sede">Sede</label>
+      <select id="f_sede" name="sede" class="form-select" onchange="this.form.submit()">
+        <option value="">Todas</option>
+        {% for id, nombre in sedes %}
+          <option value="{{ id }}" {% if sel_sede == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
+        {% endfor %}
+      </select>
     </div>
-  </section>
+
+    <div class="col-md-3">
+      <label class="form-label" for="f_grado">Grado</label>
+      <select id="f_grado" name="grado" class="form-select" onchange="this.form.submit()">
+        <option value="">Todos</option>
+        {% for id, nombre in grados %}
+          <option value="{{ id }}" {% if sel_grado == id|stringformat:'s' %}selected{% endif %}>{{ nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label" for="f_grupo">Grupo</label>
+      <select id="f_grupo" name="grupo" class="form-select">
+        <option value="">Todos</option>
+        {% for id, label in grupos %}
+          <option value="{{ id }}" {% if sel_grupo == id|stringformat:'s' %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-3 d-flex align-items-end gap-2">
+      {# 👉 Los botones sí van al landing y abren en otra pestaña #}
+      <button class="btn btn-outline-danger"
+              type="submit"
+              name="formato" value="pdf"
+              formaction="{% url 'docente_planillas_export_landing' %}"
+              formtarget="_blank">
+        PDF
+      </button>
+
+      <button class="btn btn-outline-success"
+              type="submit"
+              name="formato" value="excel"
+              formaction="{% url 'docente_planillas_export_landing' %}"
+              formtarget="_blank">
+        Excel
+      </button>
+    </div>
+  </form>
 </main>
 {% endblock %}
 
@@ -244,3 +219,5 @@
   })();
 </script>
 {% endblock %}
+
+
