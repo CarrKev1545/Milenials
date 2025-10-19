@@ -12,163 +12,81 @@
   @media (max-width: 48em) { :root { font-size: 13px; } } /* ~768px  */
   @media (max-width: 36em) { :root { font-size: 12px; } } /* ~576px  */
 
-  /* ===== Barra roja superior ===== */
   .page-title{
-    position: sticky; top: var(--navbar-height, 3.5rem); z-index: 40;
-    background: var(--accent); color: #fff; font-weight: 800; letter-spacing: .02em;
-    text-align: center; padding: .625rem .75rem; box-shadow: 0 .25rem .75rem rgba(0,0,0,.35);
+    position:sticky; top:var(--navbar-height); z-index:40;
+    background:var(--accent); color:#fff; font-weight:800; letter-spacing:.0125em;
+    text-align:center; padding:.625rem .75rem; box-shadow:0 .25rem .75rem rgba(0,0,0,.35);
   }
 
-  /* ===== Contenedor tarjeta ===== */
-  .rg{width:100%;max-width:71.25rem;margin:0 auto;padding:0 1.25rem}
-  .rg-wrap{position:relative;margin-top:.875rem}
-  .rg-wrap::before{
-    content:""; position:absolute; inset:-1.125rem -1.375rem; border-radius:1.125rem;
-    background:
-      radial-gradient(140% 160% at 10% 0%, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 45%),
-      linear-gradient(135deg, rgba(22,22,24,.88) 0%, rgba(16,16,18,.86) 100%);
-    border:1px solid rgba(255,255,255,.10); backdrop-filter: blur(.375rem) saturate(115%);
-    box-shadow:0 1.375rem 2.75rem rgba(0,0,0,.50); z-index:0
+  .rg{width:100%; max-width:73.75rem; margin:0 auto; padding:0 1.25rem;} /* 1180px, 20px */
+  .toolbar{
+    display:flex; gap:.5rem; align-items:center; justify-content:space-between; margin-top:.875rem;
   }
 
-  .rg-inner{position:relative;z-index:1;padding:1.75rem 1.5rem 1.5rem}
-
-  /* ===== Badge ===== */
-  .rg-badge{
-    width:22.5rem;max-width:90vw;margin:0 auto;margin-top:-1.375rem;background:#0c0c0c;border-radius:1rem;
-    box-shadow:0 1rem 1.875rem rgba(0,0,0,.55), inset 0 -.5rem 1.375rem rgba(0,0,0,.22);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.125rem 1rem .75rem
-  }
-  .rg-badge i{font-size:5.125rem;color:#fff;filter:drop-shadow(0 .625rem 1.875rem rgba(0,0,0,.6))}
-  .rg-chip{margin-top:.75rem;background:var(--accent);color:#fff;padding:.5rem 1.125rem;border-radius:999rem;font-weight:800;letter-spacing:.02em}
-
-  /* ===== Chips resumen ===== */
-  .meta{display:flex;gap:.625rem;flex-wrap:wrap;align-items:center;margin:1rem .125rem .75rem}
-  .chip{
-    --bg:#0f172a;
-    background:linear-gradient(180deg,var(--bg),#0b1220);
-    color:#fff;border:1px solid rgba(255,255,255,.08);
-    padding:.5625rem .75rem;border-radius:.75rem;font-weight:900;letter-spacing:.02em;
-    display:inline-grid;grid-auto-flow:column;gap:.5rem;align-items:center;
-    box-shadow:0 .5rem 1rem rgba(0,0,0,.28)
-  }
-  .chip i{font-size:.875rem;opacity:.9}
-
-  /* ===== Acciones ===== */
-  .actions{display:flex;gap:.625rem;flex-wrap:wrap}
   .btn{
-    height:2.875rem;min-width:12.5rem;border-radius:.75rem;border:1px solid rgba(0,0,0,.06);
-    display:inline-grid;grid-auto-flow:column;place-items:center;gap:.625rem;
-    font-weight:900;color:#fff;cursor:pointer;
-    box-shadow:0 .75rem 1.5rem rgba(0,0,0,.25); transition:transform .12s ease, box-shadow .12s ease, filter .12s ease
+    display:inline-flex; align-items:center; gap:.5rem;
+    padding:.625rem .875rem; border-radius:.75rem; border:1px solid #e5e9f2;
+    background:#fff; box-shadow:0 .25rem .625rem rgba(0,0,0,.06);
+    font-weight:700; letter-spacing:.0125em; cursor:pointer; text-decoration:none; color:#0f172a;
+    transition: transform .12s ease;
   }
-  .btn i{font-size:1rem}
-  .btn--pdf{background:linear-gradient(180deg,#ef4444,#c81e1e)}
-  .btn--xls{background:linear-gradient(180deg,#16a34a,#0f7a33)}
-  .btn--ghost{background:#b51415}
-  .btn:hover{transform:translateY(-.0625rem); box-shadow:0 1rem 1.875rem rgba(0,0,0,.30)}
-  .btn:active{transform:translateY(0) scale(.99)}
-  .btn:focus{outline:.1875rem solid rgba(255,255,255,.4); outline-offset:.125rem}
+  .btn:hover{ transform: translateY(-.0625rem); }
 
-  /* ===== Tabla ===== */
   .table-card{
-    --ring: 255,255,255;
-    background:#0b1220;
-    border-radius:1rem; border:1px solid rgba(var(--ring),.06);
-    box-shadow:0 1.125rem 2.25rem rgba(0,0,0,.28); overflow:hidden; margin-top:.875rem
+    background:#fff; border-radius:1rem; box-shadow:0 .75rem 1.875rem rgba(0,0,0,.18);
+    border:1px solid #e5e9f2; overflow:hidden; margin-top:.75rem;
   }
 
-  .table-responsive{
-    width:100%; max-height:27.5rem; overflow:auto; background:#eef2f6;
-    -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0) 0, #000 1.75rem, #000 calc(100% - 1.75rem), rgba(0,0,0,0) 100%);
-            mask-image: linear-gradient(to right, rgba(0,0,0,0) 0, #000 1.75rem, #000 calc(100% - 1.75rem), rgba(0,0,0,0) 100%);
-    scrollbar-width: thin; scrollbar-color: #9aa4b2 #e6ebf3;
-  }
-  .table-responsive::-webkit-scrollbar{height:.625rem;width:.625rem}
-  .table-responsive::-webkit-scrollbar-thumb{background:#9aa4b2;border-radius:999rem}
-  .table-responsive::-webkit-scrollbar-track{background:#e6ebf3;border-radius:999rem}
-
-  table.tabla{
-    width:100%;
-    border-collapse:separate;
-    border-spacing:0 .625rem;
-    table-layout:auto; /* asegura cálculo natural de ancho y evita cortes raros */
-  }
+  .table-responsive{ width:100%; overflow-x:auto; }
+  table.tabla{ width:100%; border-collapse:separate; border-spacing:0; table-layout:auto; }
 
   .tabla thead th{
-    position:sticky; top:0; z-index:4;
-    background:linear-gradient(180deg,#0f172a,#0b1220);
-    backdrop-filter:saturate(120%) blur(.125rem);
-    color:#fff;font-weight:900;text-transform:uppercase;letter-spacing:.03em;
-    text-align:left;padding:.875rem 1rem; box-shadow:0 .25rem 0 rgba(255,255,255,.04)
+    background:#0f172a; color:#fff; font-weight:900; text-align:left;
+    padding:.75rem .875rem; letter-spacing:.0125em; white-space:nowrap;
+    position:sticky; top:0; z-index:10; /* encabezado siempre encima */
   }
 
   .tabla tbody td{
-    background:#fff; color:#0b1220; border:1px solid #e6ebf3;
-    padding:.875rem 1rem; vertical-align:middle;
-    transition: filter .12s ease, box-shadow .12s ease;
-    overflow: visible;    /* evita recortes internos */
+    padding:.75rem .875rem; border-top:1px solid #eef2f6; background:#fff;
+    vertical-align:middle; overflow:visible;
   }
-  .tabla tbody tr td:first-child{
-    border-top-left-radius:.75rem;border-bottom-left-radius:.75rem;border-left-width:1px;
-    position:sticky; left:0; z-index:6; background:#fff; /* z superior para que nunca quede debajo */
-    box-shadow: .0625rem 0 0 #e6ebf3;
-  }
-  .tabla tbody tr td:last-child {border-top-right-radius:.75rem;border-bottom-right-radius:.75rem;border-right-width:1px}
-  .tabla tbody tr:hover td{filter:saturate(110%); box-shadow:0 .5rem 1.125rem rgba(2,6,23,.08)}
+  .tabla tbody tr:nth-child(odd) td{ background:#fbfdff; }
 
-  /* Avatar + nombre (sin avatar) */
-  .alum{display:flex;align-items:center;gap:.75rem;font-weight:900;letter-spacing:.02em;flex-wrap:wrap;min-width:0;}
+  .alum{ font-weight:800; letter-spacing:.0125em; display:flex; gap:.5rem; flex-wrap:wrap; min-width:0; }
+  .doc{ opacity:.85; font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  .empty{ padding:1.125rem; color:#334155; }
+
+  /* Responsive */
+  @media (max-width: 45em){ /* ~720px */
+    .btn{ padding:.5rem .75rem; }
+    .alum{ display:block; }
+  }
+
+  /* ====== AJUSTES FINOS ADICIONALES ====== */
+
+  /* 1) Quitar iniciales/avatares */
+  .avatar{ display:none !important; }
+
+  /* 2) Nombres completos sin cortes (wrap). */
   .alum .name{
-    white-space:normal;          /* permite salto de línea */
-    word-break:break-word;       /* por si hay apellidos largos/compuestos */
-    overflow:visible;            /* nunca cortar visualmente */
-    min-width:0;
-  }
-  .avatar{display:none!important;} /* removemos las iniciales */
-
-  /* Documento */
-  .doc{opacity:.9;font-weight:800;font-variant-numeric:tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
-
-  /* Mini acciones (PDF/Excel) */
-  .mini{display:inline-flex;gap:.625rem;flex-wrap:wrap}
-  .mini a{
-    height:2.375rem;min-width:7.625rem;border-radius:.625rem;padding:0 .75rem;
-    display:inline-grid;grid-auto-flow:column;gap:.5rem;place-items:center;
-    color:#fff;text-decoration:none;font-weight:900;letter-spacing:.02em;
-    box-shadow:0 .5rem 1.125rem rgba(0,0,0,.18); transition:transform .12s ease, box-shadow .12s ease, filter .12s ease
-  }
-  .mini a.pdf{background:linear-gradient(180deg,#ef4444,#c81e1e)}
-  .mini a.xls {background:linear-gradient(180deg,#16a34a,#0f7a33)}
-  .mini a:hover{transform:translateY(-.0625rem); box-shadow:0 .75rem 1.5rem rgba(0,0,0,.22); filter:saturate(110%)}
-
-  /* Anchos de columnas + responsive (más aire para el nombre) */
-  .tabla th:nth-child(1){width:60%}
-  .tabla th:nth-child(2){width:16%}
-  .tabla th:nth-child(3){width:24%}
-  @media (max-width: 61.25em){ /* ~980px */
-    .tabla th:nth-child(2), .tabla td:nth-child(2){display:none}
-    .tabla th:nth-child(1){width:auto}
+    white-space: normal;
+    word-break: break-word;
+    overflow: visible;
+    min-width: 0;
+    display: inline;
   }
 
-  /* --- FIX superposición primera columna vs. encabezado --- */
-
-  /* Asegura que el encabezado quede SIEMPRE por encima */
-  .tabla thead th{
-    z-index: 10 !important;
-  }
-
-  /* La primera celda sticky queda por debajo del thead, pero por encima del resto */
+  /* 3) Mantener primera columna sticky y por debajo del thead (sin solapar) */
   .tabla tbody tr td:first-child{
-    z-index: 3 !important; /* antes lo teníamos más alto */
-    box-shadow: .0625rem 0 0 #e6ebf3; /* mantiene el divisor vertical */
+    position: sticky;
+    left: 0;
+    z-index: 3 !important;   /* por debajo del thead (z=10) */
+    background: inherit;     /* respeta zebra */
+    box-shadow: .0625rem 0 0 #e6ebf3; /* divisor vertical */
   }
 
-  /* (Opcional) Suaviza el borde redondeado superior para que no “asome” bajo el header */
-  .tabla tbody tr:first-child td:first-child{
-    border-top-left-radius: .5rem;
-  }
-
+  /* Bordes redondeados suaves en el primer registro para que no 'asome' bajo el header */
+  .tabla tbody tr:first-child td:first-child{ border-top-left-radius:.5rem; }
 </style>
 {% endblock %}
 
@@ -181,23 +99,24 @@
         <div class="rg-inner">
 
           <!-- Badge -->
-          <div class="rg-badge" aria-hidden="true">
-            <i class="fa-solid fa-file-lines"></i>
-            <div class="rg-chip">Reportes</div>
+          <div class="toolbar" style="justify-content:center; gap:.75rem; flex-wrap:wrap;">
+            <span class="btn" style="pointer-events:none;"><i class="fa-solid fa-calendar-days"></i> <span id="chip-periodo"></span></span>
+            <span class="btn" style="pointer-events:none;"><i class="fa-solid fa-building-columns"></i> <span id="chip-sede"></span></span>
+            <span class="btn" style="pointer-events:none;"><i class="fa-solid fa-sitemap"></i> <span id="chip-grado"></span></span>
+            <span class="btn" style="pointer-events:none;"><i class="fa-solid fa-people-roof"></i> <span id="chip-grupo"></span></span>
           </div>
 
-          <!-- Chips resumen -->
-          <div class="meta" id="resumen-tags"></div>
-
           <!-- Acciones -->
-          <div class="actions" style="margin:.375rem .125rem 0">
-            <button id="btn-grupo-pdf" class="btn btn--pdf">
-              <i class="fa-solid fa-file-pdf"></i> Boletín del grupo (PDF)
-            </button>
-            <button id="btn-grupo-xls" class="btn btn--xls">
-              <i class="fa-solid fa-file-excel"></i> Boletín del grupo (Excel)
-            </button>
-            <a class="btn btn--ghost" href="{% url 'administrativo_reportes_academicos_filtro' %}">
+          <div class="toolbar">
+            <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+              <button id="btn-grupo-pdf" class="btn" style="background:linear-gradient(180deg,#ef4444,#c81e1e); color:#fff; border-color:transparent;">
+                <i class="fa-solid fa-file-pdf"></i> Boletín del grupo (PDF)
+              </button>
+              <button id="btn-grupo-xls" class="btn" style="background:linear-gradient(180deg,#16a34a,#0f7a33); color:#fff; border-color:transparent;">
+                <i class="fa-solid fa-file-excel"></i> Boletín del grupo (Excel)
+              </button>
+            </div>
+            <a class="btn" href="{% url 'administrativo_reportes_academicos_filtro' %}">
               <i class="fa-solid fa-arrow-left"></i> Volver a filtros
             </a>
           </div>
@@ -214,7 +133,7 @@
                   </tr>
                 </thead>
                 <tbody id="tbody-alumnos">
-                  <tr><td colspan="3">Cargando…</td></tr>
+                  <tr><td class="empty" colspan="3">Cargando…</td></tr>
                 </tbody>
               </table>
             </div>
@@ -229,7 +148,7 @@
 {% block extra_js %}
 {{ block.super }}
 <script>
-  /* === Endpoints de exportación (misma lógica) === */
+  /* === Endpoints (misma lógica) === */
   const ENDPOINTS = {
     grupo_pdf:  "/reportes/boletin/grupo/pdf",
     grupo_xlsx: "/reportes/boletin/grupo/excel",
@@ -237,45 +156,45 @@
     alum_xlsx:  "/reportes/boletin/estudiante/excel",
   };
 
-  /* Parámetros URL */
+  /* Params */
   const qs = new URLSearchParams(location.search);
   const sede_id    = qs.get("sede_id");
   const grado_id   = qs.get("grado_id");
   const grupo_id   = qs.get("grupo_id");
   const periodo_id = qs.get("periodo_id");
 
-  const $tags  = document.getElementById('resumen-tags');
   const $tbody = document.getElementById('tbody-alumnos');
 
-  async function j(url){ try{ const r=await fetch(url,{headers:{'Accept':'application/json'}}); return await r.json(); }catch{return{}} }
-  const addTag = (icon, txt)=>{
-    const s = document.createElement('span'); s.className='chip';
-    s.innerHTML = `<i class="${icon}"></i><span>${txt}</span>`; $tags.appendChild(s);
-  };
+  async function j(url){
+    try { const r = await fetch(url, { headers:{'Accept':'application/json'} }); return await r.json(); }
+    catch { return {}; }
+  }
 
+  // Chips superiores (usan tu API existente)
   (async()=>{
-    // Resumen legible
     const pj = await j("{% url 'api_admin_periodos_abiertos' %}");
     const per = (pj.periodos||[]).find(x=>String(x.id)===String(periodo_id));
-    addTag("fa-solid fa-calendar-days","Periodo: " + (per?.nombre || periodo_id));
+    document.getElementById('chip-periodo').textContent = "Periodo: " + (per?.nombre || periodo_id);
 
     const sj = await j("{% url 'api_admin_sedes' %}");
     const sede = (sj.sedes||[]).find(x=>String(x.id)===String(sede_id));
-    addTag("fa-solid fa-building-columns","Sede: " + (sede?.nombre || sede_id));
+    document.getElementById('chip-sede').textContent = "Sede: " + (sede?.nombre || sede_id);
 
     const gj = await j("{% url 'api_admin_grados_por_sede' %}?sede_id="+encodeURIComponent(sede_id));
     const grado = (gj.grados||[]).find(x=>String(x.id)===String(grado_id));
-    addTag("fa-solid fa-sitemap","Grado: " + (grado?.nombre || grado_id));
+    document.getElementById('chip-grado').textContent = "Grado: " + (grado?.nombre || grado_id);
 
     const grj = await j("{% url 'api_admin_grupos_por_sede_grado' %}?sede_id="+encodeURIComponent(sede_id)+"&grado_id="+encodeURIComponent(grado_id));
     const grupo = (grj.grupos||[]).find(x=>String(x.id)===String(grupo_id));
-    addTag("fa-solid fa-people-roof","Grupo: " + (grupo?.nombre || grupo_id));
+    document.getElementById('chip-grupo').textContent = "Grupo: " + (grupo?.nombre || grupo_id);
+  })();
 
+  (async()=>{
     // Alumnos
     const r = await j("{% url 'api_admin_estudiantes_por_grupo' %}?grupo_id="+encodeURIComponent(grupo_id));
     const alumnos = r.estudiantes || [];
     if (!alumnos.length){
-      $tbody.innerHTML = '<tr><td colspan="3">No hay estudiantes en este grupo.</td></tr>';
+      $tbody.innerHTML = '<tr><td class="empty" colspan="3">No hay estudiantes en este grupo.</td></tr>';
       return;
     }
     $tbody.innerHTML = "";
@@ -289,9 +208,13 @@
         </td>
         <td class="doc">${a.documento || ''}</td>
         <td>
-          <div class="mini">
-            <a target="_blank" class="pdf"><i class="fa-solid fa-file-pdf"></i> PDF</a>
-            <a target="_blank" class="xls"><i class="fa-solid fa-file-excel"></i> Excel</a>
+          <div class="mini" style="display:inline-flex; gap:.5rem; flex-wrap:wrap;">
+            <a target="_blank" class="btn" style="background:linear-gradient(180deg,#ef4444,#c81e1e); color:#fff; border-color:transparent;">
+              <i class="fa-solid fa-file-pdf"></i> PDF
+            </a>
+            <a target="_blank" class="btn" style="background:linear-gradient(180deg,#16a34a,#0f7a33); color:#fff; border-color:transparent;">
+              <i class="fa-solid fa-file-excel"></i> Excel
+            </a>
           </div>
         </td>`;
 
