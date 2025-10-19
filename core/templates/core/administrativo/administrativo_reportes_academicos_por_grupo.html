@@ -150,6 +150,25 @@
     .tabla th:nth-child(2), .tabla td:nth-child(2){display:none}
     .tabla th:nth-child(1){width:auto}
   }
+
+  /* --- FIX superposición primera columna vs. encabezado --- */
+
+  /* Asegura que el encabezado quede SIEMPRE por encima */
+  .tabla thead th{
+    z-index: 10 !important;
+  }
+
+  /* La primera celda sticky queda por debajo del thead, pero por encima del resto */
+  .tabla tbody tr td:first-child{
+    z-index: 3 !important; /* antes lo teníamos más alto */
+    box-shadow: .0625rem 0 0 #e6ebf3; /* mantiene el divisor vertical */
+  }
+
+  /* (Opcional) Suaviza el borde redondeado superior para que no “asome” bajo el header */
+  .tabla tbody tr:first-child td:first-child{
+    border-top-left-radius: .5rem;
+  }
+
 </style>
 {% endblock %}
 
