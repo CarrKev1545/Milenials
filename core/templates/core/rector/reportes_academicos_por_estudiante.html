@@ -240,7 +240,7 @@
       setSelect(sedeSel, sedes.sedes, "Seleccione la sede"); enable(sedeSel, true);
 
       const pers  = await fetch("{% url 'api_periodos_abiertos' %}").then(r=>r.json());
-      setSelect(periodoSel, pers.periodos, "Periodo (opcional)"); enable(periodoSel, true);
+      setSelect(periodoSel, pers.periodos, "Periodo"); enable(periodoSel, true);
     }catch(e){ console.error(e); }
   })();
 
