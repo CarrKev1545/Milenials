@@ -126,7 +126,7 @@ DATABASES = {
         'PASSWORD': os.environ.get("DB_PASSWORD", "d0i39cDqDk61e9yRubB6lIhhraaYkF3E"),
         'HOST': os.environ.get("DB_HOST", "localhost"),
         'PORT': os.environ.get("DB_PORT", "5432"),
-        'OPTIONS': {'sslmode': 'require'},  # importante para Render
+        'OPTIONS': {'sslmode': 'require'},  
     }
 }
 
