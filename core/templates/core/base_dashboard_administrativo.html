@@ -48,13 +48,6 @@
          {% if request.path == admin_home_url %}aria-current="page"{% endif %}>
         Inicio
       </a>
-
-      {% url 'administrativo_graficas_reportes' as admin_graficas_url %}
-      <a href="{{ admin_graficas_url }}"
-         class="{% if request.resolver_match.url_name == 'administrativo_graficas_reportes' %}active{% endif %}"
-         {% if request.resolver_match.url_name == 'administrativo_graficas_reportes' %}aria-current="page"{% endif %}>
-         Gráficas (BETA)
-      </a>
     </nav>
 
     <div class="nav-right">
