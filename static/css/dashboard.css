@@ -13,7 +13,7 @@
   --pill-bg: rgba(24,24,24,.88);
   --footer-bg: #000000;
   --accent: #9c0f10;
-  --accent-dark: #800000;
+  --accent-dark: #b02020; /* Mejorado de #800000 para WCAG AA (4.5:1) */
   --white: #ffffff;
   --muted: #cfcfcf;
 
