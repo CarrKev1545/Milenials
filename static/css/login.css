@@ -209,9 +209,36 @@ body::before{
   to { transform: rotate(360deg); }
 }
 
-/* Link */
-.forgot{ margin-top:10px; display:inline-block; text-decoration:none; color:var(--muted); font-size:12px; }
-.forgot:hover{ color:#fff; }
+/* Link olvidaste contraseña mejorado */
+.forgot{
+  margin-top:16px;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  text-decoration:none;
+  color:var(--muted);
+  font-size:13px;
+  font-weight:600;
+  padding:8px 16px;
+  border-radius:12px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.08);
+  transition:all 0.3s ease;
+}
+.forgot:hover{
+  color:var(--accent-light);
+  background:rgba(255,255,255,0.08);
+  border-color:rgba(184,15,34,0.3);
+  transform:translateY(-2px);
+  box-shadow:0 4px 12px rgba(184,15,34,0.2);
+}
+.forgot i{
+  font-size:12px;
+  transition:transform 0.3s ease;
+}
+.forgot:hover i{
+  transform:translateX(3px);
+}
 
 /* Animaciones */
 .login-card.enter{ animation:fadeInUp .5s ease-out both; }
