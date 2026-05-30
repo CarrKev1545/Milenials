@@ -47,6 +47,10 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 STATICFILES_DIRS = [ BASE_DIR / 'static' ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Compresión de staticfiles para producción
+if not DEBUG:
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+
 
 
 
