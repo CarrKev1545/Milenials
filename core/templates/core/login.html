@@ -7,7 +7,9 @@
   <!-- Preload de CSS crítico -->
   <link rel="preload" href="{% static 'css/login.css' %}" as="style">
 
+  {% compress css %}
   <link rel="stylesheet" href="{% static 'css/login.css' %}">
+  {% endcompress %}
 
   <style>
     /* Estilos específicos del login que no están en login.css */

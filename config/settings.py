@@ -51,6 +51,12 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 if not DEBUG:
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
+# --- Django Compressor (minificación CSS/JS) ---
+COMPRESS_ENABLED = True
+COMPRESS_CSS_FILTERS = ['compressor.filters.css_default.CssAbsoluteFilter', 'compressor.filters.cssmin.CSSMinFilter']
+COMPRESS_JS_FILTERS = ['compressor.filters.jsmin.JSMinFilter']
+COMPRESS_ROOT = STATIC_ROOT
+
 
 
 
@@ -67,6 +73,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'compressor',
     'rest_framework',
     'corsheaders',
     'django_filters',
