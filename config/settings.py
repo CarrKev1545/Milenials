@@ -52,7 +52,8 @@ if not DEBUG:
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
 # --- Django Compressor (minificación CSS/JS) ---
-COMPRESS_ENABLED = True
+# Habilitado solo en producción para evitar problemas en desarrollo
+COMPRESS_ENABLED = not DEBUG
 COMPRESS_CSS_FILTERS = ['compressor.filters.css_default.CssAbsoluteFilter', 'compressor.filters.cssmin.CSSMinFilter']
 COMPRESS_JS_FILTERS = ['compressor.filters.jsmin.JSMinFilter']
 COMPRESS_ROOT = STATIC_ROOT
@@ -111,7 +112,6 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'compressor.context_processors.compress',
             ],
         },
     },

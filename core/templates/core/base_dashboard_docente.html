@@ -7,10 +7,8 @@
   <title>{% block title %}Panel del Docente{% endblock %}</title>
 
   <!-- === Mismos CSS que usa el Rector === -->
-  {% compress css %}
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
   <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
-  {% endcompress %}
 
   <!-- Preload de Font Awesome -->
   <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
