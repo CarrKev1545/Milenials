@@ -14,6 +14,9 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.timezone import now
 from django.utils.encoding import force_str
 from django.conf import settings
+from django.core.cache import cache
+from django.views.decorators.cache import never_cache
+import logging
 
 # Templates
 from django.template.loader import render_to_string
@@ -109,82 +112,110 @@ def login_view(request: HttpRequest) -> HttpResponse:
     error = None
     next_url = request.GET.get("next") or request.POST.get("next")
 
+    # Rate limiting básico (5 intentos por IP en 15 minutos)
+    client_ip = request.META.get('REMOTE_ADDR', 'unknown')
+    rate_limit_key = f'login_attempts_{client_ip}'
+    attempts = cache.get(rate_limit_key, 0)
+
     if request.method == "POST":
         usuario = (request.POST.get("usuario") or "").strip()
         password = request.POST.get("password") or ""
 
-        # 1) Intento normal con Django
-        user = authenticate(request, username=usuario, password=password)
+        # Validación de campos
+        if not usuario:
+            error = "Por favor ingresa tu usuario"
+        elif len(usuario) < 3:
+            error = "El usuario debe tener al menos 3 caracteres"
+        elif not password:
+            error = "Por favor ingresa tu contraseña"
+        elif len(password) < 6:
+            error = "La contraseña debe tener al menos 6 caracteres"
+        elif attempts >= 5:
+            error = "Demasiados intentos. Por favor espera 15 minutos e intenta nuevamente."
+            logging.warning(f"Rate limit excedido para IP: {client_ip}")
+        else:
+            # 1) Intento normal con Django
+            user = authenticate(request, username=usuario, password=password)
 
-        # 2) Fallback contra public.usuarios (tu helper)
-        if user is None:
-            row = autenticar_usuario_tabla_usuarios(usuario, password)
-            if row:
-                u_id, nombre, apellidos, rol, usuario_db, email_db = row
+            # 2) Fallback contra public.usuarios (tu helper)
+            if user is None:
+                row = autenticar_usuario_tabla_usuarios(usuario, password)
+                if row:
+                    u_id, nombre, apellidos, rol, usuario_db, email_db = row
 
-                User = get_user_model()
-                # Lista de campos reales del modelo de usuario
-                user_fields = {f.name for f in User._meta.get_fields()}
+                    User = get_user_model()
+                    # Lista de campos reales del modelo de usuario
+                    user_fields = {f.name for f in User._meta.get_fields()}
 
-                # Campo de búsqueda: 'usuario' si existe, si no USERNAME_FIELD, si no 'username'
-                lookup_field = (
-                    'usuario' if 'usuario' in user_fields
-                    else getattr(User, 'USERNAME_FIELD', 'username')
-                )
+                    # Campo de búsqueda: 'usuario' si existe, si no USERNAME_FIELD, si no 'username'
+                    lookup_field = (
+                        'usuario' if 'usuario' in user_fields
+                        else getattr(User, 'USERNAME_FIELD', 'username')
+                    )
 
-                lookup_kwargs = {lookup_field: usuario_db}
+                    lookup_kwargs = {lookup_field: usuario_db}
 
-                # Defaults mapeando a tus campos reales
-                defaults = {}
-                if 'first_name' in user_fields:
-                    defaults['first_name'] = nombre
-                elif 'nombre' in user_fields:
-                    defaults['nombre'] = nombre
+                    # Defaults mapeando a tus campos reales
+                    defaults = {}
+                    if 'first_name' in user_fields:
+                        defaults['first_name'] = nombre
+                    elif 'nombre' in user_fields:
+                        defaults['nombre'] = nombre
 
-                if 'last_name' in user_fields:
-                    defaults['last_name'] = apellidos
-                elif 'apellidos' in user_fields:
-                    defaults['apellidos'] = apellidos
+                    if 'last_name' in user_fields:
+                        defaults['last_name'] = apellidos
+                    elif 'apellidos' in user_fields:
+                        defaults['apellidos'] = apellidos
 
-                if 'email' in user_fields:
-                    defaults['email'] = email_db
+                    if 'email' in user_fields:
+                        defaults['email'] = email_db
 
-                if 'rol' in user_fields:
-                    defaults['rol'] = str(rol)
+                    if 'rol' in user_fields:
+                        defaults['rol'] = str(rol)
 
-                if 'is_active' in user_fields:
-                    defaults['is_active'] = True
+                    if 'is_active' in user_fields:
+                        defaults['is_active'] = True
 
-                user, _created = User.objects.get_or_create(
-                    defaults=defaults,
-                    **lookup_kwargs
-                )
+                    user, _created = User.objects.get_or_create(
+                        defaults=defaults,
+                        **lookup_kwargs
+                    )
 
-                # Asegura rol en objeto/sesión para _redir_por_rol
-                if hasattr(user, 'rol'):
-                    user.rol = str(rol)
-                request.session['rol'] = str(rol)
-                request.session['usuario_custom_id'] = int(u_id)
+                    # Asegura rol en objeto/sesión para _redir_por_rol
+                    if hasattr(user, 'rol'):
+                        user.rol = str(rol)
+                    request.session['rol'] = str(rol)
+                    request.session['usuario_custom_id'] = int(u_id)
 
-                # Marca backend y login
-                user.backend = "django.contrib.auth.backends.ModelBackend"
+                    # Marca backend y login
+                    user.backend = "django.contrib.auth.backends.ModelBackend"
+                    login(request, user)
+
+                    # Resetear contador de intentos exitosos
+                    cache.delete(rate_limit_key)
+                    logging.info(f"Login exitoso - Usuario: {usuario}, IP: {client_ip}")
+
+                    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+                        return redirect(next_url)
+                    return _redir_por_rol(user)
+
+            # 3) Flujo original si Django sí autenticó
+            if user is None:
+                error = "Usuario o contraseña incorrectos"
+                # Incrementar contador de intentos fallidos
+                cache.set(rate_limit_key, attempts + 1, 900)  # 15 minutos
+                logging.warning(f"Login fallido - Usuario: {usuario}, IP: {client_ip}, Intentos: {attempts + 1}")
+            else:
+                # opcional: intenta propagar rol desde sesión si existiera
+                if hasattr(user, 'rol') and not getattr(user, 'rol', None):
+                    user.rol = request.session.get('rol', '')
                 login(request, user)
-
+                # Resetear contador de intentos exitosos
+                cache.delete(rate_limit_key)
+                logging.info(f"Login exitoso - Usuario: {usuario}, IP: {client_ip}")
                 if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
                     return redirect(next_url)
                 return _redir_por_rol(user)
-
-        # 3) Flujo original si Django sí autenticó
-        if user is None:
-            error = "Usuario o contraseña incorrectos"
-        else:
-            # opcional: intenta propagar rol desde sesión si existiera
-            if hasattr(user, 'rol') and not getattr(user, 'rol', None):
-                user.rol = request.session.get('rol', '')
-            login(request, user)
-            if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
-                return redirect(next_url)
-            return _redir_por_rol(user)
 
     return render(request, "core/login.html", {"error": error, "next": next_url})
 
