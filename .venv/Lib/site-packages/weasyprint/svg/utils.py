@@ -5,7 +5,7 @@ from contextlib import suppress
 from math import cos, radians, sin, tan
 from urllib.parse import urlparse
 
-from tinycss2.color4 import parse_color
+from tinycss2.color5 import parse_color
 
 from ..matrix import Matrix
 
@@ -25,7 +25,7 @@ def normalize(string):
 
 def size(string, font_size=None, percentage_reference=None):
     """Compute size from string, resolving units and percentages."""
-    from ..css.utils import LENGTHS_TO_PIXELS
+    from ..css.units import LENGTHS_TO_PIXELS
 
     if not string:
         return 0
@@ -94,7 +94,10 @@ def preserve_ratio(svg, node, font_size, width, height, viewbox=None):
     scale_x = width / viewbox_width if viewbox_width else 1
     scale_y = height / viewbox_height if viewbox_height else 1
 
-    aspect_ratio = node.get('preserveAspectRatio', 'xMidYMid').split()
+    if viewbox:
+        aspect_ratio = node.get('preserveAspectRatio', 'xMidYMid').split()
+    else:
+        aspect_ratio = ('none',)
     align = aspect_ratio[0]
     if align == 'none':
         x_position = 'min'

@@ -4,8 +4,6 @@ from functools import partial
 
 import pydyf
 
-from .metadata import add_metadata
-
 
 def pdfa(pdf, metadata, document, page_streams, attachments, compress,
          version, variant):
@@ -65,7 +63,11 @@ def pdfa(pdf, metadata, document, page_streams, attachments, compress,
     if version == 1:
         # Metadata compression is forbidden for version 1.
         compress = False
-    add_metadata(pdf, metadata, 'a', version, variant, compress)
+    metadata.include_in_pdf(pdf, 'a', version, variant, compress)
+
+    # Remove document information.
+    if version >= 4:
+        pdf.info.clear()
 
 
 VARIANTS = {
@@ -78,9 +80,6 @@ VARIANTS = {
     'pdf/a-3b': (
         partial(pdfa, version=3, variant='B'),
         {'version': '1.7', 'identifier': True, 'srgb': True}),
-    'pdf/a-4b': (
-        partial(pdfa, version=4, variant='B'),
-        {'version': '2.0', 'identifier': True, 'srgb': True}),
     'pdf/a-2u': (
         partial(pdfa, version=2, variant='U'),
         {'version': '1.7', 'identifier': True, 'srgb': True}),
@@ -89,5 +88,20 @@ VARIANTS = {
         {'version': '1.7', 'identifier': True, 'srgb': True}),
     'pdf/a-4u': (
         partial(pdfa, version=4, variant='U'),
+        {'version': '2.0', 'identifier': True, 'srgb': True}),
+    'pdf/a-1a': (
+        partial(pdfa, version=1, variant='A'),
+        {'version': '1.4', 'identifier': True, 'srgb': True, 'pdf_tags': True}),
+    'pdf/a-2a': (
+        partial(pdfa, version=2, variant='A'),
+        {'version': '1.7', 'identifier': True, 'srgb': True, 'pdf_tags': True}),
+    'pdf/a-3a': (
+        partial(pdfa, version=3, variant='A'),
+        {'version': '1.7', 'identifier': True, 'srgb': True, 'pdf_tags': True}),
+    'pdf/a-4e': (
+        partial(pdfa, version=4, variant='E'),
+        {'version': '2.0', 'identifier': True, 'srgb': True}),
+    'pdf/a-4f': (
+        partial(pdfa, version=4, variant='F'),
         {'version': '2.0', 'identifier': True, 'srgb': True}),
 }

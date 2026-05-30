@@ -3,15 +3,15 @@
 import functools
 
 from tinycss2.ast import DimensionToken, IdentToken, NumberToken
-from tinycss2.color4 import parse_color
+from tinycss2.color5 import parse_color
 
+from ..functions import check_var
 from ..properties import INITIAL_VALUES
 from .descriptors import expand_font_variant
 
-from ..utils import (  # isort:skip
-    InvalidValues, Pending, check_var_function, get_keyword, get_single_keyword,
-    split_on_comma)
-from .properties import ( # isort:skip
+from ..tokens import (  # isort:skip
+    InvalidValues, Pending, get_keyword, get_single_keyword, split_on_comma)
+from .properties import (  # isort:skip
     background_attachment, background_image, background_position, background_repeat,
     background_size, block_ellipsis, border_image_source, border_image_slice,
     border_image_width, border_image_outset, border_image_repeat, border_style,
@@ -42,7 +42,7 @@ class PendingExpander(Pending):
 def _find_var(tokens, expander, expanded_names):
     """Return pending expanders when var is found in tokens."""
     for token in tokens:
-        if check_var_function(token):
+        if check_var(token):
             # Found CSS variable, keep pending-substitution values.
             pending = PendingExpander(tokens, expander)
             return {name: pending for name in expanded_names}
@@ -257,8 +257,7 @@ def expand_border(tokens, name, base_url):
 
     """
     for suffix in ('-top', '-right', '-bottom', '-left'):
-        for new_prop in expand_border_side(tokens, name + suffix, base_url):
-            yield new_prop
+        yield from expand_border_side(tokens, name + suffix, base_url)
 
 
 @expander('border-top')

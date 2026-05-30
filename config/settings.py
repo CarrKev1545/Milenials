@@ -27,7 +27,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-%a&9qy-#v_^6y)*0-%6)u
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = ["millennials.onrender.com"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "millennials.onrender.com"]
 CSRF_TRUSTED_ORIGINS = ["https://millennials.onrender.com"]
 
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
@@ -118,20 +118,29 @@ REST_FRAMEWORK = {
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get("DB_NAME", "BaseDeDatosMilenials"),
-        'USER': os.environ.get("DB_USER", "basededatosmilenials_user"),
-        'PASSWORD': os.environ.get("DB_PASSWORD", "d0i39cDqDk61e9yRubB6lIhhraaYkF3E"),
-        'HOST': os.environ.get("DB_HOST", "localhost"),
-        'PORT': os.environ.get("DB_PORT", "5432"),
-        'OPTIONS': {'sslmode': 'require'},  
-    }
-}
+USE_SQLITE = os.environ.get("USE_SQLITE", "True") == "True"
 
-# Mantén vivas las conexiones para evitar handshakes constantes
-DATABASES['default']['CONN_MAX_AGE'] = int(os.environ.get("DB_CONN_MAX_AGE", "60"))
+if USE_SQLITE:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get("DB_NAME", "BaseDeDatosMilenials"),
+            'USER': os.environ.get("DB_USER", "basededatosmilenials_user"),
+            'PASSWORD': os.environ.get("DB_PASSWORD", "d0i39cDqDk61e9yRubB6lIhhraaYkF3E"),
+            'HOST': os.environ.get("DB_HOST", "localhost"),
+            'PORT': os.environ.get("DB_PORT", "5432"),
+            'OPTIONS': {'sslmode': 'require'},  
+        }
+    }
+    # Mantén vivas las conexiones para evitar handshakes constantes
+    DATABASES['default']['CONN_MAX_AGE'] = int(os.environ.get("DB_CONN_MAX_AGE", "60"))
 
 
 # Password validation

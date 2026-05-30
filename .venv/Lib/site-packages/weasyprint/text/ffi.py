@@ -22,6 +22,7 @@ ffi.cdef('''
     hb_blob_t * hb_face_reference_blob (hb_face_t *face);
     unsigned int hb_face_get_index (const hb_face_t *face);
     unsigned int hb_face_get_upem (const hb_face_t *face);
+    unsigned int hb_face_get_glyph_count (const hb_face_t *face);
     hb_blob_t * hb_face_reference_table (const hb_face_t *face, hb_tag_t tag);
     const char * hb_blob_get_data (hb_blob_t *blob, unsigned int *length);
     unsigned int hb_blob_get_length (hb_blob_t *blob);
@@ -450,8 +451,8 @@ def _dlopen(ffi, *names, allow_fail=False):
             return ffi.dlopen(name, flags)
     if allow_fail:
         return
-    # Re-raise the exception.
-    print(
+    # Print error message and re-raise the exception.
+    print(  # noqa: T201, logger is not configured yet
         '\n-----\n\n'
         'WeasyPrint could not import some external libraries. Please '
         'carefully follow the installation steps before reporting an issue:\n'
@@ -474,7 +475,7 @@ if hasattr(os, 'add_dll_directory') and not hasattr(sys, 'frozen'):  # pragma: n
 
 gobject = _dlopen(
     ffi, 'libgobject-2.0-0', 'gobject-2.0-0', 'gobject-2.0',
-    'libgobject-2.0.so.0', 'libgobject-2.0.dylib', 'libgobject-2.0-0.dll')
+    'libgobject-2.0.so.0', 'libgobject-2.0.0.dylib', 'libgobject-2.0-0.dll')
 pango = _dlopen(
     ffi, 'libpango-1.0-0', 'pango-1.0-0', 'pango-1.0', 'libpango-1.0.so.0',
     'libpango-1.0.dylib', 'libpango-1.0-0.dll')

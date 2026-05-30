@@ -42,7 +42,7 @@ def draw_column_rules(stream, box):
             if box.style['column_gap'] == 'normal':
                 gap = box.style['font_size']  # normal equals 1em
             else:
-                gap = percentage(box.style['column_gap'], box.width)
+                gap = percentage(box.style['column_gap'], box.style, box.width)
             position_x = (
                 child.position_x - (box.style['column_rule_width'] + gap) / 2)
             border_box = position_x, child.position_y, rule_width, child.height
@@ -260,9 +260,7 @@ def draw_border_image(box, stream, image, border_slice, border_repeat, border_ou
                             slice_width, slice_height)
                         stream.clip()
                         stream.end()
-                        image.draw(
-                            stream, intrinsic_width, intrinsic_height,
-                            box.style['image_rendering'])
+                        image.draw(stream, intrinsic_width, intrinsic_height, box.style)
 
         return scale_x, scale_y
 
@@ -532,7 +530,7 @@ def clip_border_segment(stream, style, width, side, border_box,
                     space = 0  # no space, unused
             elif style == 'dashed':
                 space = dash = length / (number_of_spaces + number_of_dashes) or 1
-            for i in range(0, number_of_dashes + 1):
+            for i in range(number_of_dashes + 1):
                 advance = i * (space + dash)
                 if side == 'top':
                     cx, cy = bbx + advance + dash / 2, bby + width / 2

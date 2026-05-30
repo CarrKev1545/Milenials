@@ -1,10 +1,10 @@
 """Layout for pages and CSS3 margin boxes."""
 
 import copy
-from collections import namedtuple
+from collections import defaultdict, namedtuple
 from math import inf
 
-from ..css import computed_from_cascaded
+from ..css import AnonymousStyle
 from ..formatting_structure import boxes, build
 from ..logger import PROGRESS_LOGGER
 from .absolute import absolute_box_layout, absolute_layout
@@ -377,8 +377,7 @@ def make_margin_boxes(context, page, state):
         style = context.style_for(page.page_type, at_keyword)
         if style is None:
             # doesn't affect counters
-            style = computed_from_cascaded(
-                element=None, cascaded={}, parent_style=page.style)
+            style = AnonymousStyle(page.style)
         _standardize_page_based_counters(style, at_keyword)
         box = boxes.MarginBox(at_keyword, style)
         # Empty boxes should not be generated, but they may be needed for
@@ -390,7 +389,7 @@ def make_margin_boxes(context, page, state):
         if box.is_generated:
             # @margins mustn't manipulate page-context counters
             margin_state = copy.deepcopy(state)
-            quote_depth, counter_values, counter_scopes = margin_state
+            quote_depth, counter_values, counter_scopes, _page_groups = margin_state
             # TODO: check this, probably useless
             counter_scopes.append(set())
             build.update_counters(margin_state, box.style)
@@ -493,7 +492,8 @@ def margin_box_content_layout(context, page, box):
     box, resume_at, next_page, _, _, _ = block_container_layout(
         context, box, bottom_space=-inf, skip_stack=None, page_is_empty=True,
         absolute_boxes=positioned_boxes, fixed_boxes=positioned_boxes,
-        adjoining_margins=None, discard=False, max_lines=None)
+        adjoining_margins=None, first_letter_style=None, first_line_style=None,
+        discard=False, max_lines=None)
     assert resume_at is None
     for absolute_box in positioned_boxes:
         absolute_layout(
@@ -628,15 +628,19 @@ def make_page(context, root_box, page_type, resume_at, page_number,
     adjoining_margins = []
     positioned_boxes = []  # Mixed absolute and fixed
     out_of_flow_boxes = []
+    excluded_shapes = defaultdict(list)
     broken_out_of_flow = {}
     context_out_of_flow = context.broken_out_of_flow.values()
     context.broken_out_of_flow = broken_out_of_flow
-    for box, containing_block, skip_stack in context_out_of_flow:
+    for box, containing_block, context_box, skip_stack in context_out_of_flow:
+        if context_box:
+            context.create_block_formatting_context(context_box)
         box.position_y = root_box.content_box_y()
         if box.is_floated():
             out_of_flow_box, out_of_flow_resume_at = float_layout(
                 context, box, containing_block, positioned_boxes,
                 positioned_boxes, 0, skip_stack)
+            excluded_shapes[context_box].append(out_of_flow_box)
         else:
             assert box.is_absolutely_positioned()
             out_of_flow_box, out_of_flow_resume_at = absolute_box_layout(
@@ -645,8 +649,14 @@ def make_page(context, root_box, page_type, resume_at, page_number,
         out_of_flow_boxes.append(out_of_flow_box)
         page_is_empty = False
         if out_of_flow_resume_at:
-            broken_out_of_flow[out_of_flow_box] = (
-                box, containing_block, out_of_flow_resume_at)
+            context.add_broken_out_of_flow(
+                out_of_flow_box, box, containing_block, out_of_flow_resume_at)
+        if context_box:
+            context.finish_block_formatting_context()
+
+    # Set excluded shapes from broken out-of-flow for in-flow content.
+    for context_box, shapes in excluded_shapes.items():
+        context._excluded_shapes[context_box] = shapes
 
     # Display in-flow content.
     initial_root_box = root_box
@@ -668,14 +678,15 @@ def make_page(context, root_box, page_type, resume_at, page_number,
         parent.force_fragmentation = True
         root_box, _, _, _, _, _ = block_level_layout(
             context, initial_root_box, 0, initial_resume_at, initial_containing_block,
-            page_is_empty, positioned_boxes, positioned_boxes, adjoining_margins)
+            True, positioned_boxes, positioned_boxes, adjoining_margins)
         resume_at = initial_resume_at
     root_box.children = out_of_flow_boxes + root_box.children
 
     footnote_area = build.create_anonymous_boxes(footnote_area.deepcopy())
     footnote_area = block_level_layout(
-        context, footnote_area, -inf, None, footnote_area.page, True,
-        positioned_boxes, positioned_boxes)[0]
+        context, footnote_area, bottom_space=-inf, skip_stack=None,
+        containing_block=footnote_area.page, page_is_empty=True,
+        absolute_boxes=positioned_boxes, fixed_boxes=positioned_boxes)[0]
     footnote_area.translate(dy=-footnote_area.margin_height())
 
     page.fixed_boxes = [
@@ -686,7 +697,7 @@ def make_page(context, root_box, page_type, resume_at, page_number,
             context, absolute_box, page, positioned_boxes, bottom_space=0,
             skip_stack=None)
 
-    context.finish_block_formatting_context(root_box)
+    context.finish_block_formatting_context()
 
     page.children = [root_box, footnote_area]
 
@@ -890,7 +901,7 @@ def _update_page_groups(page_groups, resume_at, next_page, root_box, blank):
             return next_page['page']
 
 
-def remake_page(index, page_groups, context, root_box, html):
+def remake_page(index, context, root_box, html):
     """Return one laid out page without margin boxes.
 
     Start with the initial values from ``context.page_maker[index]``.
@@ -921,6 +932,7 @@ def remake_page(index, page_groups, context, root_box, html):
         (next_page_side == 'right' and not right_page) or
         (context.reported_footnotes and resume_at is None))
     side = 'right' if right_page else 'left'
+    page_groups = page_state[3]
     name = _update_page_groups(page_groups, resume_at, next_page, root_box, blank)
     groups = tuple((name, index) for name, index, _ in page_groups)
     page_type = PageType(side, blank, name, index, groups)
@@ -979,7 +991,6 @@ def make_all_pages(context, root_box, html, pages):
     """
     i = 0
     reported_footnotes = None
-    page_groups = []
     while True:
         remake_state = context.page_maker[i][-1]
         if (len(pages) == 0 or
@@ -991,7 +1002,7 @@ def make_all_pages(context, root_box, html, pages):
             remake_state['pages_wanted'] = False
             remake_state['anchors'] = []
             remake_state['content_lookups'] = []
-            page, resume_at = remake_page(i, page_groups, context, root_box, html)
+            page, resume_at = remake_page(i, context, root_box, html)
             reported_footnotes = context.reported_footnotes
             yield page
         else:

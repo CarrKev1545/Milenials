@@ -49,7 +49,6 @@ from django.db import connection, transaction
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from django.core.mail import send_mail
-from weasyprint import HTML, CSS
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment
@@ -67,10 +66,28 @@ def autenticar_usuario_tabla_usuarios(usuario: str, password_clara: str):
     if not usuario or not password_clara:
         return None
 
+    # Fallback compatible con SQLite (desarrollo local)
+    if connection.vendor == 'sqlite':
+        with connection.cursor() as cur:
+            cur.execute("""
+                SELECT id, nombre, apellidos, rol, usuario, email, password_hash
+                FROM usuarios
+                WHERE LOWER(usuario)=LOWER(%s)
+                  AND activo = 1
+                LIMIT 1
+            """, [usuario])
+            row = cur.fetchone()
+            if row:
+                u_id, nombre, apellidos, rol, usuario_db, email_db, password_hash = row
+                from django.contrib.auth.hashers import check_password
+                if password_hash == password_clara or check_password(password_clara, password_hash):
+                    return (u_id, nombre, apellidos, rol, usuario_db, email_db)
+        return None
+
     with connection.cursor() as cur:
         cur.execute("""
             SELECT id, nombre, apellidos, rol, usuario, email
-            FROM public.usuarios
+            FROM usuarios
             WHERE LOWER(usuario)=LOWER(%s)
               AND activo = TRUE
               AND (
@@ -355,8 +372,12 @@ def _docente_puede_editar_asignatura(user_id: int, grupo_id: int, asignatura_id:
             return False
 
         # B) si existe tabla docente_asignatura, validamos asignación específica (docente-grupo-asignatura)
-        cur.execute("SELECT to_regclass('public.docente_asignatura');")
-        has_docente_asig = bool(cur.fetchone()[0])
+        if connection.vendor == 'sqlite':
+            cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='docente_asignatura';")
+            has_docente_asig = bool(cur.fetchone())
+        else:
+            cur.execute("SELECT to_regclass('public.docente_asignatura');")
+            has_docente_asig = bool(cur.fetchone()[0])
 
         if has_docente_asig:
             cur.execute("""

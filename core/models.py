@@ -23,7 +23,7 @@ class UsuarioManager(BaseUserManager):
 class Usuario(AbstractBaseUser):
     class Meta:
         db_table = "usuarios"
-        managed = False  # No permitir que Django cree/modifique esta tabla
+        managed = True
 
     id = models.BigAutoField(primary_key=True)
     nombre = models.CharField(max_length=80)
@@ -63,7 +63,7 @@ class Usuario(AbstractBaseUser):
 class Grupo(models.Model):
     class Meta:
         db_table = "grupos"
-        managed = False
+        managed = True
 
     id = models.BigAutoField(primary_key=True)
     sede_id = models.BigIntegerField()
@@ -77,7 +77,7 @@ class Grupo(models.Model):
 class Estudiante(models.Model):
     class Meta:
         db_table = "estudiantes"  # Nombre real de la tabla en BD
-        managed = False           # Evita migraciones sobre esta tabla
+        managed = True
 
     nombre = models.CharField(max_length=100)
     apellidos = models.CharField(max_length=100)
@@ -94,7 +94,7 @@ class ReporteAcademico(models.Model):
 
     class Meta:
         db_table = "reportes_academicos"  # Ajusta si tu tabla se llama distinto
-        managed = False                   # Evita migraciones sobre esta tabla
+        managed = True
         unique_together = ('grupo', 'estudiante', 'periodo')
         verbose_name = "Reporte Académico"
         verbose_name_plural = "Reportes Académicos"
@@ -111,7 +111,7 @@ class ReporteAcademico(models.Model):
 class EstudianteGrupo(models.Model):
     class Meta:
         db_table = "estudiante_grupo"
-        managed = False
+        managed = True
 
     id = models.BigAutoField(primary_key=True)
     estudiante = models.ForeignKey(
@@ -129,7 +129,7 @@ class EstudianteGrupo(models.Model):
 class Sede(models.Model):
     class Meta:
         db_table = "sedes"
-        managed = False
+        managed = True
 
     id = models.BigAutoField(primary_key=True)
     nombre = models.CharField(max_length=100)
@@ -143,7 +143,7 @@ class Sede(models.Model):
 class Nota(models.Model):
     class Meta:
         db_table = "notas"
-        managed = False  # la tabla ya existe en tu BD
+        managed = True
 
     id = models.BigAutoField(primary_key=True)
     estudiante_id = models.BigIntegerField()

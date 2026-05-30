@@ -54,17 +54,12 @@ class HTMLUnicodeInputStream:
 
     """
 
-    def __init__(self, source):
+    def __init__(self, source, **kwargs):
         """Initialise the HTMLInputStream.
 
         Create a normalized stream from source for use by tinyhtml5.
 
         source can be either a file-object, local filename or a string.
-
-        The optional encoding parameter must be a string that indicates
-        the encoding.  If specified, that encoding will be used,
-        regardless of any BOM or later declaration (such as in a meta
-        element).
 
         """
         # List of where new lines occur.
@@ -95,13 +90,13 @@ class HTMLUnicodeInputStream:
         source can be either a file object, local filename or a string.
 
         """
-        return source if hasattr(source, 'read') else StringIO(source)
+        return source if hasattr(source, "read") else StringIO(source)
 
     def _position(self, offset):
         chunk = self.chunk
-        number_lines = chunk.count('\n', 0, offset)
+        number_lines = chunk.count("\n", 0, offset)
         position_line = self.previous_number_lines + number_lines
-        last_line_position = chunk.rfind('\n', 0, offset)
+        last_line_position = chunk.rfind("\n", 0, offset)
         if last_line_position == -1:
             position_column = self.previous_number_columns + offset
         else:
@@ -239,7 +234,7 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
 
     def __init__(self, source, override_encoding=None, transport_encoding=None,
                  same_origin_parent_encoding=None, likely_encoding=None,
-                 default_encoding="windows-1252"):
+                 default_encoding="windows-1252", **kwargs):
         # Raw Stream - for Unicode objects this will encode to UTF-8 and set
         # self.encoding as appropriate.
         self.raw_stream = self.open_stream(source)
@@ -264,12 +259,12 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
 
     def reset(self):
         streamreader = self.encoding[0].codec_info.streamreader
-        self.stream = streamreader(self.raw_stream, 'replace')
+        self.stream = streamreader(self.raw_stream, "replace")
         super().reset()
 
     def open_stream(self, source):
-        if hasattr(source, 'read'):
-            if hasattr(source, 'seekable') and source.seekable():
+        if hasattr(source, "read"):
+            if hasattr(source, "seekable") and source.seekable():
                 return source
             source = source.read()
         return BytesIO(source)
@@ -338,11 +333,11 @@ class HTMLBinaryInputStream(HTMLUnicodeInputStream):
 
         """
         boms = {
-            codecs.BOM_UTF8: 'utf-8',
-            codecs.BOM_UTF16_LE: 'utf-16le',
-            codecs.BOM_UTF16_BE: 'utf-16be',
-            codecs.BOM_UTF32_LE: 'utf-32le',
-            codecs.BOM_UTF32_BE: 'utf-32be',
+            codecs.BOM_UTF8: "utf-8",
+            codecs.BOM_UTF16_LE: "utf-16le",
+            codecs.BOM_UTF16_BE: "utf-16be",
+            codecs.BOM_UTF32_LE: "utf-32le",
+            codecs.BOM_UTF32_BE: "utf-32be",
         }
 
         # Go to beginning of file and read in 4 bytes.

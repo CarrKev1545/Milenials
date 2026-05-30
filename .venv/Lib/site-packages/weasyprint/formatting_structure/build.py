@@ -84,6 +84,8 @@ def build_formatting_structure(element_tree, style_for, get_image_from_uri,
             target_collector, counter_style, footnotes)
 
     target_collector.check_pending_targets()
+    process_whitespace(box)
+    process_text_transform(box)
 
     box.is_for_root_element = True
     # If this is changed, maybe update weasy.layout.page.make_margin_boxes()
@@ -142,6 +144,8 @@ def element_to_box(element, style_for, get_image_from_uri, base_url,
             style['display'] = ('inline', 'flow')
 
     box = make_box(element.tag, style, [], element)
+    box.first_letter_style = style_for(element, 'first-letter')
+    box.first_line_style = style_for(element, 'first-line')
 
     if state is None:
         # use a list to have a shared mutable object
@@ -150,9 +154,10 @@ def element_to_box(element, style_for, get_image_from_uri, base_url,
             [0],  # quote_depth: single integer
             # TODO: define the footnote counter where it can be updated by page
             {'footnote': [0]},  # counter_values: name -> stacked/scoped values
-            [{'footnote'}]  # counter_scopes: element depths -> counter names
+            [{'footnote'}],  # counter_scopes: element depths -> counter names
+            [] # page_groups
         )
-    quote_depth, counter_values, counter_scopes = state
+    quote_depth, counter_values, counter_scopes, _page_groups = state
 
     update_counters(state, style)
 
@@ -161,9 +166,6 @@ def element_to_box(element, style_for, get_image_from_uri, base_url,
     # If this element’s direct children create new scopes, the counter
     # names will be in this new list
     counter_scopes.append(set())
-
-    box.first_letter_style = style_for(element, 'first-letter')
-    box.first_line_style = style_for(element, 'first-line')
 
     marker_boxes = []
     if 'list-item' in style['display']:
@@ -225,10 +227,8 @@ def element_to_box(element, style_for, get_image_from_uri, base_url,
             counter_values.pop(name)
 
     box.children = children
-    process_whitespace(box)
     set_content_lists(
         element, box, style, counter_values, target_collector, counter_style)
-    process_text_transform(box)
 
     if marker_boxes and len(box.children) == 1:
         # See https://www.w3.org/TR/css-lists-3/#list-style-position-outside
@@ -279,7 +279,7 @@ def before_after_to_box(element, pseudo_type, state, style_for,
         return []
     box = make_box(f'{element.tag}::{pseudo_type}', style, [], element)
 
-    quote_depth, counter_values, _counter_scopes = state
+    quote_depth, counter_values, _counter_scopes, _page_groups = state
     update_counters(state, style)
 
     children = []
@@ -298,7 +298,7 @@ def before_after_to_box(element, pseudo_type, state, style_for,
 
     # calculate the bookmark-label
     if style['bookmark_level'] != 'none':
-        _quote_depth, counter_values, _counter_scopes = state
+        _quote_depth, counter_values, _counter_scopes, _page_groups = state
         compute_bookmark_label(
             element, box, style['bookmark_label'], counter_values,
             target_collector, counter_style)
@@ -319,7 +319,7 @@ def marker_to_box(element, state, parent_style, style_for, get_image_from_uri,
     # TODO: should be the computed value. When does the used value for
     # `display` differ from the computer value? It's at least wrong for
     # `content` where 'normal' computes as 'inhibit' for pseudo elements.
-    quote_depth, counter_values, _counter_scopes = state
+    quote_depth, counter_values, _counter_scopes, _page_groups = state
 
     box = make_box(f'{element.tag}::marker', style, children, element)
 
@@ -424,9 +424,7 @@ def compute_content_list(content_list, parent_box, counter_values, css_token,
                     boxes.InlineReplacedBox.anonymous_from(parent_box, image))
         elif type_ == 'content()':
             added_text = extract_text(value, parent_box)
-            # Simulate the step of white space processing
-            # (normally done during the layout).
-            add_text(added_text.strip())
+            add_text(added_text)
         elif type_ == 'string()':
             if not in_page_context:
                 # string() is currently only valid in @page context.
@@ -492,9 +490,7 @@ def compute_content_list(content_list, parent_box, counter_values, css_token,
                 # TODO: 'before'- and 'after'- content referring missing
                 # counters are not properly set.
                 text = extract_text(text_style, target_box)
-                # Simulate the step of white space processing
-                # (normally done during the layout)
-                add_text(text.strip())
+                add_text(text)
             else:
                 break
         elif type_ == 'quote' and None not in (quote_depth, quote_style):
@@ -599,7 +595,6 @@ def compute_string_set(element, box, string_name, content_list,
     """Parse the content-list value of ``string_name`` for ``string-set``."""
     def parse_again(mixin_pagebased_counters=None):
         """Closure to parse the string-set string value all again."""
-
         # Neither alters the mixed-in nor the cached counter values, no
         # need to deepcopy here
         if mixin_pagebased_counters is None:
@@ -607,7 +602,6 @@ def compute_string_set(element, box, string_name, content_list,
         else:
             local_counters = mixin_pagebased_counters.copy()
         local_counters.update(box.cached_counter_values)
-
         compute_string_set(
             element, box, string_name, content_list, local_counters,
             target_collector, counter_style)
@@ -631,7 +625,7 @@ def compute_string_set(element, box, string_name, content_list,
 def compute_bookmark_label(element, box, content_list, counter_values,
                            target_collector, counter_style):
     """Parses the content-list value for ``bookmark-label``."""
-    def parse_again(mixin_pagebased_counters={}):
+    def parse_again(mixin_pagebased_counters=None):
         """Closure to parse the bookmark-label all again."""
         # Neither alters the mixed-in nor the cached counter values, no
         # need to deepcopy here
@@ -639,7 +633,6 @@ def compute_bookmark_label(element, box, content_list, counter_values,
             local_counters = {}
         else:
             local_counters = mixin_pagebased_counters.copy()
-        local_counters = mixin_pagebased_counters.copy()
         local_counters.update(box.cached_counter_values)
         compute_bookmark_label(
             element, box, content_list, local_counters, target_collector,
@@ -663,7 +656,7 @@ def set_content_lists(element, box, style, counter_values, target_collector,
     """
     box.string_set = []
     if style['string_set'] != 'none':
-        for i, (string_name, string_values) in enumerate(style['string_set']):
+        for string_name, string_values in style['string_set']:
             compute_string_set(
                 element, box, string_name, string_values, counter_values,
                 target_collector, counter_style)
@@ -675,7 +668,7 @@ def set_content_lists(element, box, style, counter_values, target_collector,
 
 def update_counters(state, style):
     """Handle the ``counter-*`` properties."""
-    _quote_depth, counter_values, counter_scopes = state
+    _quote_depth, counter_values, counter_scopes, _page_groups = state
     sibling_scopes = counter_scopes[-1]
 
     for name, value in style['counter_reset']:
@@ -1002,7 +995,6 @@ def blockify(box, layout):
     return anonymous
 
 
-
 def flex_boxes(box):
     """Remove and add boxes according to the flex model.
 
@@ -1115,45 +1107,120 @@ def process_whitespace(box, following_collapsible_space=False):
 
     else:
         for child in box.children:
+            child_collapsible_space = process_whitespace(
+                child, following_collapsible_space)
             if isinstance(child, (boxes.TextBox, boxes.InlineBox)):
-                child_collapsible_space = process_whitespace(
-                    child, following_collapsible_space)
-                if box.is_in_normal_flow() and child.is_in_normal_flow():
-                    following_collapsible_space = child_collapsible_space
+                following_collapsible_space = child_collapsible_space
             elif child.is_in_normal_flow():
                 following_collapsible_space = False
 
-    return following_collapsible_space and not box.is_running()
+    return following_collapsible_space
 
 
 def process_text_transform(box):
+    # Rules defined in
+    # https://www.unicode.org/versions/latest/core-spec/chapter-3/#G33992
+    # https://www.unicode.org/Public/UCD/latest/ucd/SpecialCasing.txt
+    # https://w3c.github.io/i18n-tests/results/text-transform
+    # Common transformations should be handled by common algorithm in Python, special
+    # casing and tailoring shoud be done here when it depends on the language and not on
+    # only on the glyphs.
     if isinstance(box, boxes.TextBox):
         text_transform = box.style['text_transform']
+        lang_code = (box.style['lang'] or '').split('-')[0].lower()
         if text_transform != 'none':
             box.text = {
-                'uppercase': lambda text: text.upper(),
-                'lowercase': lambda text: text.lower(),
+                'uppercase': uppercase,
+                'lowercase': lowercase,
                 'capitalize': capitalize,
-                'full-width': lambda text: text.translate(ASCII_TO_WIDE),
-            }[text_transform](box.text)
+                'full-width': lambda text, lang_code: text.translate(ASCII_TO_WIDE),
+            }[text_transform](box.text, lang_code)
         if box.style['hyphens'] == 'none':
             box.text = box.text.replace('\u00AD', '')  # U+00AD is soft hyphen
 
     elif not box.is_running():
         for child in box.children:
-            if isinstance(child, (boxes.TextBox, boxes.InlineBox)):
-                process_text_transform(child)
+            process_text_transform(child)
+
+def uppercase(text, lang_code):
+    mapper = {}
+
+    if lang_code == 'el':
+        # https://w3c.github.io/i18n-tests/css-text/text-transform/
+        #   text-transform-tailoring-003.html
+        # https://en.wikiversity.org/wiki/Greek_Language/Diphthongs
+        mapper = {
+            'άι': 'ΑΪ',
+            'άυ': 'ΑΫ',
+            'όι': 'ΟΪ',
+            'όυ': 'ΟΫ',
+            'έυ': 'ΗΫ',
+        }
+    elif lang_code in ('tr', 'az'):
+        # https://github.com/unicode-org/cldr/blob/main/common/transforms/tr-Upper.xml
+        mapper = {
+            'i': 'İ',
+        }
+
+    for key, value in mapper.items():
+        text = text.replace(key, value)
+
+    if lang_code == 'el':
+        # Remove diacritics in Greek.
+        # https://github.com/unicode-org/cldr/blob/main/common/transforms/el-Upper.xml
+        # TODO: we should keep tonos on disjunctive eta.
+        # https://w3c.github.io/i18n-tests/css-text/text-transform/
+        #   text-transform-tailoring-005.html
+        text = unicodedata.normalize('NFD', text)
+        for char in '\u0313\u0314\u0301\u0300\u0306\u0342\u0304\u0345':
+            text = text.replace(char, '')
+        text = unicodedata.normalize('NFC', text)
+
+    return text.upper()
 
 
-def capitalize(text):
+def lowercase(text, lang_code):
+    mapper = {}
+
+    if lang_code in ('tr', 'az'):
+        # https://github.com/unicode-org/cldr/blob/main/common/transforms/tr-Lower.xml
+        mapper = {
+            'I': 'ı',
+            'İ': 'i',
+        }
+    elif lang_code == 'lt':
+        # https://github.com/unicode-org/cldr/blob/main/common/transforms/lt-Lower.xml
+        mapper = {
+            'Ì': 'i̇̀',
+            'Í': 'i̇́',
+            'Ĩ': 'i̇̃',
+        }
+
+    for key, value in mapper.items():
+        text = text.replace(key, value)
+
+    return text.lower()
+
+
+def capitalize(text, lang_code):
     """Capitalize words according to CSS’s "text-transform: capitalize"."""
     letter_found = False
+    skip_next_letter = False
     output = ''
-    for letter in text:
+    for i, letter in enumerate(text):
+        if skip_next_letter:
+            skip_next_letter = False
+            continue
         category = unicodedata.category(letter)[0]
         if not letter_found and category in ('L', 'N'):
             letter_found = True
-            letter = letter.upper()
+            if lang_code == 'nl' and text[i:i+2] == 'ij':
+                skip_next_letter = True
+                letter = 'IJ'
+            elif lang_code in ('tr', 'az'):
+                letter = uppercase(letter, lang_code)
+            else:
+                letter = letter.upper()
         elif category == 'Z':
             letter_found = False
         output += letter
@@ -1450,15 +1517,20 @@ def set_viewport_overflow(root_box):
 
 
 def box_text(box):
+    # Stripping may not be the "right" way, but it seems to be what users usually want
+    # in this case. The specification asks for the "text content", probably as defined
+    # in DOM.
+    box = box.deepcopy()
+    process_whitespace(box)
     if isinstance(box, boxes.TextBox):
-        return box.text
+        return box.text.strip()
     elif isinstance(box, boxes.ParentBox):
         return ''.join(
             child.text for child in box.descendants()
             if not child.element_tag.endswith('::before') and
             not child.element_tag.endswith('::after') and
             not child.element_tag.endswith('::marker') and
-            isinstance(child, boxes.TextBox))
+            isinstance(child, boxes.TextBox)).strip()
     return ''
 
 
