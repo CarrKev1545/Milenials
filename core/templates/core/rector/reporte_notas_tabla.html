@@ -4,8 +4,9 @@
 {% block title %}Registro de notas — Tabla{% endblock %}
 
 {% block extra_css %}
-  <!-- Font Awesome para íconos (si ya lo cargas en base, puedes quitarlo) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- Preload de Font Awesome -->
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
 
   <style>
     /* ===== Escala base rem + ajustes fluidos ===== */
