@@ -363,16 +363,16 @@ body::before{
 .rd-field{
   position: relative; display:flex; align-items:center; gap:10px;
   height: 50px; padding: 0 16px 0 54px; margin-bottom: 16px;
-  background: #fff; border-radius: 16px; border: 1px solid rgba(0,0,0,.06);
+  background: rgba(255,255,255,0.08); border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);
   box-shadow: 0 12px 22px rgba(0,0,0,.22);
 }
 .rd-field input, .rd-field select{
   appearance: none; width:100%; border:none; outline:none; background: transparent;
-  color:#111; font-weight:600;
+  color:#fff; font-weight:600;
 }
-.rd-field input::placeholder{ color:#6f7781; }
-.rd-ico{ position:absolute; left:16px; top:50%; transform:translateY(-50%); width:28px; display:grid; place-items:center; color:#111; opacity:.95; }
-.rd-caret{ position:absolute; right:12px; top:50%; transform:translateY(-50%); color:#111; opacity:.8; }
+.rd-field input::placeholder{ color:rgba(255,255,255,0.6); }
+.rd-ico{ position:absolute; left:16px; top:50%; transform:translateY(-50%); width:28px; display:grid; place-items:center; color:#fff; opacity:.95; }
+.rd-caret{ position:absolute; right:12px; top:50%; transform:translateY(-50%); color:#fff; opacity:.8; }
 
 /* Acciones */
 .rd-actions{
@@ -511,19 +511,19 @@ body::before{
   grid-column: 1 / 2;
   position: relative; display:flex; align-items:center; gap:10px;
   height: 48px; padding: 0 14px 0 50px; margin-bottom: 12px;
-  background:#ffffff; border-radius: 14px; border:1px solid rgba(0,0,0,.06);
+  background: rgba(255,255,255,0.08); border-radius: 14px; border:1px solid rgba(255,255,255,0.1);
   box-shadow: 0 10px 20px rgba(0,0,0,.22);
   width:100%; min-width:0;
 }
 .re-field input, .re-field select{
   appearance:none; width:100%; border:none; outline:none; background:transparent;
-  color:#111; font-weight:600;
+  color:#fff; font-weight:600;
 }
 .re-ico{
   position:absolute; left:14px; top:50%; transform:translateY(-50%);
-  width:26px; display:grid; place-items:center; color:#111; opacity:.95;
+  width:26px; display:grid; place-items:center; color:#fff; opacity:.95;
 }
-.re-caret{ position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#111; }
+.re-caret{ position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#fff; }
 
 /* Botones */
 .re-btn{
@@ -686,8 +686,8 @@ body::before{
 .nt-btn--pdf{ background:#2b2f3a; }           /* gris negruzco */
 
 .nt-chip{
-  background:#ffffff;
-  color:#222;
+  background: rgba(255,255,255,0.08);
+  color:#fff;
   font-weight:800;
   border-radius:999px;
   padding:8px 14px;
@@ -716,8 +716,8 @@ body::before{
   width:120px; height:36px;
   text-align:center;
   border-radius:10px;
-  border:1px solid rgba(0,0,0,.12);
-  background:#fff;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,0.08);
   font-weight:700;
   box-shadow: inset 0 1px 0 rgba(0,0,0,.04);
 }
@@ -1567,8 +1567,8 @@ table input[type="number"], table select{ max-width: 100%; min-width: 88px; }
   background-color: #111; color: #eaeaea; border-color: rgba(255,255,255,.12);
 }
 .glass-card .form-select:focus, .glass-card .form-control:focus {
-  background-color: #111; color: #fff; border-color: #8b0000;
-  box-shadow: 0 0 0 0.2rem rgba(139,0,0,.25);
+  background-color: rgba(255,255,255,0.12); color: #fff; border-color: var(--accent);
+  box-shadow: 0 0 0 0.2rem rgba(156,15,16,.25);
 }
 
 /* Evita "parches" blancos en pantallas altas */

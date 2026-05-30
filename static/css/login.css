@@ -1,10 +1,14 @@
 :root{
   --accent:#b80f22;
   --accent-dark:#8f0c1a;
+  --accent-light:#d41a30;
   --white:#fff;
   --muted:#a9a9a9;
   --underline:#e5e5e5;
   --card-shadow:0 18px 48px rgba(0,0,0,.55);
+  --glass-bg: rgba(0, 0, 0, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-blur: 20px;
 }
 
 /* Reset y base */
@@ -13,9 +17,18 @@ html, body{ height:100%; margin:0; }
 body{
   font-family:"Segoe UI", Roboto, Arial, sans-serif;
   color:var(--white);
-  /* Fondo global (misma ruta que ya usabas) */
+  /* Fondo global con overlay oscuro */
   background:url("/static/img/fondo2.jpg") center/cover no-repeat;
   background-color:#000; /* respaldo si no carga la imagen */
+}
+
+/* Overlay oscuro para mejor legibilidad */
+body::before{
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: -1;
 }
 
 /* Lienzo que centra la tarjeta */
@@ -28,24 +41,38 @@ body{
   padding: clamp(16px, 2vw, 24px);
 }
 
-/* Tarjeta */
+/* Tarjeta con glassmorphism */
 .login-card{
   position:relative;
   width: min(100%, 460px);            /* ocupa todo en móvil; limita en desktop */
-  background:#000;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   border-radius:12px;
   padding: clamp(72px, 8vw, 92px) clamp(18px, 3vw, 34px) 28px; /* espacio para el avatar */
-  border:1px solid rgba(255,255,255,.06);
+  border: 1px solid var(--glass-border);
   box-shadow: var(--card-shadow);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Avatar flotando */
+.login-card:hover{
+  transform: translateY(-4px);
+  box-shadow: 0 22px 56px rgba(0,0,0,.65);
+}
+
+/* Avatar flotando con efecto glow */
 .avatar{
   position:absolute;
   top:-52px; left:50%; transform:translateX(-50%);
   width:104px; height:104px; border-radius:50%;
   object-fit:cover; border:3px solid #fff; background:#111;
   box-shadow:0 10px 24px rgba(0,0,0,.55);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.avatar:hover{
+  transform: translateX(-50%) scale(1.05);
+  box-shadow: 0 14px 32px rgba(184,15,34,.4);
 }
 
 /* Título (fluido) */
@@ -59,19 +86,24 @@ body{
 .login-form{ display:flex; flex-direction:column; gap:10px; }
 .field-label{ font-weight:700; font-size:14px; margin-top:6px; }
 
-/* Inputs */
+/* Inputs con mejor feedback visual */
 .field-control{
   width:100%;
   min-height:44px;                    /* mejor accesibilidad táctil */
   padding:10px 36px 10px 2px;         /* espacio a la derecha para el ojo */
-  background:transparent; border:none; border-bottom:2px solid var(--underline);
+  background:rgba(255,255,255,.05); border:none; border-bottom:2px solid var(--underline);
   color:var(--white); font-size:16px; outline:none;
-  transition:border-color .15s ease, box-shadow .15s ease;
+  transition:border-color .2s ease, box-shadow .2s ease, background .2s ease;
+  border-radius: 4px 4px 0 0;
 }
 .field-control::placeholder{ color:#cfcfcf; opacity:.92; }
 .field-control:focus{
   border-bottom-color:var(--accent);
-  box-shadow:0 2px 6px rgba(184,15,34,.4);
+  background:rgba(255,255,255,.08);
+  box-shadow:0 2px 8px rgba(184,15,34,.3);
+}
+.field-control:hover{
+  background:rgba(255,255,255,.06);
 }
 
 /* Marca de error (usada por el JS) */
@@ -91,7 +123,7 @@ body{
 .toggle-pass.on{ color:#fff; }
 .toggle-pass .icon-eye{ width:20px; height:20px; fill: currentColor; pointer-events:none; }
 
-/* Botón */
+/* Botón con mejor diseño e indicador de carga */
 .btn-login{
   margin-top:10px; width:100%;
   min-height:44px;
@@ -100,11 +132,36 @@ body{
   font-weight:800; font-size:16px; letter-spacing:.2px; cursor:pointer;
   color:var(--white); background:var(--accent);
   box-shadow:0 14px 28px rgba(184,15,34,.35);
-  transition:transform .12s ease, background .12s ease, box-shadow .12s ease;
+  transition:transform .2s ease, background .2s ease, box-shadow .2s ease;
+  position: relative;
+  overflow: hidden;
 }
-.btn-login:hover{ background:var(--accent-dark); transform:translateY(-1px); }
+.btn-login:hover{ background:var(--accent-dark); transform:translateY(-2px); box-shadow:0 16px 32px rgba(184,15,34,.4); }
 .btn-login:active{ transform:translateY(0); }
 .btn-login[disabled]{ opacity:.75; cursor:wait; }
+
+/* Indicador de carga (spinner) */
+.btn-login.loading{
+  color: transparent;
+  pointer-events: none;
+}
+.btn-login.loading::after{
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  top: 50%;
+  left: 50%;
+  margin-left: -10px;
+  margin-top: -10px;
+  border: 2px solid rgba(255,255,255,.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin{
+  to { transform: rotate(360deg); }
+}
 
 /* Link */
 .forgot{ margin-top:10px; display:inline-block; text-decoration:none; color:var(--muted); font-size:12px; }
