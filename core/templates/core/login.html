@@ -8,44 +8,6 @@
   <link rel="preload" href="{% static 'css/login.css' %}" as="style">
 
   <link rel="stylesheet" href="{% static 'css/login.css' %}">
-
-  <style>
-    /* Estilos específicos del login que no están en login.css */
-    .login-wrapper {
-      min-height: 100vh;
-      padding: 2rem 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    /* --- Fix: avatar flotando centrado sobre la tarjeta --- */
-    .login-card{
-      position: relative;
-      overflow: visible;
-      padding-top: 4.25rem;
-    }
-
-    .login-card .avatar{
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 6.25rem;
-      height: 6.25rem;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 0.25rem solid #fff;
-      outline: 0.25rem solid #0b0b0b;
-      box-shadow: 0 .5rem 1.25rem rgba(0,0,0,.35);
-      margin: 0;
-    }
-
-    @media (max-width: 40em){
-      .login-card{ padding-top: 3.75rem; }
-      .login-card .avatar{ width: 5.5rem; height: 5.5rem; }
-    }
-  </style>
 {% endblock %}
 
 {% block content %}
