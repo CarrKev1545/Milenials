@@ -141,6 +141,13 @@ body::before{
   padding-bottom: calc(var(--footer-height) + env(safe-area-inset-bottom));
 }
 
+/* Desktop: aumentar padding-bottom para footer fijo */
+@media (min-width: 993px){
+  .main{
+    padding-bottom: calc(var(--footer-height) + 40px + env(safe-area-inset-bottom));
+  }
+}
+
 /* ================= CARDS ================= */
 .cards{
   width: 100%;
