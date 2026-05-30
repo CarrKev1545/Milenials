@@ -1,39 +1,238 @@
-/* === Forzar 4 tarjetas en la primera fila (desktop) === */
-.home-cards{
-  display:grid;               /* por si en tu hoja ya era flex u otro */
-  gap: 2rem;
+/* === Variables especÌficas del dashboard rector === */
+:root {
+  --glass-bg: rgba(0, 0, 0, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-blur: 20px;
+  --accent-gradient: linear-gradient(135deg, #9c0f10 0%, #8f0c1a 100%);
+  --accent-gradient-hover: linear-gradient(135deg, #d41a30 0%, #9c0f10 100%);
 }
 
-@media (min-width: 1200px){    /* ~ ‚â• 1200px */
-  .home-cards{
-    grid-template-columns: repeat(4, 1fr);  /* 4 columnas */
+/* === Contenedor principal con mejor espaciado === */
+.home-cards {
+  display: grid;
+  gap: 2.5rem;
+  padding: 2rem;
+  animation: fadeInUp 0.6s ease-out both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
-/* Escalas agradables para tablets y m√≥viles */
-@media (min-width: 768px) and (max-width: 1199.98px){
-  .home-cards{
-    grid-template-columns: repeat(2, 1fr);  /* 2 x 2 */
-  }
-}
-@media (max-width: 767.98px){
-  .home-cards{
-    grid-template-columns: 1fr;             /* una por fila */
+/* === Layout responsive mejorado === */
+@media (min-width: 1200px) {
+  .home-cards {
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
-/* Asegura que cada tarjeta no imponga un ancho m√≠nimo que rompa el grid */
-.home-card{
+@media (min-width: 768px) and (max-width: 1199.98px) {
+  .home-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .home-cards {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+}
+
+/* === Cards con glassmorphism === */
+.home-card {
   width: 100%;
-  min-width: 0;           /* evita que un width interno fuerce salto de l√≠nea */
+  min-width: 0;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--card-radius, 28px);
+  padding: 2rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-/* Mant√©n las ‚Äúcajas negras‚Äù cuadradas sin crecer demasiado */
-.home-card .card-box{
-  aspect-ratio: 1 / 1;    /* cuadrado perfecto */
+.home-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.65);
+  border-color: rgba(184, 15, 34, 0.3);
 }
 
-/* Si tus tiles eran muy grandes y por eso no cab√≠an 4, reduce un pel√≠n el padding */
-.home-card .label{
-  margin-top: 1rem;
+/* === Cajas de iconos mejoradas === */
+.home-card .card-box {
+  aspect-ratio: 1 / 1;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.home-card:hover .card-box {
+  transform: scale(1.05);
+}
+
+/* === Iconos m·s grandes con efectos animados === */
+.home-card .card-box i {
+  font-size: clamp(48px, 8vw, 72px);
+  color: #fff;
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.5));
+  transition: transform 0.3s ease, filter 0.3s ease;
+  animation: pulse 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 12px 28px rgba(184, 15, 34, 0.4));
+  }
+}
+
+.home-card:hover .card-box i {
+  transform: scale(1.1);
+  animation: none;
+}
+
+/* === Colores diferentes por categorÌa === */
+.home-card:nth-child(1) .card-box i {
+  color: #ff6b6b;
+}
+
+.home-card:nth-child(2) .card-box i {
+  color: #4ecdc4;
+}
+
+.home-card:nth-child(3) .card-box i {
+  color: #ffe66d;
+}
+
+.home-card:nth-child(4) .card-box i {
+  color: #95e1d3;
+}
+
+/* === Labels con gradiente y mejor tipografÌa === */
+.home-card .label {
+  margin-top: 1.5rem;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-radius: 16px;
+  background: var(--accent-gradient);
+  color: #fff;
+  border: none;
+  box-shadow: 0 8px 20px rgba(184, 15, 34, 0.35);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.home-card .label::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.home-card:hover .label {
+  background: var(--accent-gradient-hover);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(184, 15, 34, 0.45);
+}
+
+.home-card:hover .label::before {
+  left: 100%;
+}
+
+/* === Accesibilidad mejorada === */
+.home-card:focus-visible,
+.home-card .label:focus-visible {
+  outline: 3px solid #9c0f10;
+  outline-offset: 4px;
+}
+
+.home-card[tabindex="0"]:focus {
+  outline: none;
+}
+
+/* === Responsive mejorado para tablets === */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .home-cards {
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+
+  .home-card {
+    padding: 1.5rem;
+  }
+
+  .home-card .card-box i {
+    font-size: clamp(40px, 6vw, 56px);
+  }
+
+  .home-card .label {
+    font-size: 13px;
+    padding: 10px 20px;
+  }
+}
+
+/* === Responsive para mÛviles pequeÒos === */
+@media (max-width: 480px) {
+  .home-cards {
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .home-card {
+    padding: 1.25rem;
+  }
+
+  .home-card .card-box i {
+    font-size: 48px;
+  }
+
+  .home-card .label {
+    font-size: 12px;
+    padding: 10px 16px;
+    margin-top: 1rem;
+  }
+}
+
+/* === Efecto de brillo en hover para cards === */
+.home-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.home-card:hover::before {
+  opacity: 1;
 }
