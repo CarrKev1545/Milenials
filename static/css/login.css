@@ -17,18 +17,25 @@ html, body{ height:100%; margin:0; }
 body{
   font-family:"Segoe UI", Roboto, Arial, sans-serif;
   color:var(--white);
-  /* Fondo global con overlay oscuro */
+  /* Fondo global con overlay oscuro y gradiente */
   background:url("/static/img/fondo2.jpg") center/cover no-repeat;
   background-color:#000; /* respaldo si no carga la imagen */
 }
 
-/* Overlay oscuro para mejor legibilidad */
+/* Overlay oscuro y gradiente dinámico para mejor legibilidad */
 body::before{
   content: '';
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(184,15,34,0.15) 50%, rgba(0,0,0,0.7) 100%);
   z-index: -1;
+  animation: gradientShift 15s ease infinite;
+  background-size: 400% 400%;
+}
+@keyframes gradientShift{
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 /* Lienzo que centra la tarjeta */
@@ -60,19 +67,25 @@ body::before{
   box-shadow: 0 22px 56px rgba(0,0,0,.65);
 }
 
-/* Avatar flotando con efecto glow */
+/* Avatar flotando con efectos animados mejorados */
 .avatar{
   position:absolute;
   top:-52px; left:50%; transform:translateX(-50%);
   width:104px; height:104px; border-radius:50%;
   object-fit:cover; border:3px solid #fff; background:#111;
   box-shadow:0 10px 24px rgba(0,0,0,.55);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  animation: pulse 3s ease-in-out infinite;
 }
-
+@keyframes pulse{
+  0%, 100% { box-shadow: 0 10px 24px rgba(0,0,0,.55), 0 0 0 0 rgba(184,15,34,0); }
+  50% { box-shadow: 0 10px 24px rgba(0,0,0,.55), 0 0 0 8px rgba(184,15,34,0.3); }
+}
 .avatar:hover{
-  transform: translateX(-50%) scale(1.05);
-  box-shadow: 0 14px 32px rgba(184,15,34,.4);
+  transform: translateX(-50%) scale(1.08);
+  box-shadow: 0 14px 32px rgba(184,15,34,.5);
+  border-color: var(--accent-light);
+  animation: none;
 }
 
 /* Título (fluido) */
@@ -86,11 +99,12 @@ body::before{
 .login-form{ display:flex; flex-direction:column; gap:10px; }
 .field-label{ font-weight:700; font-size:14px; margin-top:6px; }
 
-/* Inputs con mejor feedback visual */
+/* Inputs con mejor feedback visual e iconos */
+.field-wrap{ position:relative; display:block; }
 .field-control{
   width:100%;
   min-height:44px;                    /* mejor accesibilidad táctil */
-  padding:10px 36px 10px 2px;         /* espacio a la derecha para el ojo */
+  padding:10px 36px 10px 44px;         /* espacio a la derecha para el ojo, izquierda para icono */
   background:rgba(255,255,255,.05); border:none; border-bottom:2px solid var(--underline);
   color:var(--white); font-size:16px; outline:none;
   transition:border-color .2s ease, box-shadow .2s ease, background .2s ease;
@@ -104,6 +118,22 @@ body::before{
 }
 .field-control:hover{
   background:rgba(255,255,255,.06);
+}
+
+/* Iconos dentro de los inputs */
+.field-icon{
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 18px;
+  transition: color 0.2s ease;
+  pointer-events: none;
+}
+.field-control:focus + .field-icon,
+.field-control:focus ~ .field-icon{
+  color: var(--accent);
 }
 
 /* Marca de error (usada por el JS) */
@@ -123,20 +153,36 @@ body::before{
 .toggle-pass.on{ color:#fff; }
 .toggle-pass .icon-eye{ width:20px; height:20px; fill: currentColor; pointer-events:none; }
 
-/* Botón con mejor diseño e indicador de carga */
+/* Botón con gradiente y efectos mejorados */
 .btn-login{
   margin-top:10px; width:100%;
   min-height:44px;
   padding-block: clamp(10px, 2.5vw, 14px);
   border:none; border-radius:22px;
   font-weight:800; font-size:16px; letter-spacing:.2px; cursor:pointer;
-  color:var(--white); background:var(--accent);
+  color:var(--white);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
   box-shadow:0 14px 28px rgba(184,15,34,.35);
-  transition:transform .2s ease, background .2s ease, box-shadow .2s ease;
+  transition:transform .2s ease, box-shadow .2s ease, background .2s ease;
   position: relative;
   overflow: hidden;
 }
-.btn-login:hover{ background:var(--accent-dark); transform:translateY(-2px); box-shadow:0 16px 32px rgba(184,15,34,.4); }
+.btn-login::before{
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s ease;
+}
+.btn-login:hover{
+  background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 100%);
+  transform:translateY(-2px);
+  box-shadow:0 16px 32px rgba(184,15,34,.4);
+}
+.btn-login:hover::before{
+  left: 100%;
+}
 .btn-login:active{ transform:translateY(0); }
 .btn-login[disabled]{ opacity:.75; cursor:wait; }
 

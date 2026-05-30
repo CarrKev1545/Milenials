@@ -66,11 +66,14 @@
       {% endif %}
 
       <label for="usuario" class="field-label">Usuario</label>
-      <input id="usuario" name="usuario" type="text"
-             class="field-control input"
-             placeholder="Usuario"
-             autocomplete="username" required
-             {% if error %}aria-invalid="true" aria-describedby="login-error"{% endif %}>
+      <span class="field-wrap">
+        <input id="usuario" name="usuario" type="text"
+               class="field-control input"
+               placeholder="Usuario"
+               autocomplete="username" required
+               {% if error %}aria-invalid="true" aria-describedby="login-error"{% endif %}>
+        <i class="fas fa-user field-icon" aria-hidden="true"></i>
+      </span>
 
       <label for="password" class="field-label">Contraseña</label>
       <span class="field-wrap">
@@ -79,6 +82,7 @@
                placeholder="Contraseña"
                autocomplete="current-password" required
                {% if error %}aria-invalid="true" aria-describedby="login-error"{% endif %}>
+        <i class="fas fa-lock field-icon" aria-hidden="true"></i>
         <!-- Botón ojo con SVG inline (JS propio mantiene data-visible) -->
         <button type="button" class="toggle-pass"
                 aria-label="Mostrar u ocultar contraseña"
