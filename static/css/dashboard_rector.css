@@ -1,4 +1,4 @@
-/* === Variables especÃ­ficas del dashboard rector === */
+/* === Variables específicas del dashboard rector === */
 :root {
   --glass-bg: rgba(0, 0, 0, 0.75);
   --glass-border: rgba(255, 255, 255, 0.1);
@@ -8,25 +8,14 @@
 }
 
 /* === Contenedor principal con mejor espaciado === */
-.main {
-  display: block !important;
-}
-
-.container {
-  width: 100% !important;
-  max-width: 1200px !important;
-  margin: 0 auto !important;
-}
-
 .home-cards {
-  display: flex;
+  display: grid;
   gap: 2rem;
   padding: 2rem;
   animation: fadeInUp 0.6s ease-out both;
   max-width: 1200px;
   margin: 0 auto;
-  justify-content: center;
-  flex-wrap: wrap;
+  place-content: center;
 }
 
 @keyframes fadeInUp {
@@ -40,14 +29,23 @@
   }
 }
 
+/* === Layout responsive mejorado === */
+@media (min-width: 1200px) {
+  .home-cards {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+}
+
 @media (min-width: 768px) and (max-width: 1199.98px) {
   .home-cards {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 1.5rem;
   }
 }
 
 @media (max-width: 767.98px) {
   .home-cards {
+    grid-template-columns: 1fr;
     gap: 1rem;
     padding: 1rem;
   }
@@ -56,8 +54,7 @@
 /* === Cards con glassmorphism === */
 .home-card {
   width: 100%;
-  max-width: 380px;
-  flex: 1 1 240px;
+  min-width: 0;
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
@@ -92,7 +89,7 @@
   transform: scale(1.05);
 }
 
-/* === Iconos mÃ¡s pequeÃ±os para dar mÃ¡s espacio === */
+/* === Iconos más pequeños para dar más espacio === */
 .home-card .card-box i {
   font-size: clamp(32px, 5vw, 48px);
   color: #fff;
@@ -115,7 +112,7 @@
   animation: none;
 }
 
-/* === Colores diferentes por categorÃ­a === */
+/* === Colores diferentes por categoría === */
 .home-card:nth-child(1) .card-box i {
   color: #ff6b6b;
 }
@@ -132,7 +129,7 @@
   color: #95e1d3;
 }
 
-/* === Labels con gradiente y mejor tipografÃ­a === */
+/* === Labels con gradiente y mejor tipografía === */
 .home-card .label {
   margin-top: 1rem;
   padding: 12px 12px;
@@ -213,7 +210,7 @@
   }
 }
 
-/* === Responsive para mÃ³viles pequeÃ±os === */
+/* === Responsive para móviles pequeños === */
 @media (max-width: 480px) {
   .home-cards {
     gap: 0.75rem;
