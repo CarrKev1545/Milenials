@@ -67,7 +67,7 @@ button,input,select,textarea{ font:inherit; color:inherit; }
 /* 4) Container */
 .container{
   width:100%; max-width:var(--container);
-  margin-inline:auto;
+  margin:0 auto;
   padding-inline:clamp(12px,4vw,32px);
 }
 

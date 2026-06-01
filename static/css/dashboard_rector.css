@@ -8,6 +8,16 @@
 }
 
 /* === Contenedor principal con mejor espaciado === */
+.main {
+  display: block !important;
+}
+
+.container {
+  width: 100% !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+}
+
 .home-cards {
   display: flex;
   gap: 2rem;
